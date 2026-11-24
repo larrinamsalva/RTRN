@@ -580,7 +580,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
  #rtrnWorkspaces .workspace-area.rtrn-active{visibility:visible!important;display:block!important}
 }
 </style>
-<style>.rtrn-record-top{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0;padding:0 8px}.rtrn-record-top .btn{min-height:48px;white-space:normal;font-weight:800}.rtrn-record-top #rtrnRecordQuick{background:#762d56;border-color:#ff9bc6;color:white}.rtrn-record-top #rtrnStopRecordQuick{background:#a52c45;color:white}.rtrn-record-top .btn:disabled{opacity:.5;cursor:not-allowed}body.output-mode .rtrn-record-top{display:none!important}</style></head>
+<style>.rtrn-record-top{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0;padding:0 8px}.rtrn-record-top .btn{min-height:48px;white-space:normal;font-weight:800}.rtrn-record-top #rtrnRecordQuick{background:#762d56;border-color:#ff9bc6;color:white}.rtrn-record-top #rtrnStopRecordQuick{background:#a52c45;color:white}.rtrn-record-top .btn:disabled{opacity:.5;cursor:not-allowed}body.output-mode .rtrn-record-top{display:none!important}</style><style id="table-frame-style">#tablePortraits{z-index:9}.frame-portrait.table-photo{box-sizing:border-box;border:clamp(1px,.25vw,4px) solid #d6b16b;border-radius:3px;background:linear-gradient(135deg,#614739,#20172d);box-shadow:1px 3px 6px #000a;display:grid;place-items:center}.table-photo .table-empty{color:#e7c994;font-size:clamp(6px,1vw,14px);line-height:1}.stage.rtrn-cozy .rtrn-original-desk{display:none}</style></head>
 <body>
 <div class="app">
 <header class="topbar"><div class="branding"><div aria-hidden="true" class="logo">R</div><div><h1>RTRN Studio Control Room V6 · Solo & Two Person Fixed</h1><p>Roads to Recognition Network · original sets + four cozy lounges · solo and two-person shows · recording</p></div></div><div class="top-actions"><span class="pill"><span class="pulse"></span> Studio ready</span><button class="btn" id="popBtn" title="Open a clean stage in another window">↗ Pop-out output</button><button class="btn btn-primary" id="fullBtn">⛶ Fullscreen stage</button></div></header>
@@ -599,7 +599,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <div aria-live="polite" class="rtrn-scene-status" id="customSceneStatus" role="status">New scenes are stored in this browser on this device. Keep the original image files as backups.</div>
 </div></div><div class="sidebar-note"><strong>Director's shortcuts</strong><br/>1–4 scenes · L Laugh · A Awww · P Clap · C Cheer · N News · D Drum · E Alert · X Fart · B Birds · F fullscreen</div></div></details></aside>
 <main class="center">
-<div class="panel stage-panel"><div class="stage-top"><h2>◉ Program preview</h2><span>16:9 virtual broadcast canvas</span></div><div class="stage-shell"><div aria-label="Live studio scene preview" class="stage" id="stage"><div class="bg-image" id="background"></div><div aria-label="Uploaded photos placed within existing picture frames" class="frame-portraits" id="framePortraits"></div><div aria-hidden="true" class="holiday-decor" hidden="" id="holidayDecor"><div class="holiday-top-trim" id="holidayTopTrim"></div><div class="holiday-sparkles" id="holidaySparkles"></div><div class="holiday-edge holiday-edge-left" id="holidayLeft"></div><div class="holiday-feature holiday-feature-left" id="holidayFeatureLeft"></div><div class="holiday-plaque" id="holidayPlaque"><span id="holidayIcon"></span><strong id="holidayName"></strong><small id="holidaySubtitle"></small></div><div class="holiday-feature holiday-feature-right" id="holidayFeatureRight"></div><div class="holiday-edge holiday-edge-right" id="holidayRight"></div><div class="holiday-bottom-trim" id="holidayBottomTrim"></div></div><div aria-hidden="true" class="birds" id="birds"><div class="bird"><span class="bird-facing">🕊️</span></div><div class="bird"><span class="bird-facing">🐦</span></div><div class="bird"><span class="bird-facing">🕊️</span></div></div><div aria-hidden="true" class="music-bars" id="musicBars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div aria-hidden="true" class="city-window" data-scene="news" id="cityWindow"><div class="traffic" id="traffic"><span class="street-actor car">🚙</span><span class="street-actor bike">🚴</span><span class="street-actor walk">🚶‍♀️</span><span class="street-actor wave">👋🤪</span><span class="street-actor car2">🚕</span><span class="street-actor pigeon">🐦</span></div></div><div aria-live="off" class="comedy-pop" id="comedyPop"><span class="gag-emoji" id="gagEmoji">🛒</span><div><div class="gag-caption" id="gagCaption">Shopping Cart Steve</div><small>MEANWHILE, OUTSIDE… · FICTIONAL</small></div></div><div aria-live="polite" class="reaction-visual" id="reactionVisual"></div><div aria-live="polite" class="news-flash" id="newsFlash"><b>🚨 RTRN COMEDY BULLETIN · FICTIONAL</b><strong id="newsFlashTitle">PIGEON PATROL DEMANDS BREADCRUMBS!</strong><small>FOR FUN ONLY · NOT ACTUAL NEWS</small></div><div class="stage-topline"><div class="network-mark" id="networkMark"><div><div class="mark">RTRN <span style="font-size:.67em">✦</span></div><div class="network-name">ROADS TO RECOGNITION NETWORK</div></div></div><div class="clock-bug"><span class="live-dot" id="liveDot"></span><span id="clockText">STUDIO • PREVIEW</span></div></div><div class="fiction" hidden="" id="fictionTag">FICTIONAL COMEDY SKETCH</div><div aria-hidden="true" class="guest-stage-set" id="guestStageSet"><div class="guest-scene-backdrop"></div><div class="guest-window-wall"></div><div class="guest-curtain left"></div><div class="guest-curtain right"></div><div class="guest-floor"></div><div class="guest-desk"><div class="guest-desk-top"></div><div class="guest-desk-front"></div></div><div class="guest-chair left"><div class="seat-back"></div><div class="chair-arm left"></div><div class="chair-arm right"></div><div class="seat-bottom"></div><div class="chair-leg a"></div><div class="chair-leg b"></div><div class="chair-leg c"></div><div class="chair-leg d"></div><div class="guest-seat-tag">Host</div></div><div class="guest-chair right"><div class="seat-back"></div><div class="chair-arm left"></div><div class="chair-arm right"></div><div class="seat-bottom"></div><div class="chair-leg a"></div><div class="chair-leg b"></div><div class="chair-leg c"></div><div class="chair-leg d"></div><div class="guest-photo-slot"><img alt="Guest portrait for the guest chair" hidden="" id="guestSeatPhoto"/><div class="guest-photo-placeholder" id="guestPhotoPlaceholder">Add a guest photo from the Photo Library to seat your guest here.</div></div><div class="guest-seat-tag" id="guestSeatTag">Guest</div></div><div class="guest-scene-note">Guest interview desk</div></div><div class="rtrn-tribute" hidden="" id="rtrnTribute"><img alt="Tribute portrait" id="rtrnTributeImage"/><span id="rtrnTributeCaption"></span></div>
+<div class="panel stage-panel"><div class="stage-top"><h2>◉ Program preview</h2><span>16:9 virtual broadcast canvas</span></div><div class="stage-shell"><div aria-label="Live studio scene preview" class="stage" id="stage"><div class="bg-image" id="background"></div><div aria-label="Uploaded photos placed within existing picture frames" class="frame-portraits" id="framePortraits"></div><div aria-label="Desk and end table photos" class="frame-portraits" id="tablePortraits"></div><div aria-hidden="true" class="holiday-decor" hidden="" id="holidayDecor"><div class="holiday-top-trim" id="holidayTopTrim"></div><div class="holiday-sparkles" id="holidaySparkles"></div><div class="holiday-edge holiday-edge-left" id="holidayLeft"></div><div class="holiday-feature holiday-feature-left" id="holidayFeatureLeft"></div><div class="holiday-plaque" id="holidayPlaque"><span id="holidayIcon"></span><strong id="holidayName"></strong><small id="holidaySubtitle"></small></div><div class="holiday-feature holiday-feature-right" id="holidayFeatureRight"></div><div class="holiday-edge holiday-edge-right" id="holidayRight"></div><div class="holiday-bottom-trim" id="holidayBottomTrim"></div></div><div aria-hidden="true" class="birds" id="birds"><div class="bird"><span class="bird-facing">🕊️</span></div><div class="bird"><span class="bird-facing">🐦</span></div><div class="bird"><span class="bird-facing">🕊️</span></div></div><div aria-hidden="true" class="music-bars" id="musicBars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div aria-hidden="true" class="city-window" data-scene="news" id="cityWindow"><div class="traffic" id="traffic"><span class="street-actor car">🚙</span><span class="street-actor bike">🚴</span><span class="street-actor walk">🚶‍♀️</span><span class="street-actor wave">👋🤪</span><span class="street-actor car2">🚕</span><span class="street-actor pigeon">🐦</span></div></div><div aria-live="off" class="comedy-pop" id="comedyPop"><span class="gag-emoji" id="gagEmoji">🛒</span><div><div class="gag-caption" id="gagCaption">Shopping Cart Steve</div><small>MEANWHILE, OUTSIDE… · FICTIONAL</small></div></div><div aria-live="polite" class="reaction-visual" id="reactionVisual"></div><div aria-live="polite" class="news-flash" id="newsFlash"><b>🚨 RTRN COMEDY BULLETIN · FICTIONAL</b><strong id="newsFlashTitle">PIGEON PATROL DEMANDS BREADCRUMBS!</strong><small>FOR FUN ONLY · NOT ACTUAL NEWS</small></div><div class="stage-topline"><div class="network-mark" id="networkMark"><div><div class="mark">RTRN <span style="font-size:.67em">✦</span></div><div class="network-name">ROADS TO RECOGNITION NETWORK</div></div></div><div class="clock-bug"><span class="live-dot" id="liveDot"></span><span id="clockText">STUDIO • PREVIEW</span></div></div><div class="fiction" hidden="" id="fictionTag">FICTIONAL COMEDY SKETCH</div><div aria-hidden="true" class="guest-stage-set" id="guestStageSet"><div class="guest-scene-backdrop"></div><div class="guest-window-wall"></div><div class="guest-curtain left"></div><div class="guest-curtain right"></div><div class="guest-floor"></div><div class="guest-desk"><div class="guest-desk-top"></div><div class="guest-desk-front"></div></div><div class="guest-chair left"><div class="seat-back"></div><div class="chair-arm left"></div><div class="chair-arm right"></div><div class="seat-bottom"></div><div class="chair-leg a"></div><div class="chair-leg b"></div><div class="chair-leg c"></div><div class="chair-leg d"></div><div class="guest-seat-tag">Host</div></div><div class="guest-chair right"><div class="seat-back"></div><div class="chair-arm left"></div><div class="chair-arm right"></div><div class="seat-bottom"></div><div class="chair-leg a"></div><div class="chair-leg b"></div><div class="chair-leg c"></div><div class="chair-leg d"></div><div class="guest-photo-slot"><img alt="Guest portrait for the guest chair" hidden="" id="guestSeatPhoto"/><div class="guest-photo-placeholder" id="guestPhotoPlaceholder">Add a guest photo from the Photo Library to seat your guest here.</div></div><div class="guest-seat-tag" id="guestSeatTag">Guest</div></div><div class="guest-scene-note">Guest interview desk</div></div><div class="rtrn-tribute" hidden="" id="rtrnTribute"><img alt="Tribute portrait" id="rtrnTributeImage"/><span id="rtrnTributeCaption"></span></div>
 <div class="camera-box" id="cameraBox"><video autoplay="" id="cameraVideo" muted="" playsinline=""></video><canvas id="cameraCanvas"></canvas><div class="rtrn-camera-standby" id="rtrnHostSeatStandby"><span>🎥</span><strong>HOST CAMERA</strong><small>Press Start camera</small></div></div>
 <div class="camera-box" hidden="" id="rtrnSecondBox"><video autoplay="" id="rtrnSecondVideo" muted="" playsinline=""></video><canvas id="rtrnSecondCanvas"></canvas><div class="rtrn-camera-standby" id="rtrnSecondSeatStandby"><span>🎥</span><strong>SECOND PERSON</strong><small>Start second camera or select video</small></div></div>
 <div class="rtrn-cozy-seat" hidden="" id="rtrnSeatPlaceholder3"><img alt="Third guest photo" hidden="" id="rtrnSeatPhoto3"/><span>📷<small>Photo seat 3</small></span></div><div class="rtrn-cozy-seat" hidden="" id="rtrnSeatPlaceholder4"><img alt="Fourth guest photo" hidden="" id="rtrnSeatPhoto4"/><span>📷<small>Photo seat 4</small></span></div><div aria-hidden="true" class="rtrn-original-desk" id="rtrnOriginalDesk"></div>
@@ -953,7 +953,7 @@ renderSceneChoices();
 function store(){try{const safe={...state,cameraEnabled:false};localStorage.setItem('rtrn-v1',JSON.stringify(safe))}catch(e){}}
 function send(){const sync={...state,cameraEnabled:false};store();try{channel?.postMessage({kind:'state',value:sync})}catch(e){}try{if(outputWindow&&!outputWindow.closed)outputWindow.postMessage({kind:'state',value:sync},'*')}catch(e){}}
 function setState(patch,broadcast=true){state={...state,...patch};render();if(broadcast)send()}
-function pickScene(id){const s=SCENES.find(s=>s.id===id);if(!s)return;setState({scene:id,headline:s.headline,...(s.solemn?{quietWindow:true,autoGags:false}: {})});}
+function pickScene(id){const s=SCENES.find(s=>s.id===id);if(!s)return;setState({scene:id,headline:s.headline,...(s.solemn?{quietWindow:true,autoGags:false}: {})});window.RTRNChooseSceneSeats?.(id);}
 function safeText(target,value){el(target).textContent=value}
 function render(){
  const weather=SCENES.find(x=>x.id==='window-weather');weather.img=state.weatherMode==='rain'?'rain':'snow';
@@ -2030,6 +2030,30 @@ const frameLayout={
   {id:'cozy-4-wall-4',name:'Four Seats — wall frame 4 (photo or video)',box:[575,45,127,110],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'}
  ]
 };
+// Coordinates are normalized percentages, independent of artwork pixel size.
+const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:(side==='left'?'Left':'Right')+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
+const tabletopPositions={
+ originalPodcast:[[24,59,7,12],[84,60,7,11]],
+ originalLive:[[26,54,7,11],[85,55,7,11]],
+ news:[[13,55,6,11],[88,54,6,11]],
+ cozy1:[[8,64,5.5,12],[88,64,5.5,12]],
+ cozy2:[[1.5,54,5,11],[94,54,5,11]],
+ cozy3:[[40,67,5,13],[56,67,5,13]],
+ cozy4:[[37,65,5.5,13],[60,65,5.5,13]],
+ beach:[[44,57,5.5,12],[50.5,57,5.5,12]],
+ mountain:[[44,57,5.5,12],[50.5,57,5.5,12]],
+ washers:[[13,55,6,11],[88,54,6,11]],
+ grandma:[[13,55,6,11],[88,54,6,11]],
+ robber:[[13,55,6,11],[88,54,6,11]],
+ sunset:[[13,55,6,11],[88,54,6,11]],
+ snow:[[13,55,6,11],[88,54,6,11]],
+ rain:[[13,55,6,11],[88,54,6,11]],
+ podcast:[[10,65,6,10],[85,65,6,10]]
+};
+for(const [art,boxes] of Object.entries(tabletopPositions)){
+  frameLayout[art]??=[];
+  frameLayout[art].push(tabletop(art==='rain'?'snow':art,'left',boxes[0]),tabletop(art==='rain'?'snow':art,'right',boxes[1]));
+}
 const storeKey='rtrn-wall-pictures-v3';
 let saved={};
 try {saved=JSON.parse(localStorage.getItem(storeKey)||'{}')||{}}catch(e){}
@@ -2037,7 +2061,7 @@ let lastArt=null;
 let libraryPhotos=[], libraryVideos=[];
 const libraryPhotoURLs=new Map(), pendingLibraryURLs=new Set(), libraryVideoURLs=new Map(), pendingVideoURLs=new Set();
 const slideshowIndices=new Map(), slideshowPaused=new Set(), slideElapsed=new Map();
-const largeFrames=new Set(Object.values(frameLayout).flat().map(f=>f.id));
+const largeFrames=new Set(Object.values(frameLayout).flat().filter(f=>!f.table).map(f=>f.id));
 window.RTRNFramePhotoBridge={get urls(){return libraryPhotoURLs},get photos(){return libraryPhotos},load:loadLibraryURL};
 function currentSlideId(frameId,item){const slides=(item?.slides||[]).filter(id=>libraryPhotos.some(p=>p.id===id));return slides.length?slides[(slideshowIndices.get(frameId)||0)%slides.length]:null}
 function framePhotoSource(frameId,item){
@@ -2082,7 +2106,7 @@ function drawGuestPhotoOptions(){
 const list=document.getElementById('wallFrameList');
 const status=document.getElementById('wallFrameStatus');
 
-const surface=document.getElementById('framePortraits');
+const surface=document.getElementById('framePortraits'),tableSurface=document.getElementById('tablePortraits');
 let sync=null;
 try{sync=new BroadcastChannel('rtrn-wall-frame-sync');sync.onmessage=e=>{if(e.data?.kind==='picture-update'){saved=e.data.value;drawFramePhotos();drawEditor();}}}catch(e){}
 function setStatus(message){status.textContent=message}
@@ -2118,12 +2142,15 @@ function drawFramePhotos(){
   }else{
     url=frameURL(item);if(item.libraryId&&!url)loadLibraryURL(item.libraryId);
   }
-  let d=surface.querySelector(`[data-frame-id="${def.id}"]`);
-  if(!url){if(d)d.remove();continue}
-  if(!d){d=document.createElement('div');d.className='frame-portrait';d.dataset.frameId=def.id;surface.appendChild(d)}
+  const layer=def.table?tableSurface:surface;
+  let d=layer.querySelector(`[data-frame-id="${def.id}"]`);
+  if(!url&&!def.table){if(d)d.remove();continue}
+  if(!d){d=document.createElement('div');d.className='frame-portrait'+(def.table?' table-photo':'');d.dataset.frameId=def.id;layer.appendChild(d)}
   const imgW=art.startsWith('cozy')?828:art==='originalPodcast'||art==='originalLive'?1672:1279, imgH=art.startsWith('cozy')?463:art==='originalPodcast'||art==='originalLive'?941:720;
-  d.style.left=(def.box[0]/imgW*100)+'%';d.style.top=(def.box[1]/imgH*100)+'%';
-  d.style.width=(def.box[2]/imgW*100)+'%';d.style.height=(def.box[3]/imgH*100)+'%';d.style.clipPath=def.shape;
+  const [x,y,w,h]=def.box;
+  d.style.left=(def.percent?x:x/imgW*100)+'%';d.style.top=(def.percent?y:y/imgH*100)+'%';
+  d.style.width=(def.percent?w:w/imgW*100)+'%';d.style.height=(def.percent?h:h/imgH*100)+'%';d.style.clipPath=def.shape;
+  if(!url){if(!d.querySelector('.table-empty')){const span=document.createElement('span');span.className='table-empty';span.textContent='♡';d.replaceChildren(span)}activeEls.add(def.id);continue}
   if(mode==='video'){
     let v=d.querySelector('video');
     if(!v){d.replaceChildren();v=document.createElement('video');v.dataset.frameId=def.id;v.playsInline=true;v.preload='auto';d.append(v)}
@@ -2144,7 +2171,7 @@ function drawFramePhotos(){
   }
   activeEls.add(def.id);
  }
- for(const d of Array.from(surface.children))if(!activeEls.has(d.dataset.frameId))d.remove();
+ for(const d of [...surface.children,...tableSurface.children])if(!activeEls.has(d.dataset.frameId))d.remove();
 }
 
 function compressPhoto(file){
@@ -2259,7 +2286,7 @@ function addBigFrameMediaEditor(card,def,item){
 const emptyFramePreview = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#302443"/><stop offset="1" stop-color="#182d29"/></linearGradient></defs><rect width="320" height="240" rx="18" fill="url(#bg)"/><rect x="18" y="18" width="284" height="204" rx="12" fill="none" stroke="#e2c184" stroke-width="5"/><rect x="103" y="46" width="114" height="112" rx="10" fill="none" stroke="#c5adf4" stroke-width="6"/><circle cx="160" cy="82" r="15" fill="#e8d4fb"/><path d="M117 143L144 114L164 132L185 106L204 144" fill="none" stroke="#e8d4fb" stroke-width="5" stroke-linejoin="round"/><text x="160" y="192" fill="#fff4df" text-anchor="middle" font-family="Arial,sans-serif" font-size="19" font-weight="700">Add Photo</text></svg>'); function drawEditor(){
  const {art}=activeArt();
  list.innerHTML='';
- if(!(frameLayout[art]||[]).length){const e=document.createElement('div');e.className='frame-disabled';e.textContent='This background does not contain editable wall picture frames.';list.append(e);return}
+ if(!(frameLayout[art]||[]).length){const e=document.createElement('div');e.className='frame-disabled';e.textContent='This background does not contain editable picture frames.';list.append(e);return}
  for(const def of frameLayout[art]){
   const item=saved[def.id]||{},card=document.createElement('div');card.className='frame-edit-card';
   const title=document.createElement('strong');title.textContent='🖼️ '+def.name;card.append(title);
@@ -2363,7 +2390,7 @@ const emptyFramePreview = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent
     const tip=document.createElement('div');tip.className='frame-move-tip';tip.textContent='Use Fit whole photo to keep heads visible. Zoom can go down to 40%. Center resets the position.';
     pos.append(tip);card.append(pos);updateControls();
   }
-  addBigFrameMediaEditor(card,def,item);
+  if(!def.table)addBigFrameMediaEditor(card,def,item);
   list.append(card);
  }
 }
@@ -2516,10 +2543,10 @@ refresh();
   const isCozy = () => /^cozy-[1-4]$/.test(state.scene)||isOutdoor();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||isCozy();
   const cozyPresets={
-    'cozy-1':{oneX:28,oneY:34,oneSize:41,twoX:56,twoY:27,twoSize:27},
-    'cozy-2':{oneX:13,oneY:30,oneSize:30,twoX:57,twoY:30,twoSize:30},
-    'cozy-3':{oneX:8,oneY:28,oneSize:33,twoX:60,twoY:28,twoSize:33},
-    'cozy-4':{oneX:7,oneY:32,oneSize:17,twoX:30,twoY:32,twoSize:17},
+    'cozy-1':{oneX:34,oneY:50,oneSize:32,twoX:56,twoY:27,twoSize:27},
+    'cozy-2':{oneX:11,oneY:44,oneSize:27,twoX:62,twoY:44,twoSize:27},
+    'cozy-3':{oneX:9,oneY:39,oneSize:30,twoX:61,twoY:39,twoSize:30},
+    'cozy-4':{oneX:8,oneY:39,oneSize:18,twoX:30, twoY:39,twoSize:18},
     beach:{oneX:15,oneY:32,oneSize:20,twoX:65,twoY:32,twoSize:20},
     mountain:{oneX:15,oneY:32,oneSize:20,twoX:65,twoY:32,twoSize:20}
   };
@@ -2552,6 +2579,7 @@ refresh();
   }
   function paintHostLayers() {
     const original=isOriginal(),cutout=state.cameraMode==='cutout'; const seat=sceneSeatConf();
+    stage.classList.toggle('rtrn-cozy',/^cozy-/.test(state.scene));
     stage.classList.toggle('rtrn-original',original);
     stage.classList.toggle('rtrn-solo-mode',conf.layout!=='duo');
     stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo');
@@ -2618,6 +2646,7 @@ refresh();
     if(layout==='duo')Object.assign(conf,{oneX:23,oneY:22,oneSize:36,twoX:50,twoY:22,twoSize:34});
     save();syncControls();paintHostLayers();
   }
+  window.RTRNChooseSceneSeats=id=>{if(['cozy-2','cozy-3','cozy-4','beach','mountain'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
   $('rtrnLayout').addEventListener('change',e=>chooseLayout(e.target.value));
   $('rtrnSoloQuick').addEventListener('click',()=>chooseLayout('solo'));
   $('rtrnDuoQuick').addEventListener('click',()=>chooseLayout('duo'));
@@ -2644,6 +2673,7 @@ refresh();
   }
   $('rtrnShowTribute').addEventListener('change',e=>{conf.showTribute=e.target.checked;save();paintHostLayers()});
   $('rtrnResetPositions').addEventListener('click',()=>{
+    if(isCozy()){delete cozySaved[state.scene];saveCozy()}
     Object.assign(conf,{oneX:initial.oneX,oneY:initial.oneY,oneSize:initial.oneSize,
       twoX:initial.twoX,twoY:initial.twoY,twoSize:initial.twoSize});
     if(conf.layout==='together')Object.assign(conf,{oneX:13,oneY:15,oneSize:73});
@@ -2810,9 +2840,15 @@ refresh();
     if(isOriginal() && !secondBox.hidden && conf.layout==='duo')
       drawHost(secondBox,secondVideo,secondCanvas,!!secondStream);
     // A second pass of the untouched original photograph puts the real desk in front of the hosts.
-    if(isOriginal()&&bg&&!isOutdoor()){
+    if(isOriginal()&&bg&&!isCozy()){
       ctx.save();ctx.beginPath();ctx.rect(0,(state.scene==='original-live'?.65:isCozy()?.72:.69)*720,1280,720);
       ctx.clip();drawCover(bg,0,0,1280,720);ctx.restore();
+    }
+    for(const node of document.querySelectorAll('#tablePortraits .table-photo')){
+      const b=relativeBox(node);ctx.fillStyle='#25192e';ctx.fillRect(b.x,b.y,b.w,b.h);
+      const img=node.querySelector('img');
+      if(img?.complete&&img.naturalWidth){ctx.save();ctx.beginPath();ctx.rect(b.x+2,b.y+2,b.w-4,b.h-4);ctx.clip();const iw=img.naturalWidth,ih=img.naturalHeight;const scale=(img.style.objectFit==='cover'?Math.max:Math.min)(b.w/iw,b.h/ih);const m=new DOMMatrix(getComputedStyle(img).transform==='none'?undefined:getComputedStyle(img).transform);const dx=m.e*1280/stage.getBoundingClientRect().width,dy=m.f*720/stage.getBoundingClientRect().height;const w=iw*scale*m.a,h=ih*scale*m.d;ctx.drawImage(img,b.x+(b.w-w)/2+dx,b.y+(b.h-h)/2+dy,w,h);ctx.restore();}
+      ctx.strokeStyle='#d6b16b';ctx.lineWidth=3;ctx.strokeRect(b.x,b.y,b.w,b.h);
     }
     if(document.getElementById('stage').classList.contains('birds-running')){
       const now=(Date.now()%16500)/16500;
