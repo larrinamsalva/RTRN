@@ -585,7 +585,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <div class="app">
 <header class="topbar"><div class="branding"><div aria-hidden="true" class="logo">R</div><div><h1>RTRN Studio Control Room V6 · Solo & Two Person Fixed</h1><p>Roads to Recognition Network · original sets + four cozy lounges · solo and two-person shows · recording</p></div></div><div class="top-actions"><span class="pill"><span class="pulse"></span> Studio ready</span><button class="btn" id="popBtn" title="Open a clean stage in another window">↗ Pop-out output</button><button class="btn btn-primary" id="fullBtn">⛶ Fullscreen stage</button></div></header>
 <div class="layout">
-<aside class="panel sidebar"><details class="control-fold" id="sceneFold" open>
+<aside class="panel sidebar"><details class="control-fold" id="sceneFold">
 <summary class="fold-summary"><span aria-hidden="true" class="fold-icon">🎬</span><span class="fold-titleblock"><strong>01 / Pick a scene</strong><small id="sceneFoldCurrent">Recognition News Desk</small></span><span aria-hidden="true" class="fold-chevron">⌄</span></summary>
 <div class="fold-body"><div class="panel-pad"><p class="fold-help">Choose a studio or holiday set, or add your own image background below. This list stays open until you close it.</p><div class="scenes" id="sceneList"></div>
 <div class="rtrn-add-scenes">
@@ -756,7 +756,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 </details>
 </section>
 <section aria-labelledby="rtrnPhotoTab" class="panel workspace-area" data-area="photos" hidden="" id="rtrnPhotoArea" role="tabpanel"><div class="rtrn-v38-sectiontag">🖼️ PHOTOS ONLY — Library, wall picture frames, slideshows &amp; videos</div>
-<details class="control-fold" id="wallFramesFold" open="">
+<details class="control-fold" id="wallFramesFold">
 <summary class="fold-summary"><span aria-hidden="true" class="fold-icon">🖼️</span><span class="fold-titleblock"><strong>Photo &amp; Video Frames on Studio Walls</strong><small>Original sets and all 4 cozy lounges · choose photo, slideshow or video</small></span><span aria-hidden="true" class="fold-chevron">⌄</span></summary>
 <div class="fold-body"><div class="panel-pad">
 <details class="rtrn-photo-library-fold" id="photoSavedFold">
@@ -1583,8 +1583,8 @@ render();setInterval(()=>{const t=el('clockText');if(t)t.textContent=`${state.li
  const sceneCurrent=document.getElementById('sceneFoldCurrent');
  const audienceCurrent=document.getElementById('audienceFoldCurrent');
  // Both controls start minimized and operate independently.
- sceneFold.open=true;
- audienceFold.open=true;
+ sceneFold.open=false;
+ audienceFold.open=false;
  sceneList.addEventListener('click',function(e){
    const chosen=e.target.closest('.scene-btn');
    if(!chosen)return;
@@ -1629,7 +1629,7 @@ render();setInterval(()=>{const t=el('clockText');if(t)t.textContent=`${state.li
   backup:['💾 Backup & Restore','Export or import your saved collection, without the music player or photo editor.'],
   broadcast:['🎛️ Broadcast Controls','Camera, headlines, animated city window, and live show setup.']
  };
- function choose(area){
+ function choose(area,openRequestedFold=true){
   if(!allowed.has(area))area='music';
   window.rtrnActiveArea=area;
   areas.forEach(panel=>{
@@ -1649,7 +1649,7 @@ render();setInterval(()=>{const t=el('clockText');if(t)t.textContent=`${state.li
   document.getElementById('rtrnActiveHeading').textContent=headers[area][0];
   document.getElementById('rtrnActiveDescription').textContent=headers[area][1];
   const folds={music:'mediaLibraryFold',photos:'wallFramesFold',backup:'mediaBackupFold'};
-  if(folds[area])document.getElementById(folds[area]).open=true;
+  if(openRequestedFold && folds[area])document.getElementById(folds[area]).open=true;
   try{localStorage.setItem('rtrn-v38-work-area',area)}catch(e){}
  }
  window.rtrnShowArea=choose;
@@ -1663,7 +1663,7 @@ render();setInterval(()=>{const t=el('clockText');if(t)t.textContent=`${state.li
   next.focus();choose(next.dataset.rtrnArea);
  });
  let saved='music';try{saved=localStorage.getItem('rtrn-v38-work-area')||'music'}catch(e){}
- choose(saved);
+ choose(saved,false);
 })();
 </script>
 <script>

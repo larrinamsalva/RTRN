@@ -14,6 +14,12 @@ try {
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);
   await page.locator('#rtrnRecordQuick').waitFor({state:'visible'});
+  assert.equal(await page.locator('details[open]').count(),0,'All expandable sections start closed on mobile');
+  const sceneSummary = page.locator('#sceneFold > summary');
+  await sceneSummary.tap();
+  assert.equal(await page.locator('#sceneFold').evaluate(el=>el.open),true,'Tapping the scene arrow opens the section');
+  await sceneSummary.tap();
+  assert.equal(await page.locator('#sceneFold').evaluate(el=>el.open),false,'Tapping again closes the section');
   const dock = page.locator('#mobileDock');
   const targets = [['photos','#rtrnPhotoArea'],['library','#rtrnMusicArea'],['reactions','#audienceFold'],['scenes','#sceneFold'],['settings','#rtrnBroadcastArea'],['stage','.stage-panel']];
   for(const [target,selector] of targets){
@@ -37,10 +43,17 @@ try {
   await mobile.close();
   const desktop = await browser.newPage({viewport:{width:1440,height:900}});
   await desktop.goto(url);
+  assert.equal(await desktop.locator('details[open]').count(),0,'All expandable sections start closed on desktop');
   await desktop.locator('#rtrnPhotoTab').click();
   assert(await desktop.locator('#rtrnPhotoArea').isVisible());
   await desktop.locator('#rtrnMusicTab').click();
   assert(await desktop.locator('#rtrnMusicArea').isVisible());
+  await desktop.reload();
+  assert.equal(await desktop.locator('details[open]').count(),0,'Remembered workspaces still start collapsed after reload');
+  await desktop.locator('#mediaLibraryFold > summary').click();
+  assert.equal(await desktop.locator('#mediaLibraryFold').evaluate(el=>el.open),true);
+  await desktop.locator('#mediaLibraryFold > summary').click();
+  assert.equal(await desktop.locator('#mediaLibraryFold').evaluate(el=>el.open),false);
   assert(await desktop.locator('#rtrnRecordQuick').isVisible());
   console.log('Desktop workspace navigation passed.');
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
