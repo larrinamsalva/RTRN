@@ -2541,12 +2541,15 @@ refresh();
   let secondStream = null, secondFileURL = '', secondLoop = 0, tributeURL = '';
   const isOutdoor = () => ['beach','mountain'].includes(state.scene);
   const isCozy = () => /^cozy-[1-4]$/.test(state.scene)||isOutdoor();
-  const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||isCozy();
+  const isWindowScene = () => /^window-(washers|grandma|robber|sunset|weather)$/.test(state.scene);
+  const hasSceneSeats = () => isCozy()||isWindowScene();
+  const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
     'cozy-1':{oneX:34,oneY:50,oneSize:32,twoX:56,twoY:27,twoSize:27},
     'cozy-2':{oneX:11,oneY:44,oneSize:27,twoX:62,twoY:44,twoSize:27},
     'cozy-3':{oneX:9,oneY:39,oneSize:30,twoX:61,twoY:39,twoSize:30},
     'cozy-4':{oneX:8,oneY:39,oneSize:18,twoX:30, twoY:39,twoSize:18},
+    ...Object.fromEntries(['window-washers','window-grandma','window-robber','window-sunset','window-weather'].map(id=>[id,{oneX:10,oneY:29,oneSize:27,twoX:43,twoY:29,twoSize:27}])),
     beach:{oneX:15,oneY:32,oneSize:20,twoX:65,twoY:32,twoSize:20},
     mountain:{oneX:15,oneY:32,oneSize:20,twoX:65,twoY:32,twoSize:20}
   };
@@ -2563,7 +2566,7 @@ refresh();
   }catch(_) {
     cozySaved['cozy-4']={...(cozySaved['cozy-4']||{}),oneSize:17,twoSize:17,oneY:32,twoY:32};
   }
-  const sceneSeatConf=()=>isCozy()?{...conf,...cozyPresets[state.scene],...(cozySaved[state.scene]||{})}:conf;
+  const sceneSeatConf=()=>hasSceneSeats()?{...conf,...cozyPresets[state.scene],...(cozySaved[state.scene]||{})}:conf;
   const saveCozy=()=>{try{localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved))}catch(_){}};
   
   const sourceReady = () => !!secondStream || !!secondFileURL;
@@ -2646,7 +2649,7 @@ refresh();
     if(layout==='duo')Object.assign(conf,{oneX:23,oneY:22,oneSize:36,twoX:50,twoY:22,twoSize:34});
     save();syncControls();paintHostLayers();
   }
-  window.RTRNChooseSceneSeats=id=>{if(['cozy-2','cozy-3','cozy-4','beach','mountain'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
+  window.RTRNChooseSceneSeats=id=>{if(['cozy-2','cozy-3','cozy-4','beach','mountain','window-washers','window-grandma','window-robber','window-sunset','window-weather'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
   $('rtrnLayout').addEventListener('change',e=>chooseLayout(e.target.value));
   $('rtrnSoloQuick').addEventListener('click',()=>chooseLayout('solo'));
   $('rtrnDuoQuick').addEventListener('click',()=>chooseLayout('duo'));
@@ -2667,13 +2670,13 @@ refresh();
   for(const key of controlled){
     $('rtrn'+key[0].toUpperCase()+key.slice(1)).addEventListener('input',e=>{
       const value=e.target.type==='range'?Number(e.target.value):e.target.value;
-      if(isCozy()&&/^(one|two)/.test(key)){(cozySaved[state.scene]??={})[key]=value;saveCozy()} else {conf[key]=value;save()}
+      if(hasSceneSeats()&&/^(one|two)/.test(key)){(cozySaved[state.scene]??={})[key]=value;saveCozy()} else {conf[key]=value;save()}
       paintHostLayers();
     });
   }
   $('rtrnShowTribute').addEventListener('change',e=>{conf.showTribute=e.target.checked;save();paintHostLayers()});
   $('rtrnResetPositions').addEventListener('click',()=>{
-    if(isCozy()){delete cozySaved[state.scene];saveCozy()}
+    if(hasSceneSeats()){delete cozySaved[state.scene];saveCozy()}
     Object.assign(conf,{oneX:initial.oneX,oneY:initial.oneY,oneSize:initial.oneSize,
       twoX:initial.twoX,twoY:initial.twoY,twoSize:initial.twoSize});
     if(conf.layout==='together')Object.assign(conf,{oneX:13,oneY:15,oneSize:73});
