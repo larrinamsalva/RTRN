@@ -39,6 +39,27 @@ try {
     if(target==='stage')assert(await page.locator('#rtrnRecordQuick').isVisible(),'record shortcut is accessible');
     console.log('Mobile navigation passed:',target);
   }
+  const startRecord=page.locator('#rtrnRecordQuick'),stopRecord=page.locator('#rtrnStopRecordQuick');
+  assert(await startRecord.isEnabled());
+  assert(await stopRecord.isDisabled());
+  assert(await stopRecord.isVisible());
+  const positions=await page.evaluate(()=>{const a=document.getElementById('stage').getBoundingClientRect(),b=document.getElementById('rtrnRecordQuick').getBoundingClientRect(),c=document.getElementById('rtrnStopRecordQuick').getBoundingClientRect();return {gap:b.top-a.bottom,aligned:Math.abs(b.top-c.top)<2};});
+  assert(positions.gap>=0 && positions.gap<160 && positions.aligned,'Recording buttons sit side by side directly below the stage');
+  await page.locator('#rtrnSilentRecording').evaluate(el=>el.checked=true);
+  for(let i=0;i<2;i++){
+    await startRecord.tap();
+    await page.waitForFunction(()=>!document.getElementById('rtrnStopRecordQuick').disabled,{},{timeout:15000});
+    assert(await startRecord.isDisabled());
+    assert(await page.locator('#rtrnRecordStop').isEnabled());
+    await page.waitForTimeout(1200);
+    const download=page.waitForEvent('download',{timeout:20000});
+    await stopRecord.tap();
+    const file=await download;
+    assert.match(file.suggestedFilename(),/RTRN-finished-show-/);
+    await page.waitForFunction(()=>!document.getElementById('rtrnRecordQuick').disabled,{},{timeout:15000});
+    assert(await stopRecord.isDisabled());
+    assert(await page.locator('#rtrnRecordStop').isDisabled());
+  }
   assert.deepEqual(errors,[],'No uncaught browser errors');
   await mobile.close();
   const desktop = await browser.newPage({viewport:{width:1440,height:900}});
@@ -55,6 +76,8 @@ try {
   await desktop.locator('#mediaLibraryFold > summary').click();
   assert.equal(await desktop.locator('#mediaLibraryFold').evaluate(el=>el.open),false);
   assert(await desktop.locator('#rtrnRecordQuick').isVisible());
+  assert(await desktop.locator('#rtrnStopRecordQuick').isVisible());
+  assert(await desktop.locator('#rtrnStopRecordQuick').isDisabled());
   await desktop.locator('#sceneFold > summary').click();
   const ids=await desktop.locator('#sceneList [data-scene]').evaluateAll(nodes=>nodes.map(n=>n.dataset.scene));
   assert.equal(ids.filter(id=>id.startsWith('holiday-')).length,0);
