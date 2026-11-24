@@ -101,7 +101,7 @@ try {
     await desktop.locator('#rtrnSoloQuick').click();
     assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
   }
-  for(const [id,count] of [['cozy-1',1],['cozy-2',2],['cozy-3',2],['cozy-4',4],['beach',2],['mountain',2],['original-podcast',1],['original-live',1],['news',0]]){
+  for(const [id,count] of [['cozy-1',1],['cozy-2',2],['cozy-3',2],['cozy-4',4],['beach',2],['mountain',2],['original-podcast',1],['original-live',1],['news',2]]){
     await desktop.locator('[data-scene="'+id+'"]').click();
     await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2);
     if(count){await desktop.waitForFunction(n=>['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].filter(id=>{const e=document.getElementById(id);return !e.hidden&&getComputedStyle(e).display!=='none'}).length===n,count);}
@@ -111,6 +111,27 @@ try {
   assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
   assert(!(await desktop.locator('#rtrnSeatPlaceholder3').isVisible()));
   await desktop.locator('#rtrnDuoQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder4').isVisible());
+  for(const n of [3,4]){
+    assert.equal(await desktop.locator('#rtrnSeatPlaceholder'+n+' video').count(),1,'Every seat has a video element');
+    assert.match(await desktop.locator('#rtrnSeatPlaceholder'+n).innerText(),/GUEST.*VIDEO/);
+  }
+  await desktop.context().grantPermissions(['camera']);
+  await desktop.locator('#rtrnBroadcastTab').click();
+  for(const n of [3,4]){
+    await desktop.locator('#rtrnSeatRefresh'+n).click();
+    await desktop.waitForFunction(n=>document.getElementById('rtrnSeatCamera'+n).options.length>1,n);
+    await desktop.locator('#rtrnSeatCamera'+n).selectOption({index:1});
+    await desktop.locator('#rtrnSeatStart'+n).click();
+    await desktop.waitForFunction(n=>{const v=document.getElementById('rtrnSeatVideo'+n);return !v.hidden&&v.readyState>=2},n,{timeout:15000});
+    await desktop.locator('#rtrnSeatStop'+n).click();
+    assert(await desktop.locator('#rtrnSeatVideo'+n).isHidden());
+  }
+  await desktop.locator('#rtrnSoloQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder3').isHidden());
+  assert(await desktop.locator('#rtrnSeatPlaceholder4').isHidden());
+  await desktop.locator('#rtrnDuoQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder3').isVisible());
   assert(await desktop.locator('#rtrnSeatPlaceholder4').isVisible());
   await desktop.locator('#rtrnPhotoTab').click();
   const upload=desktop.getByLabel('Upload Left desk / table photo',{exact:true});
