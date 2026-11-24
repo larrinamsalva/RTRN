@@ -17,7 +17,7 @@ const afterDarkAssets=Object.fromEntries(await Promise.all([
   ['purple-haze','sunset_cannabis_field_lounge.png'],
   ['midnight','midnight_lounge_cannabis_studio.png'],
   ['starry-patio','a_richly_detailed_hyper_realistic_highly_stylize.png'],
-  ['starry-firepit','a_highly_detailed_photorealistic_ultra_vibrant.png']
+  ['starry-firepit','moonlit_purple_gold_garden_lounge.png']
 ].map(async ([id,name])=>[id,{name,bytes:await readFile(new URL('../'+name,import.meta.url))}])));
 const server = createServer((req,res) => {
   const asset=Object.values(afterDarkAssets).find(a=>req.url==='/'+a.name);
