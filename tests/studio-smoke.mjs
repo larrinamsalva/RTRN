@@ -9,10 +9,13 @@ const mountainAssetName='golden_mountain_lake_lounge.png';
 const mountainAsset=await readFile(new URL('../'+mountainAssetName,import.meta.url));
 const porchAssetName='a_photorealistic_warmly_lit_countryside_front_por.png';
 const porchAsset=await readFile(new URL('../'+porchAssetName,import.meta.url));
+const gazeboAssetName='a_highly_detailed_photorealistic_cozy_garden_gaz.png';
+const gazeboAsset=await readFile(new URL('../'+gazeboAssetName,import.meta.url));
 const server = createServer((req,res) => {
   if(req.url==='/'+beachAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(beachAsset);return}
   if(req.url==='/'+mountainAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(mountainAsset);return}
   if(req.url==='/'+porchAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(porchAsset);return}
+  if(req.url==='/'+gazeboAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(gazeboAsset);return}
   res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(html)
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -84,7 +87,7 @@ try {
   await desktop.locator('#sceneFold > summary').click();
   const ids=await desktop.locator('#sceneList [data-scene]').evaluateAll(nodes=>nodes.map(n=>n.dataset.scene));
   assert.equal(ids.filter(id=>id.startsWith('holiday-')).length,0);
-  for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch'])assert(ids.includes(id),'Missing '+id);
+  for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch','gazebo'])assert(ids.includes(id),'Missing '+id);
   await desktop.locator('[data-scene="window-weather"]').click();
   await desktop.locator('#rtrnBroadcastTab').click();
   const before=await desktop.locator('#background').evaluate(el=>el.style.backgroundImage);
@@ -114,6 +117,17 @@ try {
   const porchThumb=desktop.locator('[data-scene="porch"] img');
   await desktop.waitForFunction(()=>{const img=document.querySelector('[data-scene="porch"] img');return img?.complete&&img.naturalWidth>=1200&&img.naturalHeight>=650});
   assert((await porchThumb.getAttribute('src')).endsWith(porchAssetName));
+  await desktop.waitForFunction(()=>{const img=document.querySelector('[data-scene="gazebo"] img');return img?.complete&&img.naturalWidth>=1200&&img.naturalHeight>=650});
+  await desktop.locator('[data-scene="gazebo"]').click();
+  await desktop.locator('#rtrnSeatPlaceholder3').waitFor({state:'visible'});
+  assert(await desktop.locator('#cameraBox').isVisible());
+  assert(await desktop.locator('#rtrnSecondBox').isVisible());
+  assert(await desktop.locator('#rtrnSeatPlaceholder4').isHidden());
+  assert(await desktop.locator('#rtrnSeatPlaceholder5').isHidden());
+  await desktop.locator('#rtrnSoloQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder3').isHidden());
+  await desktop.locator('#rtrnDuoQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder3').isVisible());
   for(const id of ['beach','mountain','porch']){
     await desktop.locator('[data-scene="'+id+'"]').click();
     await desktop.locator('#rtrnDuoQuick').click();
@@ -121,7 +135,7 @@ try {
     await desktop.locator('#rtrnSoloQuick').click();
     assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
   }
-  for(const [id,count] of [['cozy-1',1],['cozy-2',2],['cozy-3',2],['cozy-4',4],['beach',2],['mountain',2],['porch',2],['original-podcast',1],['original-live',1],['news',2]]){
+  for(const [id,count] of [['cozy-1',1],['cozy-2',2],['cozy-3',2],['cozy-4',4],['beach',2],['mountain',2],['porch',2],['gazebo',3],['original-podcast',1],['original-live',1],['news',2]]){
     await desktop.locator('[data-scene="'+id+'"]').click();
     await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2);
     if(count){await desktop.waitForFunction(n=>['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].filter(id=>{const e=document.getElementById(id);return !e.hidden&&getComputedStyle(e).display!=='none'}).length===n,count);}
