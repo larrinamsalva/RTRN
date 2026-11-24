@@ -5,8 +5,11 @@ import { readFile } from 'node:fs/promises';
 const html = await readFile(new URL('../index.html', import.meta.url));
 const beachAssetName='a_crisp_sunlit_photorealistic_beach_lounge_scene.png';
 const beachAsset=await readFile(new URL('../'+beachAssetName,import.meta.url));
+const mountainAssetName='golden_mountain_lake_lounge.png';
+const mountainAsset=await readFile(new URL('../'+mountainAssetName,import.meta.url));
 const server = createServer((req,res) => {
   if(req.url==='/'+beachAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(beachAsset);return}
+  if(req.url==='/'+mountainAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(mountainAsset);return}
   res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(html)
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -102,6 +105,9 @@ try {
   const beachThumb=desktop.locator('[data-scene="beach"] img');
   await desktop.waitForFunction(()=>{const img=document.querySelector('[data-scene="beach"] img');return img?.complete&&img.naturalWidth>=1200&&img.naturalHeight>=650});
   assert((await beachThumb.getAttribute('src')).endsWith(beachAssetName));
+  const mountainThumb=desktop.locator('[data-scene="mountain"] img');
+  await desktop.waitForFunction(()=>{const img=document.querySelector('[data-scene="mountain"] img');return img?.complete&&img.naturalWidth>=1200&&img.naturalHeight>=650});
+  assert((await mountainThumb.getAttribute('src')).endsWith(mountainAssetName));
   for(const id of ['beach','mountain']){
     await desktop.locator('[data-scene="'+id+'"]').click();
     await desktop.locator('#rtrnDuoQuick').click();
