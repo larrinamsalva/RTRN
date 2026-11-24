@@ -538,14 +538,16 @@ body.output-mode .rtrn-cozy-seat:not([hidden]){display:flex!important}
 /* Single-seat Fireside and both original purple-and-green desk studios show one host video seat regardless of saved duo mode. */
 .stage.rtrn-single-host-scene #rtrnSecondBox,
 .stage.rtrn-single-host-scene #rtrnSeatPlaceholder3,
-.stage.rtrn-single-host-scene #rtrnSeatPlaceholder4 {display:none!important}
+.stage.rtrn-single-host-scene #rtrnSeatPlaceholder4,
+.stage.rtrn-single-host-scene #rtrnSeatPlaceholder5 {display:none!important}
 </style>
 <style id="rtrnSoloDuoSeatVisibilityFix">
 /* Solo (and Together single-camera) never display a second video box, even
    on two-chair / sofa backgrounds or in the pop-out broadcast stage. */
 .stage.rtrn-solo-mode #rtrnSecondBox,
 .stage.rtrn-solo-mode #rtrnSeatPlaceholder3,
-.stage.rtrn-solo-mode #rtrnSeatPlaceholder4 {display:none!important}
+.stage.rtrn-solo-mode #rtrnSeatPlaceholder4,
+.stage.rtrn-solo-mode #rtrnSeatPlaceholder5 {display:none!important}
 /* Solo only: reduce the host video box without changing guest layouts or other studio controls. */
 .stage.rtrn-solo-video-smaller #cameraBox { transform: scale(.78); transform-origin: center center; }
 </style>
@@ -604,7 +606,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <div class="panel stage-panel"><div class="stage-top"><h2>◉ Program preview</h2><span>16:9 virtual broadcast canvas</span></div><div class="stage-shell"><div aria-label="Live studio scene preview" class="stage" id="stage"><div class="bg-image" id="background"></div><div aria-label="Uploaded photos placed within existing picture frames" class="frame-portraits" id="framePortraits"></div><div aria-label="Desk and end table photos" class="frame-portraits" id="tablePortraits"></div><div aria-hidden="true" class="holiday-decor" hidden="" id="holidayDecor"><div class="holiday-top-trim" id="holidayTopTrim"></div><div class="holiday-sparkles" id="holidaySparkles"></div><div class="holiday-edge holiday-edge-left" id="holidayLeft"></div><div class="holiday-feature holiday-feature-left" id="holidayFeatureLeft"></div><div class="holiday-plaque" id="holidayPlaque"><span id="holidayIcon"></span><strong id="holidayName"></strong><small id="holidaySubtitle"></small></div><div class="holiday-feature holiday-feature-right" id="holidayFeatureRight"></div><div class="holiday-edge holiday-edge-right" id="holidayRight"></div><div class="holiday-bottom-trim" id="holidayBottomTrim"></div></div><div aria-hidden="true" class="birds" id="birds"><div class="bird"><span class="bird-facing">🕊️</span></div><div class="bird"><span class="bird-facing">🐦</span></div><div class="bird"><span class="bird-facing">🕊️</span></div></div><div aria-hidden="true" class="music-bars" id="musicBars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div aria-hidden="true" class="city-window" data-scene="news" id="cityWindow"><div class="traffic" id="traffic"><span class="street-actor car">🚙</span><span class="street-actor bike">🚴</span><span class="street-actor walk">🚶‍♀️</span><span class="street-actor wave">👋🤪</span><span class="street-actor car2">🚕</span><span class="street-actor pigeon">🐦</span></div></div><div aria-live="off" class="comedy-pop" id="comedyPop"><span class="gag-emoji" id="gagEmoji">🛒</span><div><div class="gag-caption" id="gagCaption">Shopping Cart Steve</div><small>MEANWHILE, OUTSIDE… · FICTIONAL</small></div></div><div aria-live="polite" class="reaction-visual" id="reactionVisual"></div><div aria-live="polite" class="news-flash" id="newsFlash"><b>🚨 RTRN COMEDY BULLETIN · FICTIONAL</b><strong id="newsFlashTitle">PIGEON PATROL DEMANDS BREADCRUMBS!</strong><small>FOR FUN ONLY · NOT ACTUAL NEWS</small></div><div class="stage-topline"><div class="network-mark" id="networkMark"><div><div class="mark">RTRN <span style="font-size:.67em">✦</span></div><div class="network-name">ROADS TO RECOGNITION NETWORK</div></div></div><div class="clock-bug"><span class="live-dot" id="liveDot"></span><span id="clockText">STUDIO • PREVIEW</span></div></div><div class="fiction" hidden="" id="fictionTag">FICTIONAL COMEDY SKETCH</div><div aria-hidden="true" class="guest-stage-set" id="guestStageSet"><div class="guest-scene-backdrop"></div><div class="guest-window-wall"></div><div class="guest-curtain left"></div><div class="guest-curtain right"></div><div class="guest-floor"></div><div class="guest-desk"><div class="guest-desk-top"></div><div class="guest-desk-front"></div></div><div class="guest-chair left"><div class="seat-back"></div><div class="chair-arm left"></div><div class="chair-arm right"></div><div class="seat-bottom"></div><div class="chair-leg a"></div><div class="chair-leg b"></div><div class="chair-leg c"></div><div class="chair-leg d"></div><div class="guest-seat-tag">Host</div></div><div class="guest-chair right"><div class="seat-back"></div><div class="chair-arm left"></div><div class="chair-arm right"></div><div class="seat-bottom"></div><div class="chair-leg a"></div><div class="chair-leg b"></div><div class="chair-leg c"></div><div class="chair-leg d"></div><div class="guest-photo-slot"><img alt="Guest portrait for the guest chair" hidden="" id="guestSeatPhoto"/><div class="guest-photo-placeholder" id="guestPhotoPlaceholder">Add a guest photo from the Photo Library to seat your guest here.</div></div><div class="guest-seat-tag" id="guestSeatTag">Guest</div></div><div class="guest-scene-note">Guest interview desk</div></div><div class="rtrn-tribute" hidden="" id="rtrnTribute"><img alt="Tribute portrait" id="rtrnTributeImage"/><span id="rtrnTributeCaption"></span></div>
 <div class="camera-box" id="cameraBox"><video autoplay="" id="cameraVideo" muted="" playsinline=""></video><canvas id="cameraCanvas"></canvas><div class="rtrn-camera-standby" id="rtrnHostSeatStandby"><span>🎥</span><strong>HOST CAMERA</strong><small>Press Start camera</small></div></div>
 <div class="camera-box" hidden="" id="rtrnSecondBox"><video autoplay="" id="rtrnSecondVideo" muted="" playsinline=""></video><canvas id="rtrnSecondCanvas"></canvas><div class="rtrn-camera-standby" id="rtrnSecondSeatStandby"><span>🎥</span><strong>SECOND PERSON</strong><small>Start second camera or select video</small></div></div>
-<div class="rtrn-cozy-seat" hidden="" id="rtrnSeatPlaceholder3"><video autoplay playsinline muted hidden id="rtrnSeatVideo3"></video><img alt="Guest 2 photo" hidden="" id="rtrnSeatPhoto3"/><span>🎥<small>GUEST 2 VIDEO</small></span></div><div class="rtrn-cozy-seat" hidden="" id="rtrnSeatPlaceholder4"><video autoplay playsinline muted hidden id="rtrnSeatVideo4"></video><img alt="Guest 3 photo" hidden="" id="rtrnSeatPhoto4"/><span>🎥<small>GUEST 3 VIDEO</small></span></div><div aria-hidden="true" class="rtrn-original-desk" id="rtrnOriginalDesk"></div>
+<div class="rtrn-cozy-seat" hidden="" id="rtrnSeatPlaceholder3"><video autoplay playsinline muted hidden id="rtrnSeatVideo3"></video><img alt="Guest 2 photo" hidden="" id="rtrnSeatPhoto3"/><span>🎥<small>GUEST 2 VIDEO</small></span></div><div class="rtrn-cozy-seat" hidden="" id="rtrnSeatPlaceholder4"><video autoplay playsinline muted hidden id="rtrnSeatVideo4"></video><img alt="Guest 3 photo" hidden="" id="rtrnSeatPhoto4"/><span>🎥<small>GUEST 3 VIDEO</small></span></div><div class="rtrn-cozy-seat" hidden id="rtrnSeatPlaceholder5"><video autoplay playsinline muted hidden id="rtrnSeatVideo5"></video><img alt="Guest 4 photo" hidden id="rtrnSeatPhoto5"/><span>🎥<small>GUEST 4 VIDEO</small></span></div><div aria-hidden="true" class="rtrn-original-desk" id="rtrnOriginalDesk"></div>
 <div class="stage-foot"><div class="lowerthird" id="lowerThird"><div class="eyebrow" id="segmentLabel">ROADS TO RECOGNITION · LIVE</div><div class="headline" id="headlinePreview">Real people. Real stories. Real impact.</div></div><div class="ticker" id="tickerBox"><span id="tickerText">KINDNESS • COMPASSION • COURAGE • COMMUNITY • EVERYDAY HEROES ✨</span></div></div></div></div><div class="rtrn-record-top" aria-label="Recording controls"><button class="btn btn-primary" id="rtrnRecordQuick" type="button">● Start recording</button><button class="btn btn-danger" id="rtrnStopRecordQuick" type="button" disabled>■ Stop &amp; save recording</button></div><div class="stage-row"><div class="scene-status" id="sceneStatus">Selected: <strong>Recognition News Desk</strong></div><div class="control-quick"><button class="btn" id="prompterButton">📝 Show Script / Plan</button></div><div aria-label="Show and recording controls" class="rtrn-quickbar">
 <button class="btn" id="rtrnSoloQuick" type="button">Solo</button>
 <button class="btn" id="rtrnDuoQuick" type="button">Guest seats</button><button class="btn" id="rtrnInviteQuick" type="button">📨 Invite guest</button>
@@ -807,7 +809,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <div class="control-block rtrn-host-controls">
 <h2 class="section-eyebrow">💜 Your live studio seats</h2>
 <p>Choose an Original Studio or one of the four Cozy Lounges. Your camera and guest video can sit naturally in the room while keeping the artwork visible.</p>
-<label for="rtrnLayout">Who is on camera?</label>
+<div id="rtrnCustomSeatTools" hidden><label for="rtrnCustomSeatCount">How many seats are in this custom scene?</label><select id="rtrnCustomSeatCount"><option value="1">1 · Host</option><option value="2">2 · Host + 1 guest</option><option value="3">3 · Host + 2 guests</option><option value="4">4 · Host + 3 guests</option><option value="5">5 · Host + 4 guests</option></select><p class="mini">Saved separately for each uploaded background. Adjust the positions to match the chairs.</p></div><label for="rtrnLayout">Who is on camera?</label>
 <select id="rtrnLayout"><option value="solo">Solo: Larrina</option><option value="together">Together: one camera shows both of you</option><option value="duo">Guest mode: one video box per seat</option></select>
 <p class="mini">On one phone, Together is the simplest live interview. Two sources uses a second camera if the browser supports it, or a video file.</p>
 <div class="rtrn-v6-inline"><strong>📨 Messenger guest invitations · hosted room</strong><p class="mini">Use the existing hosted guest-call test in another tab for two-phone calling. This locally opened studio cannot automatically import that remote video into its recording without the hosted connection.</p><div class="rtrn-action-grid"><button class="btn btn-green" id="rtrnOpenGuestTest" type="button">Open hosted guest room</button><button class="btn" id="rtrnCopyGuestTest" type="button">Copy guest-call link</button></div><p class="mini" id="rtrnGuestLinkStatus" role="status">Separate guest-call test, not embedded in this offline file.</p></div><div id="rtrnSecondTools">
@@ -823,7 +825,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <fieldset><legend>Larrina on screen</legend><label for="rtrnOneX">Left / right</label><input id="rtrnOneX" max="80" min="0" type="range" value="23"/><label for="rtrnOneY">Up / down</label><input id="rtrnOneY" max="58" min="4" type="range" value="22"/><label for="rtrnOneSize">Size</label><input id="rtrnOneSize" max="75" min="17" type="range" value="36"/></fieldset>
 <fieldset id="rtrnTwoPosition"><legend>Mikey on screen</legend><label for="rtrnTwoX">Left / right</label><input id="rtrnTwoX" max="80" min="0" type="range" value="50"/><label for="rtrnTwoY">Up / down</label><input id="rtrnTwoY" max="58" min="4" type="range" value="22"/><label for="rtrnTwoSize">Size</label><input id="rtrnTwoSize" max="65" min="17" type="range" value="34"/></fieldset>
 </div>
-<div class="rtrn-v6-inline" id="rtrnExtraGuestTools" hidden><strong>🛋️ Four-seat lounge · additional guest cameras</strong><p class="mini">Each chair accepts a local camera, a muted video clip or an optional photo. Live audio comes from the studio microphone. Remote calls still use the separate hosted guest room.</p><fieldset><legend>Guest 2 · seat 3</legend><label for="rtrnSeatCamera3">Camera source</label><select id="rtrnSeatCamera3"><option value="">Choose camera</option></select><div class="rtrn-action-grid"><button class="btn" id="rtrnSeatRefresh3" type="button">Refresh cameras</button><button class="btn btn-green" id="rtrnSeatStart3" type="button">Start camera</button><button class="btn" id="rtrnSeatStop3" type="button">Stop video</button></div><label for="rtrnSeatClip3">Or choose a video clip</label><input accept="video/*" id="rtrnSeatClip3" type="file"/><label for="rtrnSeatFile3">Optional guest photo</label><input accept="image/*" id="rtrnSeatFile3" type="file"/><p class="mini" id="rtrnSeatStatus3" role="status">Video off.</p></fieldset><fieldset><legend>Guest 3 · seat 4</legend><label for="rtrnSeatCamera4">Camera source</label><select id="rtrnSeatCamera4"><option value="">Choose camera</option></select><div class="rtrn-action-grid"><button class="btn" id="rtrnSeatRefresh4" type="button">Refresh cameras</button><button class="btn btn-green" id="rtrnSeatStart4" type="button">Start camera</button><button class="btn" id="rtrnSeatStop4" type="button">Stop video</button></div><label for="rtrnSeatClip4">Or choose a video clip</label><input accept="video/*" id="rtrnSeatClip4" type="file"/><label for="rtrnSeatFile4">Optional guest photo</label><input accept="image/*" id="rtrnSeatFile4" type="file"/><p class="mini" id="rtrnSeatStatus4" role="status">Video off.</p></fieldset><button class="btn" id="rtrnClearSeatPhotos" type="button">Clear both seat photos</button></div><button class="btn" id="rtrnResetPositions" type="button">Reset host positions</button>
+<div class="rtrn-v6-inline" id="rtrnExtraGuestTools" hidden><strong>🛋️ Additional guest cameras</strong><p class="mini">Each chair accepts a local camera, a muted video clip or an optional photo. Live audio comes from the studio microphone. Remote calls still use the separate hosted guest room.</p><fieldset id="rtrnGuestTools3"><legend>Guest 2 · seat 3</legend><label for="rtrnSeatCamera3">Camera source</label><select id="rtrnSeatCamera3"><option value="">Choose camera</option></select><div class="rtrn-action-grid"><button class="btn" id="rtrnSeatRefresh3" type="button">Refresh cameras</button><button class="btn btn-green" id="rtrnSeatStart3" type="button">Start camera</button><button class="btn" id="rtrnSeatStop3" type="button">Stop video</button></div><label for="rtrnSeatClip3">Or choose a video clip</label><input accept="video/*" id="rtrnSeatClip3" type="file"/><label for="rtrnSeatFile3">Optional guest photo</label><input accept="image/*" id="rtrnSeatFile3" type="file"/><p class="mini" id="rtrnSeatStatus3" role="status">Video off.</p><label for="rtrnSeatX3">Left / right</label><input type="range" id="rtrnSeatX3" min="0" max="95" value="55"><label for="rtrnSeatY3">Up / down</label><input type="range" id="rtrnSeatY3" min="4" max="70" value="32"><label for="rtrnSeatSize3">Video size</label><input type="range" id="rtrnSeatSize3" min="12" max="45" value="17"></fieldset><fieldset id="rtrnGuestTools4"><legend>Guest 3 · seat 4</legend><label for="rtrnSeatCamera4">Camera source</label><select id="rtrnSeatCamera4"><option value="">Choose camera</option></select><div class="rtrn-action-grid"><button class="btn" id="rtrnSeatRefresh4" type="button">Refresh cameras</button><button class="btn btn-green" id="rtrnSeatStart4" type="button">Start camera</button><button class="btn" id="rtrnSeatStop4" type="button">Stop video</button></div><label for="rtrnSeatClip4">Or choose a video clip</label><input accept="video/*" id="rtrnSeatClip4" type="file"/><label for="rtrnSeatFile4">Optional guest photo</label><input accept="image/*" id="rtrnSeatFile4" type="file"/><p class="mini" id="rtrnSeatStatus4" role="status">Video off.</p><label for="rtrnSeatX4">Left / right</label><input type="range" id="rtrnSeatX4" min="0" max="95" value="55"><label for="rtrnSeatY4">Up / down</label><input type="range" id="rtrnSeatY4" min="4" max="70" value="32"><label for="rtrnSeatSize4">Video size</label><input type="range" id="rtrnSeatSize4" min="12" max="45" value="17"></fieldset><fieldset id="rtrnGuestTools5"><legend>Guest 4 · seat 5</legend><label for="rtrnSeatCamera5">Camera source</label><select id="rtrnSeatCamera5"><option value="">Choose camera</option></select><div class="rtrn-action-grid"><button class="btn" id="rtrnSeatRefresh5" type="button">Refresh cameras</button><button class="btn btn-green" id="rtrnSeatStart5" type="button">Start camera</button><button class="btn" id="rtrnSeatStop5" type="button">Stop video</button></div><label for="rtrnSeatClip5">Or choose a video clip</label><input accept="video/*" id="rtrnSeatClip5" type="file"/><label for="rtrnSeatFile5">Optional guest photo</label><input accept="image/*" id="rtrnSeatFile5" type="file"/><p class="mini" id="rtrnSeatStatus5" role="status">Video off.</p><label for="rtrnSeatX5">Left / right</label><input type="range" id="rtrnSeatX5" min="0" max="95" value="55"><label for="rtrnSeatY5">Up / down</label><input type="range" id="rtrnSeatY5" min="4" max="70" value="32"><label for="rtrnSeatSize5">Video size</label><input type="range" id="rtrnSeatSize5" min="12" max="45" value="17"></fieldset><button class="btn" id="rtrnClearSeatPhotos" type="button">Clear extra seat photos</button></div><button class="btn" id="rtrnResetPositions" type="button">Reset host positions</button>
 <h3>Tribute photo</h3>
 <label for="rtrnTributeFile">Choose the person's photo</label><input accept="image/*" id="rtrnTributeFile" type="file"/>
 <label for="rtrnTributeName">Name for tribute card</label><input id="rtrnTributeName" maxlength="60" placeholder="Name or short dedication" type="text"/>
@@ -2544,7 +2546,8 @@ refresh();
   const isOutdoor = () => ['beach','mountain'].includes(state.scene);
   const isCozy = () => /^cozy-[1-4]$/.test(state.scene)||isOutdoor();
   const isWindowScene = () => /^window-(washers|grandma|robber|sunset|weather)$/.test(state.scene);
-  const hasSceneSeats = () => isCozy()||isWindowScene()||state.scene==='news';
+  const isCustom = () => state.scene.startsWith('custom-scene-');
+  const hasSceneSeats = () => isCozy()||isWindowScene()||state.scene==='news'||isCustom();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
     'cozy-1':{oneX:34,oneY:50,oneSize:32,twoX:56,twoY:27,twoSize:27},
@@ -2568,15 +2571,20 @@ refresh();
   }catch(_) {
     cozySaved['cozy-4']={...(cozySaved['cozy-4']||{}),oneSize:17,twoSize:17,oneY:32,twoY:32};
   }
-  const sceneSeatConf=()=>hasSceneSeats()?{...conf,...cozyPresets[state.scene],...(cozySaved[state.scene]||{})}:conf;
+  const seatCount=()=>isCustom()?Math.max(1,Math.min(5,Number(cozySaved[state.scene]?.count)||1)):state.scene==='cozy-4'?4:['cozy-1','original-podcast','original-live'].includes(state.scene)?1:hasSceneSeats()?2:1;
+  const customSeat=(n)=>{const count=seatCount(),width=Math.min(32,Math.floor(84/count));return {x:Math.round((100/count)*(n-.5)-width/2),y:32,size:width}};
+  const sceneSeatConf=()=>hasSceneSeats()?{...conf,...(isCustom()?{oneX:customSeat(1).x,oneY:32,oneSize:customSeat(1).size,twoX:customSeat(2).x,twoY:32,twoSize:customSeat(2).size}:cozyPresets[state.scene]),...(cozySaved[state.scene]||{})}:conf;
+  window.RTRNSeatCount=seatCount;
+  window.RTRNExtraSeatPosition=n=>{const base=isCustom()?customSeat(n):{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
+  window.RTRNSetExtraSeatPosition=(n,key,value)=>{const saved=cozySaved[state.scene]??={};(saved['seat'+n]??={})[key]=Number(value);saveCozy()};
   const saveCozy=()=>{try{localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved))}catch(_){}};
   
   const sourceReady = () => !!secondStream || !!secondFileURL;
   const inRange = (v,lo,hi) => Math.min(hi,Math.max(lo,Number(v)||0));
   function setBox(box,x,y,size,cutout) {
-    const width = inRange(size,state.scene==='cozy-4'?17:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
+    const width = inRange(size,isCustom()?12:state.scene==='cozy-4'?17:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
     box.style.left=left+'%';box.style.top=top+'%';box.style.width=width+'%';
-    box.style.height=(state.scene==='cozy-4'?32:(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
+    box.style.height=(isCustom()&&seatCount()>=3?Math.min(32,91-top):state.scene==='cozy-4'?32:(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
     box.classList.toggle('cutout',cutout);
     box.style.borderRadius=cutout?'0':'16px';
     box.style.borderWidth=cutout?'0':'3px';
@@ -2588,19 +2596,23 @@ refresh();
     stage.classList.toggle('rtrn-original',original);
     stage.classList.toggle('rtrn-solo-mode',conf.layout!=='duo');
     stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo');
-    stage.classList.toggle('rtrn-single-host-scene',['cozy-1','original-podcast','original-live'].includes(state.scene));
+    stage.classList.toggle('rtrn-single-host-scene',seatCount()===1);
     desk.style.backgroundImage=original?`url("${ART[(SCENES.find(s=>s.id===state.scene)||{}).img]}")`:'';
-    desk.style.clipPath=isOutdoor()?'polygon(0 100%,100% 100%,100% 100%,0 100%)':state.scene==='original-live'
+    desk.style.clipPath=(isOutdoor()||isCustom())?'polygon(0 100%,100% 100%,100% 100%,0 100%)':state.scene==='original-live'
       ?'polygon(0 65%,100% 65%,100% 100%,0 100%)'
       :(isCozy()?'polygon(0 72%,100% 72%,100% 100%,0 100%)':'polygon(0 69%,100% 69%,100% 100%,0 100%)');
     // Both original purple-and-green desk sets have one host position only.
     // Cozy Lounge 1 also has one host; the other cozy lounges retain both cameras.
-    const singleHostScene = ['cozy-1','original-podcast','original-live'].includes(state.scene);
+    const singleHostScene = seatCount()===1;
     // The layout buttons own guest visibility. A two-chair background must
     // NOT automatically show a second video box when the user selects Solo.
     const twoSeatMode = !singleHostScene && conf.layout==='duo';
-    $('rtrnDuoQuick').textContent=state.scene==='cozy-4'?'Four people':'Two people';
-    $('rtrnExtraGuestTools').hidden=!(state.scene==='cozy-4'&&twoSeatMode);
+    const count=seatCount();
+    $('rtrnDuoQuick').textContent=({3:'Three people',4:'Four people',5:'Five people'})[count]||'Two people';
+    $('rtrnCustomSeatTools').hidden=!isCustom();$('rtrnCustomSeatCount').value=String(count);
+    $('rtrnExtraGuestTools').hidden=!(count>=3&&twoSeatMode);
+    for(const n of [3,4,5])$('rtrnGuestTools'+n).hidden=!(twoSeatMode&&n<=count);
+    $('rtrnDuoQuick').disabled=singleHostScene;
     $('rtrnSecondTools').hidden=!twoSeatMode;
     $('rtrnTwoPosition').hidden=!twoSeatMode;
     $('rtrnLayout').value=conf.layout;
@@ -2653,8 +2665,9 @@ refresh();
     if(layout==='duo')Object.assign(conf,{oneX:23,oneY:22,oneSize:36,twoX:50,twoY:22,twoSize:34});
     save();syncControls();paintHostLayers();
   }
-  window.RTRNChooseSceneSeats=id=>{if(['cozy-2','cozy-3','cozy-4','beach','mountain','news','window-washers','window-grandma','window-robber','window-sunset','window-weather'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
+  window.RTRNChooseSceneSeats=id=>{if(id.startsWith('custom-scene-')){chooseLayout(seatCount()>1?'duo':'solo');return}if(['cozy-2','cozy-3','cozy-4','beach','mountain','news','window-washers','window-grandma','window-robber','window-sunset','window-weather'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
   $('rtrnLayout').addEventListener('change',e=>chooseLayout(e.target.value));
+  $('rtrnCustomSeatCount').addEventListener('change',e=>{if(!isCustom())return;const count=Number(e.target.value);cozySaved[state.scene]={count};saveCozy();chooseLayout(count>1?'duo':'solo');window.RTRNDrawExtraSeats?.()});
   $('rtrnSoloQuick').addEventListener('click',()=>chooseLayout('solo'));
   $('rtrnDuoQuick').addEventListener('click',()=>chooseLayout('duo'));
   $('rtrnPodcastQuick').addEventListener('click',()=>pickScene('original-podcast'));
@@ -2680,7 +2693,7 @@ refresh();
   }
   $('rtrnShowTribute').addEventListener('change',e=>{conf.showTribute=e.target.checked;save();paintHostLayers()});
   $('rtrnResetPositions').addEventListener('click',()=>{
-    if(hasSceneSeats()){delete cozySaved[state.scene];saveCozy()}
+    if(hasSceneSeats()){const count=seatCount();delete cozySaved[state.scene];if(isCustom())cozySaved[state.scene]={count};saveCozy();window.RTRNDrawExtraSeats?.()}
     Object.assign(conf,{oneX:initial.oneX,oneY:initial.oneY,oneSize:initial.oneSize,
       twoX:initial.twoX,twoY:initial.twoY,twoSize:initial.twoSize});
     if(conf.layout==='together')Object.assign(conf,{oneX:13,oneY:15,oneSize:73});
@@ -2847,7 +2860,7 @@ refresh();
     if(isOriginal() && !secondBox.hidden && conf.layout==='duo')
       drawHost(secondBox,secondVideo,secondCanvas,!!secondStream);
     // A second pass of the untouched original photograph puts the real desk in front of the hosts.
-    if(isOriginal()&&bg&&!isCozy()){
+    if(isOriginal()&&bg&&!isCozy()&&!isCustom()){
       ctx.save();ctx.beginPath();ctx.rect(0,(state.scene==='original-live'?.65:isCozy()?.72:.69)*720,1280,720);
       ctx.clip();drawCover(bg,0,0,1280,720);ctx.restore();
     }
@@ -2862,8 +2875,8 @@ refresh();
       for(let i=0;i<3;i++){const x=((now+i*.31)%1)*1400-80,y=170+i*67+Math.sin(now*18+i)*22;
         ctx.font='55px system-ui,sans-serif';ctx.fillText('🕊️',x,y);}
     }
-    if(state.scene==='cozy-4'){
-      for(const id of ['rtrnSeatPlaceholder3','rtrnSeatPlaceholder4']){
+    if(seatCount()>=3){
+      for(const id of ['rtrnSeatPlaceholder3','rtrnSeatPlaceholder4','rtrnSeatPlaceholder5']){
         const wrap=$(id),pic=wrap?.querySelector('img'),video=wrap?.querySelector('video');if(!wrap||wrap.hidden)continue;
         const b=relativeBox(wrap);ctx.fillStyle='#352648';ctx.fillRect(b.x,b.y,b.w,b.h);
         if(video&&!video.hidden&&video.readyState>=2)drawCover(video,b.x,b.y,b.w,b.h);
@@ -3067,8 +3080,8 @@ refresh();
  $('rtrnOpenGuestTest')?.addEventListener('click',()=>window.open(guestTestUrl,'_blank','noopener,noreferrer'));
  $('rtrnCopyGuestTest')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(guestTestUrl);notice('rtrnGuestLinkStatus','Copied guest-call test link. Paste it into Messenger.')}catch(e){notice('rtrnGuestLinkStatus','Copy this guest-call test URL: '+guestTestUrl)}});
  const scene=$('sceneStatus'),stage=$('stage');
- const seats=[3,4].map((n,i)=>({n,wrap:$('rtrnSeatPlaceholder'+n),img:$('rtrnSeatPhoto'+n),video:$('rtrnSeatVideo'+n),file:$('rtrnSeatFile'+n),select:$('rtrnSeatCamera'+n),clip:$('rtrnSeatClip'+n),stream:null,url:'',generation:0,css:{left:i?'77%':'55%',top:'32%',width:'17%',height:'32%'}}));
- const active=()=>state.scene==='cozy-4'&&$('rtrnLayout').value==='duo';
+ const seats=[3,4,5].map((n,i)=>({n,wrap:$('rtrnSeatPlaceholder'+n),img:$('rtrnSeatPhoto'+n),video:$('rtrnSeatVideo'+n),file:$('rtrnSeatFile'+n),select:$('rtrnSeatCamera'+n),clip:$('rtrnSeatClip'+n),stream:null,url:'',generation:0,css:{left:i?'77%':'55%',top:'32%',width:'17%',height:'32%'}}));
+ const active=item=>window.RTRNSeatCount()>=item.n&&$('rtrnLayout').value==='duo';
  function seatStatus(item,message){$('rtrnSeatStatus'+item.n).textContent=message}
  function updateSeat(item){
    item.video.hidden=!(item.stream||item.url);
@@ -3092,33 +3105,37 @@ refresh();
    }catch(err){seatStatus(item,'Cannot list cameras: '+err.message)}
  }
  async function startSeat(item){
-   if(!active())return;
+   if(!active(item))return;
    if(!item.select.value){seatStatus(item,'Refresh and select a camera first.');return}
    stopSeat(item);const generation=item.generation;
    try{
      const source=await navigator.mediaDevices.getUserMedia({video:{deviceId:{exact:item.select.value},width:{ideal:640},height:{ideal:480}},audio:false});
-     if(!active()||generation!==item.generation){source.getTracks().forEach(t=>t.stop());return}
+     if(!active(item)||generation!==item.generation){source.getTracks().forEach(t=>t.stop());return}
      item.stream=source;item.video.srcObject=source;updateSeat(item);
      await item.video.play();if(generation===item.generation)seatStatus(item,'Guest camera live.');
    }catch(err){if(generation===item.generation){stopSeat(item);seatStatus(item,'Camera unavailable: '+err.message)}}
  }
  function drawSeats(){
    for(const item of seats){
-     item.wrap.hidden=!active();Object.assign(item.wrap.style,item.css);
-     if(!active()&&(item.stream||item.url))stopSeat(item);
+     const pos=window.RTRNExtraSeatPosition(item.n),size=Math.min(45,Math.max(12,pos.size));
+      item.wrap.hidden=!active(item);Object.assign(item.wrap.style,{left:Math.min(100-size,pos.x)+'%',top:pos.y+'%',width:size+'%',height:Math.min(32,94-pos.y)+'%'});
+      for(const [key,suffix] of [['x','X'],['y','Y'],['size','Size']])$('rtrnSeat'+suffix+item.n).value=pos[key];
+     if(!active(item)&&(item.stream||item.url))stopSeat(item);
      updateSeat(item);
    }
    stage?.classList.toggle('rtrn-cozy',/^cozy-/.test(state?.scene||''));
  }
+ window.RTRNDrawExtraSeats=drawSeats;
  new MutationObserver(drawSeats).observe(scene,{childList:true,subtree:true});
  for(const id of ['rtrnSoloQuick','rtrnDuoQuick'])$(id)?.addEventListener('click',drawSeats);
  $('rtrnLayout')?.addEventListener('change',drawSeats);
  seats.forEach(item=>{
+   for(const [key,suffix] of [['x','X'],['y','Y'],['size','Size']])$('rtrnSeat'+suffix+item.n).addEventListener('input',e=>{window.RTRNSetExtraSeatPosition(item.n,key,e.target.value);drawSeats()});
    $('rtrnSeatRefresh'+item.n).addEventListener('click',()=>refreshSeat(item));
    $('rtrnSeatStart'+item.n).addEventListener('click',()=>startSeat(item));
    $('rtrnSeatStop'+item.n).addEventListener('click',()=>stopSeat(item));
    item.clip.addEventListener('change',async e=>{
-     const file=e.target.files?.[0];if(!file||!active())return;
+     const file=e.target.files?.[0];if(!file||!active(item))return;
      if(!file.type.startsWith('video/')){seatStatus(item,'Choose a video file.');return}
      stopSeat(item);const generation=item.generation;
      item.url=URL.createObjectURL(file);item.video.src=item.url;item.video.loop=true;updateSeat(item);
