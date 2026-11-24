@@ -79,6 +79,21 @@ try {
   const before=await desktop.locator('#background').evaluate(el=>el.style.backgroundImage);
   await desktop.locator('#weatherSelect').selectOption('rain');
   assert.notEqual(await desktop.locator('#background').evaluate(el=>el.style.backgroundImage),before);
+  for(const id of ['window-washers','window-grandma','window-robber','window-sunset','window-weather']){
+    await desktop.locator('[data-scene="'+id+'"]').click();
+    await desktop.locator('#rtrnSecondBox').waitFor({state:'visible'});
+    assert(await desktop.locator('#cameraBox').isVisible(),'Host seat missing: '+id);
+    const host=await desktop.locator('#cameraBox').boundingBox(),guest=await desktop.locator('#rtrnSecondBox').boundingBox();
+    assert(host.x+host.width<guest.x,'Host and guest overlap: '+id);
+    await desktop.locator('#rtrnSoloQuick').click();
+    assert(!(await desktop.locator('#rtrnSecondBox').isVisible()),'Solo must hide guest: '+id);
+    await desktop.locator('#rtrnDuoQuick').click();
+    assert(await desktop.locator('#rtrnSecondBox').isVisible(),'Duo must restore guest: '+id);
+  }
+  await desktop.locator('#weatherSelect').selectOption('snow');
+  assert(await desktop.locator('#rtrnSecondBox').isVisible(),'Snow keeps guest seat');
+  await desktop.locator('#weatherSelect').selectOption('rain');
+  assert(await desktop.locator('#rtrnSecondBox').isVisible(),'Rain keeps guest seat');
   for(const id of ['beach','mountain']){
     await desktop.locator('[data-scene="'+id+'"]').click();
     await desktop.locator('#rtrnDuoQuick').click();
