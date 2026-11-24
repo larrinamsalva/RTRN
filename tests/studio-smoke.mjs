@@ -86,5 +86,22 @@ try {
     await desktop.locator('#rtrnSoloQuick').click();
     assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
   }
-  console.log('Desktop workspace and scenic set navigation passed.');
+  for(const [id,count] of [['cozy-1',1],['cozy-2',2],['cozy-3',2],['cozy-4',4],['beach',2],['mountain',2],['original-podcast',1],['original-live',1],['news',0]]){
+    await desktop.locator('[data-scene="'+id+'"]').click();
+    await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2);
+    if(count){await desktop.waitForFunction(n=>['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].filter(id=>{const e=document.getElementById(id);return !e.hidden&&getComputedStyle(e).display!=='none'}).length===n,count);}
+  }
+  await desktop.locator('[data-scene="cozy-4"]').click();
+  await desktop.locator('#rtrnSoloQuick').click();
+  assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
+  assert(!(await desktop.locator('#rtrnSeatPlaceholder3').isVisible()));
+  await desktop.locator('#rtrnDuoQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder4').isVisible());
+  await desktop.locator('#rtrnPhotoTab').click();
+  const upload=desktop.getByLabel('Upload Left desk / table photo',{exact:true});
+  await upload.setInputFiles({name:'test.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR2sAAAAASUVORK5CYII=','base64')});
+  await desktop.waitForFunction(()=>!!document.querySelector('#tablePortraits [data-frame-id="cozy4-table-left"] img'));
+  await desktop.reload();
+  await desktop.waitForFunction(()=>!!document.querySelector('#tablePortraits [data-frame-id="cozy4-table-left"] img'));
+  console.log('Desktop workspace, scenic sets, tabletop photo and seat checks passed.');
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
