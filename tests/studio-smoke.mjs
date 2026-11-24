@@ -13,7 +13,15 @@ const gazeboAssetName='a_highly_detailed_photorealistic_cozy_garden_gaz.png';
 const gazeboAsset=await readFile(new URL('../'+gazeboAssetName,import.meta.url));
 const brandedGazeboAssetName='a_highly_detailed_photorealistic_richly_lit_gard.png';
 const brandedGazeboAsset=await readFile(new URL('../'+brandedGazeboAssetName,import.meta.url));
+const afterDarkAssets=Object.fromEntries(await Promise.all([
+  ['purple-haze','sunset_cannabis_field_lounge.png'],
+  ['midnight','midnight_lounge_cannabis_studio.png'],
+  ['starry-patio','a_richly_detailed_hyper_realistic_highly_stylize.png'],
+  ['starry-firepit','a_highly_detailed_photorealistic_ultra_vibrant.png']
+].map(async ([id,name])=>[id,{name,bytes:await readFile(new URL('../'+name,import.meta.url))}])));
 const server = createServer((req,res) => {
+  const asset=Object.values(afterDarkAssets).find(a=>req.url==='/'+a.name);
+  if(asset){res.writeHead(200,{'Content-Type':'image/png'});res.end(asset.bytes);return}
   if(req.url==='/'+beachAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(beachAsset);return}
   if(req.url==='/'+mountainAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(mountainAsset);return}
   if(req.url==='/'+porchAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(porchAsset);return}
@@ -90,7 +98,7 @@ try {
   await desktop.locator('#sceneFold > summary').click();
   const ids=await desktop.locator('#sceneList [data-scene]').evaluateAll(nodes=>nodes.map(n=>n.dataset.scene));
   assert.equal(ids.filter(id=>id.startsWith('holiday-')).length,0);
-  for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch','gazebo','gazebo-branded'])assert(ids.includes(id),'Missing '+id);
+  for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','starry-patio','starry-firepit'])assert(ids.includes(id),'Missing '+id);
   await desktop.locator('[data-scene="window-weather"]').click();
   await desktop.locator('#rtrnBroadcastTab').click();
   const before=await desktop.locator('#background').evaluate(el=>el.style.backgroundImage);
@@ -140,6 +148,17 @@ try {
     assert(await desktop.locator('#rtrnSecondBox').isVisible());
     await desktop.locator('#rtrnSoloQuick').click();
     assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
+  }
+  for(const [id,seatCount,frameCount] of [['purple-haze',2,2],['midnight',4,3],['starry-patio',4,2],['starry-firepit',4,4]]){
+    await desktop.waitForFunction(id=>{const img=document.querySelector('[data-scene="'+id+'"] img');return img?.complete&&img.naturalWidth>=1200&&img.naturalHeight>=650},id);
+    await desktop.locator('[data-scene="'+id+'"]').click();
+    const visibleSeats=()=>desktop.evaluate(()=>['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4','rtrnSeatPlaceholder5'].filter(id=>{const el=document.getElementById(id);return !el.hidden&&getComputedStyle(el).display!=='none'}).length);
+    assert.equal(await visibleSeats(),seatCount,'Seat count '+id);
+    await desktop.waitForFunction(n=>document.querySelectorAll('#tablePortraits .table-photo').length===n,frameCount);
+    await desktop.locator('#rtrnSoloQuick').click();
+    assert.equal(await visibleSeats(),1,'Solo '+id);
+    await desktop.locator('#rtrnDuoQuick').click();
+    assert.equal(await visibleSeats(),seatCount,'Restore '+id);
   }
   for(const [id,count] of [['cozy-1',1],['cozy-2',2],['cozy-3',2],['cozy-4',4],['beach',2],['mountain',2],['porch',2],['gazebo',3],['gazebo-branded',3],['original-podcast',1],['original-live',1],['news',2]]){
     await desktop.locator('[data-scene="'+id+'"]').click();
