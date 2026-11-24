@@ -898,7 +898,7 @@ const weatherWindow=snow=>windowView('<rect width="238" height="388" fill="#788d
 ART.snow=weatherWindow(true);ART.rain=weatherWindow(false);
 const outdoorChair=(x,beach)=>'<g transform="translate('+x+' 0)"><ellipse cx="160" cy="585" rx="154" ry="22" fill="#182b33" opacity=".28"/><path d="M46 464L13 595M274 464L306 595M56 540L43 590M266 540L281 590" stroke="#45332c" stroke-width="18" stroke-linecap="round"/><rect x="24" y="225" width="270" height="295" rx="42" fill="#5f3a2b" stroke="#cda978" stroke-width="12"/><rect x="40" y="241" width="238" height="260" rx="28" fill="'+(beach?'url(#stripe)':'url(#cushion)')+'"/><path d="M20 480Q160 452 300 480L280 553Q160 578 40 553Z" fill="'+(beach?'#e2c28a':'#655276')+'" stroke="#9d7755" stroke-width="8"/><path d="M15 445H80M240 445H305" stroke="#cda978" stroke-width="19" stroke-linecap="round"/></g>';
 const outdoorArt=beach=>scenicSVG('<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="'+(beach?'#389ac6':'#496f94')+'"/><stop offset="1" stop-color="'+(beach?'#f6dca5':'#dce6df')+'"/></linearGradient><linearGradient id="ground" x2="0" y2="1"><stop stop-color="'+(beach?'#e8c994':'#58725c')+'"/><stop offset="1" stop-color="'+(beach?'#b68a59':'#263e37')+'"/></linearGradient><linearGradient id="cushion" x2="1" y2="1"><stop stop-color="#b09ac5"/><stop offset="1" stop-color="#53435f"/></linearGradient><pattern id="stripe" width="38" height="38" patternUnits="userSpaceOnUse"><rect width="38" height="38" fill="#f1ebd4"/><rect width="19" height="38" fill="#426f84"/></pattern></defs><rect width="1280" height="720" fill="url(#sky)"/><circle cx="1050" cy="112" r="55" fill="#fff0bb"/>'+(beach?'<path d="M0 280Q640 240 1280 280V500H0Z" fill="#278f9c"/><path d="M0 365Q320 385 640 360T1280 365M0 410Q320 430 640 405T1280 410" fill="none" stroke="#c7eae2" stroke-width="7"/><path d="M0 446Q380 414 640 466T1280 440V720H0Z" fill="url(#ground)"/><path d="M80 438Q124 230 94 75" stroke="#795443" stroke-width="20" fill="none"/><g fill="#366d58"><path d="M94 75Q25 15 0 101Q48 77 94 75M94 75Q167 4 225 88Q150 62 94 75M94 75Q166 85 193 165Q136 116 94 75M94 75Q20 110 12 175Q57 112 94 75"/></g>':'<path d="M0 362L215 76 345 242 495 40 680 250 850 96 1100 360 1280 200V550H0Z" fill="#788d99"/><path d="M125 195L215 76 293 176 241 154 216 183 195 144Z M399 159L495 40 592 150 520 117 496 144 471 111Z M780 178L850 96 931 190 873 163 851 183 832 149Z" fill="#f2f5ef"/><path d="M0 391Q250 340 540 403T1280 390V720H0Z" fill="url(#ground)"/>'+Array.from({length:15},(_,i)=>{let x=i*91-32,h=85+(i*57)%130;return '<path d="M'+x+' 435l40 -'+h+' 40 '+h+'Z" fill="'+(i%2?'#355b49':'#294d46')+'"/>'}).join(''))+'<rect x="600" y="495" width="80" height="84" rx="7" fill="#6d4c35"/><ellipse cx="640" cy="496" rx="90" ry="25" fill="#d0a77b"/>'+outdoorChair(160,beach)+outdoorChair(800,beach));
-ART.beach=new URL('a_crisp_sunlit_photorealistic_beach_lounge_scene.png',location.href).href;ART.mountain=new URL('golden_mountain_lake_lounge.png',location.href).href;ART.porch=new URL('a_photorealistic_warmly_lit_countryside_front_por.png',location.href).href;ART.gazebo=new URL('a_highly_detailed_photorealistic_cozy_garden_gaz.png',location.href).href;ART.gazeboBranded=new URL('a_highly_detailed_photorealistic_richly_lit_gard.png',location.href).href;
+ART.beach=new URL('a_crisp_sunlit_photorealistic_beach_lounge_scene.png',location.href).href;ART.mountain=new URL('golden_mountain_lake_lounge.png',location.href).href;ART.porch=new URL('a_photorealistic_warmly_lit_countryside_front_por.png',location.href).href;ART.gazebo=new URL('a_highly_detailed_photorealistic_cozy_garden_gaz.png',location.href).href;ART.gazeboBranded=new URL('a_highly_detailed_photorealistic_richly_lit_gard.png',location.href).href;ART.purpleHaze=new URL('sunset_cannabis_field_lounge.png',location.href).href;ART.midnight=new URL('midnight_lounge_cannabis_studio.png',location.href).href;ART.starryPatio=new URL('a_richly_detailed_hyper_realistic_highly_stylize.png',location.href).href;ART.starryFirepit=new URL('a_highly_detailed_photorealistic_ultra_vibrant.png',location.href).href;
 
 const SCENES=[
 {id:'original-podcast',name:'Original Podcast Studio',desc:'Purple-and-green desk, chairs and picture frames',img:'originalPodcast',label:'ROADS TO RECOGNITION • CONVERSATION',headline:'Stories worth sharing.',group:'💜 Original Purple & Green Studios'},
@@ -922,7 +922,11 @@ const SCENES=[
 {"id":"mountain","name":"Mountain Nature Retreat","desc":"Two nature chairs · host and guest","img":"mountain","label":"ROADS TO RECOGNITION","headline":"Stories worth sharing.","group":"🏞️ Outdoor Studios","fictional":false},
 {"id":"porch","name":"Country Front Porch","desc":"Two wooden rocking chairs · host and guest","img":"porch","label":"ROADS TO RECOGNITION • PORCH CONVERSATIONS","headline":"Come sit a spell and share your story.","group":"🏞️ Outdoor Studios","fictional":false},
 {"id":"gazebo","name":"Rose Garden Gazebo","desc":"Three purple chairs · host and two guests","img":"gazebo","label":"ROADS TO RECOGNITION • GARDEN CONVERSATIONS","headline":"Every story deserves a place to bloom.","group":"🏞️ Outdoor Studios","fictional":false},
-{"id":"gazebo-branded","name":"RTRN Signature Rose Gazebo","desc":"Branded garden set · host and two guests","img":"gazeboBranded","label":"ROADS TO RECOGNITION • GARDEN CONVERSATIONS","headline":"Every story deserves a place to bloom.","group":"🏞️ Outdoor Studios","fictional":false}
+{"id":"gazebo-branded","name":"RTRN Signature Rose Gazebo","desc":"Branded garden set · host and two guests","img":"gazeboBranded","label":"ROADS TO RECOGNITION • GARDEN CONVERSATIONS","headline":"Every story deserves a place to bloom.","group":"🏞️ Outdoor Studios","fictional":false},
+{"id":"purple-haze","name":"Purple Haze Retreat · 21+","img":"purpleHaze","desc":"Two outdoor chairs · host and guest","label":"ROADS TO RECOGNITION • AFTER DARK","headline":"Stories worth sharing.","group":"🌙 After Dark Studios · 21+","fictional":false},
+{"id":"midnight","name":"Midnight Lounge · 21+","img":"midnight","desc":"Four velvet chairs · host and three guests","label":"ROADS TO RECOGNITION • AFTER DARK","headline":"Stories worth sharing.","group":"🌙 After Dark Studios · 21+","fictional":false},
+{"id":"starry-patio","name":"Under the Stars · Patio · 21+","img":"starryPatio","desc":"Four outdoor chairs · host and three guests","label":"ROADS TO RECOGNITION • AFTER DARK","headline":"Stories worth sharing.","group":"🌙 After Dark Studios · 21+","fictional":false},
+{"id":"starry-firepit","name":"Under the Stars · Firepit · 21+","img":"starryFirepit","desc":"Four chairs · printed camera graphics remain in artwork","label":"ROADS TO RECOGNITION • AFTER DARK","headline":"Stories worth sharing.","group":"🌙 After Dark Studios · 21+","fictional":false}
 ];
 const defaults={catchphrase:'Kindness gets the spotlight. Laughter sneaks through the window!',scene:'original-podcast',headline:'Stories worth sharing.',host:'Larrina',banner:true,ticker:true,live:false,mark:true,cameraMode:'frame',cameraSize:28,keyThreshold:46,script:'',cameraEnabled:false,ambient:true,quietWindow:false,autoGags:false,soundEnabled:true,effectVolume:55,newsText:'PIGEON PATROL DEMANDS OVERTIME IN BREADCRUMBS!',guestName:'Guest',guestPhotoId:''};
 const el=id=>document.getElementById(id);
@@ -1195,7 +1199,7 @@ let cueSeq=0;const receivedCues=new Set();
 function uniqueCue(m){if(!m||m.cueId===undefined)return true;if(receivedCues.has(m.cueId))return false;receivedCues.add(m.cueId);if(receivedCues.size>100)receivedCues.clear();return true;}
 function renderExtras(){
  const win=el('cityWindow');win.dataset.scene=state.scene;
- win.hidden=!(state.ambient&&!state.quietWindow)||state.scene.startsWith('custom-scene-')||state.scene.startsWith('window-')||['beach','mountain','porch','gazebo','gazebo-branded'].includes(state.scene);
+ win.hidden=!(state.ambient&&!state.quietWindow)||state.scene.startsWith('custom-scene-')||state.scene.startsWith('window-')||['beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','starry-patio','starry-firepit'].includes(state.scene);
  el('birds').style.display=birdActive?'block':'none';
  el('ambientToggle').checked=!!state.ambient;
  el('quietToggle').checked=!!state.quietWindow;
@@ -2038,7 +2042,7 @@ const frameLayout={
  ]
 };
 // Coordinates are normalized percentages, independent of artwork pixel size.
-const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:(side==='left'?'Left':'Right')+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
+const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:(side==='left'?'Left':side==='right'?'Right':'Additional '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
 const tabletopPositions={
  originalPodcast:[[24,59,7,12],[84,60,7,11]],
  originalLive:[[26,54,7,11],[85,55,7,11]],
@@ -2052,6 +2056,10 @@ const tabletopPositions={
  porch:[[39.2,53.4,4.3,8.2],[52,53.4,4.3,8.2]],
  gazebo:[[40.7,73,4.1,9.1],[57,73,4.1,9.1]],
  gazeboBranded:[[37.1,72.4,4.9,10.1],[60.5,72.4,4.9,10.1]],
+ purpleHaze:[[39.3,42.2,4.3,10.6],[55.4,42.3,4.2,10.6]],
+ midnight:[[40.3,55.2,3,8.1],[46.9,50.1,4.8,11.1],[55,55.3,3,8]],
+ starryPatio:[[35.4,61.8,4.5,9.5],[57.9,61.8,4.5,9.5]],
+ starryFirepit:[[23.1,69.1,4.5,10],[36.7,66,4.4,10],[60.7,65.6,3.9,9.7],[72.8,69.3,4.7,10]],
  washers:[[13,55,6,11],[88,54,6,11]],
  grandma:[[13,55,6,11],[88,54,6,11]],
  robber:[[13,55,6,11],[88,54,6,11]],
@@ -2062,7 +2070,7 @@ const tabletopPositions={
 };
 for(const [art,boxes] of Object.entries(tabletopPositions)){
   frameLayout[art]??=[];
-  frameLayout[art].push(tabletop(art==='rain'?'snow':art,'left',boxes[0]),tabletop(art==='rain'?'snow':art,'right',boxes[1]));
+  frameLayout[art].push(...boxes.map((box,i)=>tabletop(art==='rain'?'snow':art,i===0?'left':i===1?'right':String(i+1),box)));
 }
 const storeKey='rtrn-wall-pictures-v3';
 let saved={};
@@ -2549,7 +2557,7 @@ refresh();
   const stage = $('stage'), desk = $('rtrnOriginalDesk'), firstBox = $('cameraBox');
   const secondBox = $('rtrnSecondBox'), secondVideo = $('rtrnSecondVideo'), secondCanvas = $('rtrnSecondCanvas');
   let secondStream = null, secondFileURL = '', secondLoop = 0, tributeURL = '';
-  const isOutdoor = () => ['beach','mountain','porch','gazebo','gazebo-branded'].includes(state.scene);
+  const isOutdoor = () => ['beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','starry-patio','starry-firepit'].includes(state.scene);
   const isCozy = () => /^cozy-[1-4]$/.test(state.scene)||isOutdoor();
   const isWindowScene = () => /^window-(washers|grandma|robber|sunset|weather)$/.test(state.scene);
   const isCustom = () => state.scene.startsWith('custom-scene-');
@@ -2565,7 +2573,11 @@ refresh();
     mountain:{oneX:14.5,oneY:33,oneSize:19,twoX:70.5,twoY:33,twoSize:19},
     porch:{oneX:11.8,oneY:39,oneSize:18,twoX:65.1,twoY:39, twoSize:13.6},
     gazebo:{oneX:8.5,oneY:37.5,oneSize:18,twoX:40.8,twoY:37.5,twoSize:18},
-    'gazebo-branded':{oneX:8.5,oneY:36.5,oneSize:18,twoX:42, twoY:36.5,twoSize:18}
+    'gazebo-branded':{oneX:8.5,oneY:36.5,oneSize:18,twoX:42, twoY:36.5,twoSize:18},
+    'purple-haze':{oneX:7.5,oneY:33,oneSize:22,twoX:73,twoY:33,twoSize:21},
+    midnight:{oneX:5,oneY:42,oneSize:16,twoX:27.5,twoY:38, twoSize:16},
+    'starry-patio':{oneX:4.5,oneY:34,oneSize:17,twoX:27.8,twoY:34,twoSize:16},
+    'starry-firepit':{oneX:7.4,oneY:38.5,oneSize:13,twoX:31.4,twoY:38.5,twoSize:12.5}
   };
   let cozySaved={};try{cozySaved=JSON.parse(localStorage.getItem('rtrn-cozy-seats-v6')||'{}')}catch(_){}
   // Upgrade previous Cozy 4 settings only once so the existing 25%-wide video
@@ -2580,22 +2592,22 @@ refresh();
   }catch(_) {
     cozySaved['cozy-4']={...(cozySaved['cozy-4']||{}),oneSize:17,twoSize:17,oneY:32,twoY:32};
   }
-  const seatCount=()=>isCustom()?Math.max(1,Math.min(5,Number(cozySaved[state.scene]?.count)||1)):['gazebo','gazebo-branded'].includes(state.scene)?3:state.scene==='cozy-4'?4:['cozy-1','original-podcast','original-live'].includes(state.scene)?1:hasSceneSeats()?2:1;
+  const seatCount=()=>isCustom()?Math.max(1,Math.min(5,Number(cozySaved[state.scene]?.count)||1)):['gazebo','gazebo-branded'].includes(state.scene)?3:['cozy-4','midnight','starry-patio','starry-firepit'].includes(state.scene)?4:['cozy-1','original-podcast','original-live'].includes(state.scene)?1:hasSceneSeats()?2:1;
   const customSeat=(n)=>{const count=seatCount(),width=Math.min(32,Math.floor(84/count));return {x:Math.round((100/count)*(n-.5)-width/2),y:32,size:width}};
   try{if(localStorage.getItem('rtrn-realistic-beach-seat-layout-v1')!=='1'){delete cozySaved.beach;localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-beach-seat-layout-v1','1')}}catch(_){}
   try{if(localStorage.getItem('rtrn-realistic-mountain-seat-layout-v1')!=='1'){delete cozySaved.mountain;localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-mountain-seat-layout-v1','1')}}catch(_){}
   const sceneSeatConf=()=>hasSceneSeats()?{...conf,...(isCustom()?{oneX:customSeat(1).x,oneY:32,oneSize:customSeat(1).size,twoX:customSeat(2).x,twoY:32,twoSize:customSeat(2).size}:cozyPresets[state.scene]),...(cozySaved[state.scene]||{})}:conf;
   window.RTRNSeatCount=seatCount;
-  window.RTRNExtraSeatPosition=n=>{const base=isCustom()?customSeat(n):['gazebo','gazebo-branded'].includes(state.scene)?{x:73.2,y:37.5,size:18}:{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
+  window.RTRNExtraSeatPosition=n=>{const afterDark={midnight:{3:{x:58,y:39,size:16},4:{x:77,y:42,size:16}},'starry-patio':{3:{x:58.5,y:34,size:16},4:{x:81.5,y:34,size:16}},'starry-firepit':{3:{x:56.5,y:38.5,size:12.6},4:{x:82,y:38.5,size:12.6}}};const base=isCustom()?customSeat(n):['gazebo','gazebo-branded'].includes(state.scene)?{x:73.2,y:37.5,size:18}:afterDark[state.scene]?.[n]||{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
   window.RTRNSetExtraSeatPosition=(n,key,value)=>{const saved=cozySaved[state.scene]??={};(saved['seat'+n]??={})[key]=Number(value);saveCozy()};
   const saveCozy=()=>{try{localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved))}catch(_){}};
   
   const sourceReady = () => !!secondStream || !!secondFileURL;
   const inRange = (v,lo,hi) => Math.min(hi,Math.max(lo,Number(v)||0));
   function setBox(box,x,y,size,cutout) {
-    const width = inRange(size,(isCustom()||state.scene==='porch')?12:state.scene==='cozy-4'?17:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
+    const width = inRange(size,(isCustom()||['porch','midnight','starry-patio','starry-firepit'].includes(state.scene))?12:state.scene==='cozy-4'?17:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
     box.style.left=left+'%';box.style.top=top+'%';box.style.width=width+'%';
-    box.style.height=(['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isCustom()&&seatCount()>=3?Math.min(32,91-top):state.scene==='cozy-4'?32:(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
+    box.style.height=(state.scene==='starry-firepit'?13.5:['midnight','starry-patio'].includes(state.scene)?Math.min(24,width*1.45):state.scene==='purple-haze'?28:['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isCustom()&&seatCount()>=3?Math.min(32,91-top):state.scene==='cozy-4'?32:(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
     box.classList.toggle('cutout',cutout);
     box.style.borderRadius=cutout?'0':'16px';
     box.style.borderWidth=cutout?'0':'3px';
@@ -2676,7 +2688,7 @@ refresh();
     if(layout==='duo')Object.assign(conf,{oneX:23,oneY:22,oneSize:36,twoX:50,twoY:22,twoSize:34});
     save();syncControls();paintHostLayers();
   }
-  window.RTRNChooseSceneSeats=id=>{if(id.startsWith('custom-scene-')){chooseLayout(seatCount()>1?'duo':'solo');return}if(['cozy-2','cozy-3','cozy-4','beach','mountain','porch','gazebo','gazebo-branded','news','window-washers','window-grandma','window-robber','window-sunset','window-weather'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
+  window.RTRNChooseSceneSeats=id=>{if(id.startsWith('custom-scene-')){chooseLayout(seatCount()>1?'duo':'solo');return}if(['cozy-2','cozy-3','cozy-4','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','starry-patio','starry-firepit','news','window-washers','window-grandma','window-robber','window-sunset','window-weather'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
   $('rtrnLayout').addEventListener('change',e=>chooseLayout(e.target.value));
   $('rtrnCustomSeatCount').addEventListener('change',e=>{if(!isCustom())return;const count=Number(e.target.value);cozySaved[state.scene]={count};saveCozy();chooseLayout(count>1?'duo':'solo');window.RTRNDrawExtraSeats?.()});
   $('rtrnSoloQuick').addEventListener('click',()=>chooseLayout('solo'));
@@ -3129,7 +3141,7 @@ refresh();
  function drawSeats(){
    for(const item of seats){
      const pos=window.RTRNExtraSeatPosition(item.n),size=Math.min(45,Math.max(12,pos.size));
-      item.wrap.hidden=!active(item);Object.assign(item.wrap.style,{left:Math.min(100-size,pos.x)+'%',top:pos.y+'%',width:size+'%',height:Math.min(['gazebo','gazebo-branded'].includes(state.scene)?25*size/18:32,94-pos.y)+'%'});
+      item.wrap.hidden=!active(item);Object.assign(item.wrap.style,{left:Math.min(100-size,pos.x)+'%',top:pos.y+'%',width:size+'%',height:Math.min(state.scene==='starry-firepit'?13.5:['midnight','starry-patio'].includes(state.scene)?Math.min(24,size*1.45):['gazebo','gazebo-branded'].includes(state.scene)?25*size/18:32,94-pos.y)+'%'});
       for(const [key,suffix] of [['x','X'],['y','Y'],['size','Size']])$('rtrnSeat'+suffix+item.n).value=pos[key];
      if(!active(item)&&(item.stream||item.url))stopSeat(item);
      updateSeat(item);
