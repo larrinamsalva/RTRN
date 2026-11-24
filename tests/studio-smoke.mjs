@@ -20,6 +20,21 @@ try {
   assert.equal(await page.locator('#sceneFold').evaluate(el=>el.open),true,'Tapping the scene arrow opens the section');
   await sceneSummary.tap();
   assert.equal(await page.locator('#sceneFold').evaluate(el=>el.open),false,'Tapping again closes the section');
+  const startButton=page.locator('#rtrnRecordQuick'), stopButton=page.locator('#rtrnStopRecordQuick');
+  assert(await startButton.isEnabled());
+  assert(await stopButton.isVisible());
+  assert(await stopButton.isDisabled());
+  const stageRect=await page.locator('.stage-shell').boundingBox(), recordRect=await page.locator('.rtrn-record-top').boundingBox();
+  assert(recordRect.y>=stageRect.y+stageRect.height-2 && recordRect.y-stageRect.y-stageRect.height<30,'Record controls immediately below preview');
+  await startButton.tap();
+  await stopButton.waitFor({state:'visible'});
+  await page.waitForFunction(()=>!document.getElementById('rtrnStopRecordQuick').disabled,{},{timeout:15000});
+  assert(await startButton.isDisabled());
+  await page.waitForTimeout(1300);
+  await stopButton.tap();
+  await page.waitForFunction(()=>!document.getElementById('rtrnRecordQuick').disabled,{},{timeout:15000});
+  assert(await stopButton.isDisabled());
+  assert(await page.locator('#rtrnVideoDownload').getAttribute('download'),'Finished recording has a downloadable file');
   const dock = page.locator('#mobileDock');
   const targets = [['photos','#rtrnPhotoArea'],['library','#rtrnMusicArea'],['reactions','#audienceFold'],['scenes','#sceneFold'],['settings','#rtrnBroadcastArea'],['stage','.stage-panel']];
   for(const [target,selector] of targets){
