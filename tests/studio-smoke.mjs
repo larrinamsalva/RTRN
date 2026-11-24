@@ -139,5 +139,29 @@ try {
   await desktop.waitForFunction(()=>!!document.querySelector('#tablePortraits [data-frame-id="cozy4-table-left"] img'));
   await desktop.reload();
   await desktop.waitForFunction(()=>!!document.querySelector('#tablePortraits [data-frame-id="cozy4-table-left"] img'));
+  await desktop.locator('#sceneFold > summary').click();
+  await desktop.locator('#newSceneFiles').setInputFiles({name:'five-seat-test.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR2sAAAAASUVORK5CYII=','base64')});
+  await desktop.locator('#addCustomScenes').click();
+  const custom=desktop.locator('[data-scene^="custom-scene-"]').first();
+  await custom.click();
+  await desktop.locator('#rtrnBroadcastTab').click();
+  const seatIds=['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4','rtrnSeatPlaceholder5'];
+  for(const n of [1,2,3,4,5]){
+    await desktop.locator('#rtrnCustomSeatCount').selectOption(String(n));
+    await desktop.waitForFunction(({seatIds,n})=>seatIds.filter(id=>{const el=document.getElementById(id);return !el.hidden&&getComputedStyle(el).display!=='none'}).length===n,{seatIds,n});
+  }
+  await desktop.locator('#rtrnSeatRefresh5').click();
+  await desktop.waitForFunction(()=>document.getElementById('rtrnSeatCamera5').options.length>1);
+  await desktop.locator('#rtrnSeatCamera5').selectOption({index:1});
+  await desktop.locator('#rtrnSeatStart5').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSeatVideo5');return !v.hidden&&v.readyState>=2},{},{timeout:15000});
+  await desktop.locator('#rtrnSoloQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder5').isHidden());
+  assert(await desktop.locator('#rtrnSeatVideo5').evaluate(v=>!v.srcObject));
+  await desktop.locator('#rtrnDuoQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder5').isVisible());
+  await desktop.reload();
+  await desktop.waitForFunction(()=>document.getElementById('rtrnCustomSeatCount').value==='5'&&!document.getElementById('rtrnSeatPlaceholder5').hidden);
+  console.log('Custom scene seating from one to five, fifth camera, solo and saved count passed.');
   console.log('Desktop workspace, scenic sets, tabletop photo and seat checks passed.');
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
