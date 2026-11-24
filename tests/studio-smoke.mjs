@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 const html = await readFile(new URL('../index.html', import.meta.url));
-const server = createServer((req,res) => {res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(html)});
+const beachAssetName='a_crisp_sunlit_photorealistic_beach_lounge_scene.png';
+const beachAsset=await readFile(new URL('../'+beachAssetName,import.meta.url));
+const server = createServer((req,res) => {
+  if(req.url==='/'+beachAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(beachAsset);return}
+  res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(html)
+});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const browser = await chromium.launch({args:['--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream']});
 const url = 'http://127.0.0.1:'+server.address().port;
@@ -94,6 +99,9 @@ try {
   assert(await desktop.locator('#rtrnSecondBox').isVisible(),'Snow keeps guest seat');
   await desktop.locator('#weatherSelect').selectOption('rain');
   assert(await desktop.locator('#rtrnSecondBox').isVisible(),'Rain keeps guest seat');
+  const beachThumb=desktop.locator('[data-scene="beach"] img');
+  await desktop.waitForFunction(()=>{const img=document.querySelector('[data-scene="beach"] img');return img?.complete&&img.naturalWidth>=1200&&img.naturalHeight>=650});
+  assert((await beachThumb.getAttribute('src')).endsWith(beachAssetName));
   for(const id of ['beach','mountain']){
     await desktop.locator('[data-scene="'+id+'"]').click();
     await desktop.locator('#rtrnDuoQuick').click();
