@@ -55,5 +55,21 @@ try {
   await desktop.locator('#mediaLibraryFold > summary').click();
   assert.equal(await desktop.locator('#mediaLibraryFold').evaluate(el=>el.open),false);
   assert(await desktop.locator('#rtrnRecordQuick').isVisible());
-  console.log('Desktop workspace navigation passed.');
+  await desktop.locator('#sceneFold > summary').click();
+  const ids=await desktop.locator('#sceneList [data-scene]').evaluateAll(nodes=>nodes.map(n=>n.dataset.scene));
+  assert.equal(ids.filter(id=>id.startsWith('holiday-')).length,0);
+  for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain'])assert(ids.includes(id),'Missing '+id);
+  await desktop.locator('[data-scene="window-weather"]').click();
+  await desktop.locator('#rtrnBroadcastTab').click();
+  const before=await desktop.locator('#background').evaluate(el=>el.style.backgroundImage);
+  await desktop.locator('#weatherSelect').selectOption('rain');
+  assert.notEqual(await desktop.locator('#background').evaluate(el=>el.style.backgroundImage),before);
+  for(const id of ['beach','mountain']){
+    await desktop.locator('[data-scene="'+id+'"]').click();
+    await desktop.locator('#rtrnDuoQuick').click();
+    assert(await desktop.locator('#rtrnSecondBox').isVisible());
+    await desktop.locator('#rtrnSoloQuick').click();
+    assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
+  }
+  console.log('Desktop workspace and scenic set navigation passed.');
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
