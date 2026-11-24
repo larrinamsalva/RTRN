@@ -421,6 +421,9 @@ body.output-mode .street-actor{font-size:4vw}body.output-mode .news-flash strong
 <style>
 .rtrn-quickbar{display:flex;gap:8px;flex-wrap:wrap;width:100%;margin:8px 0}
 .rtrn-quickbar .btn{flex:1 1 110px;min-height:46px;font-size:14px}
+.rtrn-quickbar #rtrnRecordQuick{order:-30;background:#762d56;border-color:#ff9bc6;color:#fff;font-weight:900}
+.rtrn-quickbar #rtrnStopRecordQuick{order:-29;font-weight:900}
+.rtrn-quickbar #rtrnRecordQuick:disabled,.rtrn-quickbar #rtrnStopRecordQuick:disabled{opacity:.5;cursor:not-allowed}
 #rtrnQuickStatus{flex:1 1 100%;font-size:14px;color:#d7f3e2;line-height:1.4}
 .rtrn-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0}
 .rtrn-action-grid .btn{min-height:48px;white-space:normal}
@@ -557,9 +560,10 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
   body:not(.output-mode) .stage-row .rtrn-quickbar{order:-10;margin:4px 0 2px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;min-width:0;width:100%}
   body:not(.output-mode) .rtrn-quickbar .btn{min-width:0!important;min-height:48px;font-size:13px;padding:9px 5px;white-space:normal;line-height:1.2}
   body:not(.output-mode) #rtrnRecordQuick{order:-20;grid-column:1/2;background:#762d56;border-color:#ff9bc6;color:#fff;font-weight:900}
-  body:not(.output-mode) #rtrnMusicQuick{order:-19;grid-column:2/3}
-  body:not(.output-mode) #rtrnCameraQuick{order:-18}
-  body:not(.output-mode) #rtrnStopMusicQuick{order:-17}
+  body:not(.output-mode) #rtrnStopRecordQuick{order:-19;grid-column:2/3}
+  body:not(.output-mode) #rtrnMusicQuick{order:-18;grid-column:1/2}
+  body:not(.output-mode) #rtrnCameraQuick{order:-16}
+  body:not(.output-mode) #rtrnStopMusicQuick{order:-17;grid-column:2/3}
   body:not(.output-mode) #rtrnQuickStatus{order:-16;grid-column:1/-1;margin:0;padding:6px 8px;font-size:12px}
   body:not(.output-mode) .stage-row .scene-status{order:2}
   body:not(.output-mode) .stage-row .control-quick{order:3}
@@ -610,7 +614,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <button class="btn" id="rtrnPodcastQuick" type="button">Podcast set</button>
 <button class="btn" id="rtrnLiveQuick" type="button">Live set</button>
 <button class="btn" id="rtrnMusicQuick" type="button">▶ Play music</button><button class="btn" id="rtrnStopMusicQuick" type="button">■ Stop music</button>
-<button class="btn btn-primary" id="rtrnRecordQuick" type="button">● Record show</button><button class="btn" id="rtrnBleepQuick" type="button">🔇 Bleep words</button>
+<button class="btn btn-primary" id="rtrnRecordQuick" type="button">● Start recording</button><button class="btn btn-danger" id="rtrnStopRecordQuick" type="button" disabled>■ Stop &amp; save recording</button><button class="btn" id="rtrnBleepQuick" type="button">🔇 Bleep words</button>
 <span aria-live="polite" id="rtrnQuickStatus" role="status">Ready to record.</span>
 </div>
 <p class="mobile-tip">📱 Tap Scenes below to try backgrounds. The menu stays open until you close it. Rotate your phone for a wider studio view.</p></div></div>
@@ -2884,11 +2888,18 @@ refresh();
       ['video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm','video/mp4;codecs=h264,aac','video/mp4'];
     return choices.find(type=>MediaRecorder.isTypeSupported(type))||'';
   }
+  let recordingPhase='idle';
+  function recordButtons(phase){
+    recordingPhase=phase;
+    for(const id of ['rtrnRecordStart','rtrnRecordQuick'])$(id).disabled=phase!=='idle';
+    for(const id of ['rtrnRecordStop','rtrnStopRecordQuick'])$(id).disabled=phase!=='recording';
+  }
   async function startRecording(){
-    if(recorder?.state==='recording')return;
+    if(recordingPhase!=='idle')return;
         if(!window.MediaRecorder||!canvas.captureStream){status('This phone browser cannot record a canvas video. Try the latest Chrome or Safari on a secure page.');return}
     const mime=recordingFormat();
     if(!mime){status('This browser does not support a video recording format.');return}
+    recordButtons('starting');
     try{
       if(!$('rtrnSilentRecording').checked)
         micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});
@@ -2913,8 +2924,7 @@ refresh();
         cancelAnimationFrame(raf);videoStream.getTracks().forEach(t=>t.stop());
         micStream?.getTracks().forEach(t=>t.stop());micStream=null;
         recordStream?.getTracks().forEach(t=>t.stop());recordStream=null;
-        $('rtrnRecordStart').disabled=false;$('rtrnRecordStop').disabled=true;
-        $('rtrnRecordQuick').textContent='● Record show';
+        recordButtons('idle');
         if(!chunks.length){status('No video was captured. Please try a short test.');return}
         if(outputURL)URL.revokeObjectURL(outputURL);
         const type=recorder.mimeType||mime;
@@ -2929,8 +2939,7 @@ refresh();
         link.click();
       };
       recorder.start(1000);startTime=Date.now();
-      $('rtrnRecordStart').disabled=true;$('rtrnRecordStop').disabled=false;
-      $('rtrnRecordQuick').textContent='■ Stop & save';
+      recordButtons('recording');
       $('rtrnVideoDownload').hidden=true;
       status(micStream?'● Recording started. Your microphone, music, and studio are being captured.':
         '● Recording started without microphone. Music and studio are being captured.',true);
@@ -2938,10 +2947,11 @@ refresh();
     }catch(err){
       micStream?.getTracks().forEach(t=>t.stop());micStream=null;
       recordStream?.getTracks().forEach(t=>t.stop());recordStream=null;
+      recordButtons('idle');
       status('Could not start the show recording: '+(err.message||'Allow microphone access and try again.'));
     }
   }
-  function stopRecording(){if(recorder?.state==='recording'){recorder.stop();status('Finishing video… keep this tab open.',true)}}
+  function stopRecording(){if(recorder?.state==='recording'){recordButtons('finishing');recorder.stop();status('Finishing video… keep this tab open.',true)}}
   function bleepNow(){
     if(recorder?.state!=='recording'||!audioCtx||!voiceGain){
       status('Bleep is available while recording with the microphone enabled.');return false;
@@ -2968,7 +2978,9 @@ refresh();
 
   $('rtrnRecordStart').addEventListener('click',startRecording);
   $('rtrnRecordStop').addEventListener('click',stopRecording);
-  $('rtrnRecordQuick').addEventListener('click',()=>recorder?.state==='recording'?stopRecording():startRecording());
+  $('rtrnRecordQuick').addEventListener('click',startRecording);
+  $('rtrnStopRecordQuick').addEventListener('click',stopRecording);
+  recordButtons('idle');
   $('framePortraits').addEventListener('play',e=>{if(recorder?.state==='recording'&&e.target.tagName==='VIDEO'&&!e.target.muted)connectAudio(e.target)},true);
   window.addEventListener('beforeunload',e=>{if(recorder?.state==='recording'){e.preventDefault();e.returnValue=''}});
   syncControls();paintHostLayers();listCameras();

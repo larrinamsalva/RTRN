@@ -39,6 +39,24 @@ try {
     if(target==='stage')assert(await page.locator('#rtrnRecordQuick').isVisible(),'record shortcut is accessible');
     console.log('Mobile navigation passed:',target);
   }
+  const startButton=page.locator('#rtrnRecordQuick'),stopButton=page.locator('#rtrnStopRecordQuick');
+  assert(await startButton.isEnabled());
+  assert(await stopButton.isVisible());
+  assert(await stopButton.isDisabled());
+  const order=await page.evaluate(()=>{const a=document.querySelector('#rtrnRecordQuick').getBoundingClientRect(),b=document.querySelector('#rtrnStopRecordQuick').getBoundingClientRect(),stage=document.querySelector('#stage').getBoundingClientRect();return {sameRow:Math.abs(a.top-b.top)<4,underStage:a.top>=stage.bottom-2,closeToStage:a.top-stage.bottom<100}});
+  assert(order.sameRow&&order.underStage&&order.closeToStage,'Recording buttons sit together just below the preview');
+  await page.locator('#rtrnBroadcastTab').click();
+  await page.locator('#rtrnSilentRecording').check();
+  await startButton.tap();
+  await page.waitForFunction(()=>!document.getElementById('rtrnStopRecordQuick').disabled,{},{timeout:15000});
+  assert(await startButton.isDisabled());
+  await page.waitForTimeout(1300);
+  const downloaded=page.waitForEvent('download',{timeout:20000});
+  await stopButton.tap();
+  const video=await downloaded;
+  assert.match(video.suggestedFilename(),/\.webm$|\.mp4$/);
+  await page.waitForFunction(()=>!document.getElementById('rtrnRecordQuick').disabled);
+  assert(await stopButton.isDisabled());
   assert.deepEqual(errors,[],'No uncaught browser errors');
   await mobile.close();
   const desktop = await browser.newPage({viewport:{width:1440,height:900}});
