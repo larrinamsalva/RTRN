@@ -2700,8 +2700,8 @@ refresh();
   const hasSceneSeats = () => isOriginalDesk()||isCozy()||isWindowScene()||state.scene==='news'||isCustom();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
-    'vintage-tea':{oneX:8.5,oneY:46,oneSize:19,twoX:74,twoY:46,twoSize:19},
-    'vintage-man':{oneX:15.5,oneY:55,oneSize:19,twoX:69,twoY:55,twoSize:19},
+    'vintage-tea':{oneX:8.5,oneY:38,oneSize:19,twoX:74,twoY:38,twoSize:19},
+    'vintage-man':{oneX:15.5,oneY:45,oneSize:19,twoX:69,twoY:45,twoSize:19},
     'original-podcast':{oneX:38.2,oneY:36,oneSize:22},
     'original-live':{oneX:39,oneY:30.5,oneSize:22},
     'cozy-1':{oneX:39,oneY:50,oneSize:22,twoX:56,twoY:27,twoSize:27},
@@ -2741,6 +2741,8 @@ refresh();
   try{if(localStorage.getItem('rtrn-realistic-mountain-seat-layout-v1')!=='1'){delete cozySaved.mountain;localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-mountain-seat-layout-v1','1')}}catch(_){}
   // Reset only legacy vintage default positions; preserve custom adjustments and saved photos.
   try{if(localStorage.getItem('rtrn-realistic-vintage-seat-layout-v1')!=='1'){for(const id of ['vintage-tea','vintage-man']){const saved=cozySaved[id];if(!saved)continue;for(const [key,value] of Object.entries({oneX:15.5,oneY:37,oneSize:19,twoX:65.5,twoY:37,twoSize:19})){if(saved[key]===value)delete saved[key];}}localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-vintage-seat-layout-v1','1');}}catch(_){}
+  // Lift the previous vintage default camera positions above the lower-third banner.
+  try{if(localStorage.getItem('rtrn-vintage-banner-clearance-v1')!=='1'){for(const [id,oldY] of [['vintage-tea',46],['vintage-man',55]]){const saved=cozySaved[id];if(!saved)continue;for(const key of ['oneY','twoY'])if(saved[key]===oldY)delete saved[key];}localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-vintage-banner-clearance-v1','1');}}catch(_){}
   const sceneSeatConf=()=>hasSceneSeats()?{...conf,...(isCustom()?{oneX:customSeat(1).x,oneY:32,oneSize:customSeat(1).size,twoX:customSeat(2).x,twoY:32,twoSize:customSeat(2).size}:cozyPresets[state.scene]),...(cozySaved[state.scene]||{})}:conf;
   window.RTRNSeatCount=seatCount;
   window.RTRNExtraSeatPosition=n=>{const base=state.scene==='midnight'?(n===3?{x:57.5,y:39,size:15}:{x:78,y:42,size:16}):state.scene==='stars'?(n===3?{x:58.4,y:40,size:11.8}:{x:81,y:41,size:15}):isCustom()?customSeat(n):['gazebo','gazebo-branded'].includes(state.scene)?{x:73.2,y:37.5,size:18} :state.scene==='cozy-3'?{x:39.5,y:43,size:21}:state.scene==='cozy-4'?{x:n===3?55.5:77.5,y:37,size:16}:{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
@@ -2753,6 +2755,21 @@ refresh();
     const width = inRange(size,(isCustom()||['porch','midnight','stars'].includes(state.scene))?11.5:/^cozy-[1-4]$/.test(state.scene)?11.5:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
     box.style.left=left+'%';box.style.top=top+'%';box.style.width=width+'%';
     box.style.height=(isVintage()?Math.min(29,width*1.5):state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isOriginalDesk()?Math.min(width*1.55,(state.scene==='original-live'?65:70)-top):isCustom()&&seatCount()>=3?Math.min(32,91-top):/^cozy-[1-4]$/.test(state.scene)?Math.min(36,width*1.65,91-top):(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
+    // Respect actual responsive banner and ticker geometry in the vintage rooms.
+    if(isVintage()){
+      const bounds=stage.getBoundingClientRect();
+      if(bounds.height>0){
+        const overlays=[$('lowerThird'),$('tickerBox')].filter(node=>node&&getComputedStyle(node).display!=='none'&&node.getBoundingClientRect().height>0);
+        if(overlays.length){
+          const limit=Math.min(...overlays.map(node=>node.getBoundingClientRect().top));
+          const available=(limit-bounds.top-4)/bounds.height*100;
+          const height=parseFloat(box.style.height);
+          const safeTop=Math.max(4,Math.min(top,available-height));
+          box.style.top=safeTop+'%';
+          if(safeTop+height>available)box.style.height=Math.max(0,available-safeTop)+'%';
+        }
+      }
+    }
     box.classList.toggle('cutout',cutout);
     box.style.borderRadius=cutout?'0':'16px';
     box.style.borderWidth=cutout?'0':'3px';
@@ -2828,6 +2845,10 @@ refresh();
   // Reposition host/video seats whenever the scene changes, without needing a live camera.
   window.RTRNRefreshSeatLayers=paintHostLayers;
   new MutationObserver(()=>{paintHostLayers();syncControls()}).observe($('sceneStatus'),{childList:true,subtree:true});
+  if(typeof ResizeObserver==='function'){
+    const vintageResize=new ResizeObserver(()=>{if(isVintage())paintHostLayers()});
+    for(const node of [stage,$('lowerThird'),$('tickerBox')])vintageResize.observe(node);
+  }
   $('cameraMode').addEventListener('change',paintHostLayers);
   $('cameraSize').addEventListener('input',paintHostLayers);
   $('cameraButton').addEventListener('click',()=>setTimeout(()=>{paintHostLayers();listCameras()},350));
