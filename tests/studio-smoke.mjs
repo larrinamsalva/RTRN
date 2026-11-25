@@ -15,7 +15,10 @@ const brandedGazeboAssetName='a_highly_detailed_photorealistic_richly_lit_gard.p
 const brandedGazeboAsset=await readFile(new URL('../'+brandedGazeboAssetName,import.meta.url));
 const newAssets = new Map();
 for(const filename of ['sunset_cannabis_field_lounge.png','midnight_lounge_cannabis_studio.png','moonlit_purple_gold_garden_lounge.png'])newAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
+const vintageAssets=new Map();
+for(const filename of ['vintage_tea_room.jpg','vintage_good_old_days.jpg'])vintageAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
 const server = createServer((req,res) => {
+  if(vintageAssets.has(req.url)){res.writeHead(200,{'Content-Type':'image/jpeg'});res.end(vintageAssets.get(req.url));return}
   if(newAssets.has(req.url)){res.writeHead(200,{'Content-Type':'image/png'});res.end(newAssets.get(req.url));return}
   if(req.url==='/'+beachAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(beachAsset);return}
   if(req.url==='/'+mountainAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(mountainAsset);return}
@@ -76,6 +79,18 @@ try {
   }
   await page.waitForFunction(()=>{const img=document.getElementById('stageBackgroundImage');return img?.complete&&img.naturalWidth>0&&getComputedStyle(img).visibility==='visible'});
   assert(await page.locator('#stageBackgroundError').isHidden(),'Mobile scene background must load without error');
+  await dock.locator('[data-mobile-target="scenes"]').tap();
+  for(const [id,filename,labels] of [['vintage-tea','vintage_tea_room.jpg',['Tea room — wall picture','Tea room — center table picture']],['vintage-man','vintage_good_old_days.jpg',['Wall picture 1','Wall picture 2','Wall picture 3','Wall picture 4']]]){
+    await page.locator('[data-scene="'+id+'"]').tap();
+    await page.waitForFunction(filename=>{const img=document.getElementById('stageBackgroundImage');return img?.src.endsWith(filename)&&img.complete&&img.naturalWidth>=1200&&img.naturalHeight>=675},filename);
+    await page.locator('#rtrnSecondBox').waitFor({state:'visible'});
+    const host=await page.locator('#cameraBox').boundingBox(),guest=await page.locator('#rtrnSecondBox').boundingBox();
+    assert(host.x+host.width<guest.x,'Vintage camera boxes must not overlap');
+    await dock.locator('[data-mobile-target="photos"]').tap();
+    const frameText=await page.locator('#wallFrameList').textContent();
+    for(const label of labels)assert(frameText.includes(label),'Missing vintage photo slot: '+label);
+    await dock.locator('[data-mobile-target="scenes"]').tap();
+  }
   assert.deepEqual(errors,[],'No uncaught browser errors');
   await mobile.close();
   const desktop = await browser.newPage({viewport:{width:1440,height:900}});
