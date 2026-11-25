@@ -2046,11 +2046,11 @@ const frameLayout={
  ]
 };
 // Coordinates are normalized percentages, independent of artwork pixel size.
-const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
+const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:art==='news'?(side==='left'?'Recognition — back table between chairs':'Recognition — window ledge by window washers'):(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
 const tabletopPositions={
  originalPodcast:[[27,62.5,5.5,11.5],[75.2,51.5,3.8,10]],
  originalLive:[[27,57.5,5.5,11.5],[76.5,44.5,3.6,10]],
- news:[[13,55,6,11],[88,54,6,11]],
+ news:[[45.5,49.1,5,11.6],[79.6,49.4,4.7,11.1]],
  cozy1:[[8.5,65.5,5.5,12],[88.5,64.8,5.5,12]],
  cozy2:[[2,53,4.8,12],[94.5,54,4.8,11.5]],
  cozy3:[[0.8,48,4.6,11],[91.8,40,4.5,10]],
@@ -2565,7 +2565,7 @@ refresh();
   const isWindowScene = () => /^window-(washers|grandma|robber|sunset|weather)$/.test(state.scene);
   const isCustom = () => state.scene.startsWith('custom-scene-');
   const isOriginalDesk=()=>['original-podcast','original-live'].includes(state.scene);
-  const goldTableScene=()=>isOriginalDesk()||/^cozy-[1-4]$/.test(state.scene);
+  const goldTableScene=()=>state.scene==='news'||isOriginalDesk()||/^cozy-[1-4]$/.test(state.scene);
   const hasSceneSeats = () => isOriginalDesk()||isCozy()||isWindowScene()||state.scene==='news'||isCustom();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
@@ -2633,7 +2633,7 @@ refresh();
     stage.classList.toggle('rtrn-gold-table-frames',goldTableScene());
     stage.classList.toggle('rtrn-original',original);
     stage.classList.toggle('rtrn-solo-mode',conf.layout!=='duo');
-    stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo'&&!goldTableScene());
+    stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo'&&(state.scene==='news'||!goldTableScene()));
     stage.classList.toggle('rtrn-single-host-scene',seatCount()===1);
     desk.style.backgroundImage=original?`url("${ART[(SCENES.find(s=>s.id===state.scene)||{}).img]}")`:'';
     desk.style.clipPath=(isOutdoor()||isCustom())?'polygon(0 100%,100% 100%,100% 100%,0 100%)':state.scene==='original-live'
