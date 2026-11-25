@@ -853,7 +853,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <div class="rtrn-action-grid"><button class="btn" id="rtrnDownloadSaved" type="button">⬇ Download selected show</button><button class="btn" id="rtrnDeleteSaved" type="button">Delete selected show</button></div>
 <label for="rtrnVideoImport">Or add a downloaded video to edit</label>
 <input accept="video/*,.webm,.mp4,.mov" id="rtrnVideoImport" type="file"/>
-<video controls="" id="rtrnReviewPlayer" playsinline="" preload="metadata" style="width:100%;max-height:340px;border-radius:12px;background:#0d0b17;display:block;margin:10px 0"></video>
+<video controls="" id="rtrnReviewPlayer" playsinline="" preload="auto" style="width:100%;max-height:340px;border-radius:12px;background:#0d0b17;display:block;margin:10px 0"></video>
 <p class="mini">Play to find the word. Pause just before it and mark Start; pause just after it and mark End. You can adjust the seconds below.</p>
 <div class="rtrn-edit-grid">
 <div><label for="rtrnEditStart">Start time (seconds)</label><input id="rtrnEditStart" min="0" step="0.1" type="number" value="0"/><button class="btn" id="rtrnMarkStart" type="button">Mark start at playhead</button></div>
@@ -3050,7 +3050,8 @@ refresh();
   }
   function drawProgram(){
     const scene=SCENES.find(s=>s.id===state.scene)||SCENES[0];
-    const bg=cachedImage(ART[scene.img]);
+    const stageImage=$('stageBackgroundImage'),artURL=ART[scene.img];
+    const bg=stageImage?.complete&&stageImage.naturalWidth&&stageImage.getAttribute('src')===artURL?stageImage:cachedImage(artURL);
     ctx.fillStyle='#241635';ctx.fillRect(0,0,1280,720);
     if(bg)drawCover(bg,0,0,1280,720);
     for(const node of document.querySelectorAll('#framePortraits .frame-portrait'))drawFrameNode(node);
@@ -3150,7 +3151,8 @@ refresh();
   }
   function recordingFormat(){
     const safari=/Safari/.test(navigator.userAgent)&&!/Chrome|CriOS|Edg/.test(navigator.userAgent);
-    const choices=safari?['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp8,opus','video/webm']:
+    const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
+    const choices=(safari||mobile)?['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp8,opus','video/webm']:
       ['video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm','video/mp4;codecs=h264,aac','video/mp4'];
     return choices.find(type=>MediaRecorder.isTypeSupported(type))||'';
   }
@@ -3181,9 +3183,15 @@ refresh();
       for(const player of Object.values(soundPlayers))connectAudio(player);
       document.querySelectorAll('#framePortraits video').forEach(v=>{if(!v.muted)connectAudio(v)});
       if(secondFileURL&&!secondVideo.muted)connectAudio(secondVideo);
+      // Draw the actual studio before opening the video stream, so the first
+      // encoded frame is not the canvas's initial blank/black contents.
+      const background=$('stageBackgroundImage');
+      if(background?.src&&!background.complete&&background.decode){
+        await Promise.race([background.decode().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,2500))]);
+      }
+      chunks=[];drawProgram();
       const videoStream=canvas.captureStream(24);
       recordStream=new MediaStream([...videoStream.getVideoTracks(),...destination.stream.getAudioTracks()]);
-      chunks=[];drawProgram();
       recorder=new MediaRecorder(recordStream,{mimeType:mime,videoBitsPerSecond:2400000,audioBitsPerSecond:128000});
       recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
       recorder.onerror=e=>status('Recording error: '+(e.error?.message||'Check phone storage and try again.'));
@@ -3202,10 +3210,12 @@ refresh();
         link.href=outputURL;link.download=`RTRN-finished-show-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.${ext}`;
         link.textContent='Download finished show ('+(blob.size/1024/1024).toFixed(1)+' MB)';
         link.hidden=false;status('Show ready. Tap “Download finished show” to save it to your phone or computer.');
-        if(window.RTRNShowLibrary?.saveRecording)window.RTRNShowLibrary.saveRecording(blob,link.download).catch(console.warn);
+        const poster=window.RTRNShowLibrary?.makePoster(canvas)||'';
+        if(window.RTRNShowLibrary?.saveRecording)window.RTRNShowLibrary.saveRecording(blob,link.download,poster).catch(console.warn);
         link.click();
       };
       recorder.start(1000);startTime=Date.now();
+      drawProgram();videoStream.getVideoTracks()[0]?.requestFrame?.();
       recordButtons('recording');
       $('rtrnVideoDownload').hidden=true;
       status(micStream?'● Recording started. Your microphone, music, and studio are being captured.':
@@ -3421,24 +3431,36 @@ async function refresh(selectId){
  for(const item of items){let opt=new Option(new Date(item.created).toLocaleString()+' — '+item.name,item.id);sel.add(opt)}
  if(selectId && items.some(x=>x.id===selectId))sel.value=selectId;
 }
-async function saveRecording(blob,name){
- const item={id:idNew(),created:Date.now(),name:fileName(name),blob,size:blob.size};
- try{await put(item);await refresh(item.id);message('Saved to this browser and downloaded a backup.');
+function makePoster(source){
+ try{
+  const w=source.videoWidth||source.width,h=source.videoHeight||source.height;
+  if(!w||!h)return '';
+  const image=document.createElement('canvas');image.width=480;image.height=Math.round(480*h/w);
+  const paint=image.getContext('2d');if(!paint)return '';
+  paint.drawImage(source,0,0,image.width,image.height);
+  return image.toDataURL('image/jpeg',.86);
+ }catch(_){return ''}
+}
+async function saveRecording(blob,name,poster=''){
+ const item={id:idNew(),created:Date.now(),name:fileName(name),blob,size:blob.size,poster};
+ try{await put(item);await refresh(item.id);
+  if(!selectedBlob)showVideo(item.blob,item.name,item.poster);
+  message('Saved to this browser and downloaded a backup.');
   // Keep the user's existing preview unchanged if they're editing another video.
  }catch(err){message('Video downloaded, but browser library storage is full or unavailable: '+err.message)}
  return item;
 }
-window.RTRNShowLibrary={saveRecording};
-function showVideo(blob,name){
+window.RTRNShowLibrary={saveRecording,makePoster};
+function showVideo(blob,name,poster=''){
  selectedBlob=blob;selectedName=name;
  const player=$('rtrnReviewPlayer');player.pause();
  if(videoURL)URL.revokeObjectURL(videoURL);
- videoURL=URL.createObjectURL(blob);player.src=videoURL;player.load();
+ videoURL=URL.createObjectURL(blob);player.poster=poster||'';player.src=videoURL;player.load();
  message('Ready to preview: '+name);
 }
 $('rtrnSavedSelect').addEventListener('change',async e=>{
  if(!e.target.value)return;
- try{const item=await get(e.target.value);if(item)showVideo(item.blob,item.name)}catch(err){message(err.message)}
+ try{const item=await get(e.target.value);if(item)showVideo(item.blob,item.name,item.poster)}catch(err){message(err.message)}
 });
 $('rtrnVideoImport').addEventListener('change',e=>{
  const file=e.target.files?.[0];if(!file)return;
@@ -3498,7 +3520,7 @@ $('rtrnExportEdited').addEventListener('click',async()=>{
   recorder.onstop=async()=>{try{
     if(!aborted&&pieces.length){const blob=new Blob(pieces,{type:recorder.mimeType||mime});
      const ext=(recorder.mimeType||mime).includes('mp4')?'mp4':'webm';const name='RTRN-edited-'+Date.now()+'.'+ext;
-     linkDownload(blob,name);await saveRecording(blob,name);message('Edited copy exported and downloaded. Original is unchanged.');
+     linkDownload(blob,name);await saveRecording(blob,name,makePoster(canvas));message('Edited copy exported and downloaded. Original is unchanged.');
     }else if(!aborted)message('Nothing was exported.');
    }finally{finish()}};
   let skipped=false,ended=false;
