@@ -162,6 +162,13 @@ try {
     await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2);
     if(count){await desktop.waitForFunction(n=>['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].filter(id=>{const e=document.getElementById(id);return !e.hidden&&getComputedStyle(e).display!=='none'}).length===n,count);}
   }
+  for(const [scene,left,right] of [['cozy-1',8.5,88.5],['cozy-2',2,94.5]]){
+    await desktop.locator('[data-scene="'+scene+'"]').click();
+    await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2);
+    const frames=await desktop.locator('#tablePortraits .table-photo').evaluateAll(nodes=>nodes.map(n=>({left:parseFloat(n.style.left),border:getComputedStyle(n,'::after').borderTopStyle})));
+    assert.deepEqual(frames.map(f=>f.left),[left,right],'Photos should sit on the outer tables');
+    assert(frames.every(f=>f.border==='ridge'),'Both end-table photos should have raised gold borders');
+  }
   await desktop.locator('[data-scene="cozy-3"]').click();
   assert(await desktop.locator('#rtrnSeatPlaceholder3').isVisible(),'Three-seat sofa must show its middle guest');
   assert(await desktop.locator('#rtrnSeatPlaceholder4').isHidden(),'Three-seat sofa must not show a fourth guest');
