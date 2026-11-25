@@ -16,7 +16,7 @@ const brandedGazeboAsset=await readFile(new URL('../'+brandedGazeboAssetName,imp
 const newAssets = new Map();
 for(const filename of ['sunset_cannabis_field_lounge.png','midnight_lounge_cannabis_studio.png','moonlit_purple_gold_garden_lounge.png'])newAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
 const vintageAssets=new Map();
-for(const filename of ['vintage_tea_room.jpg','vintage_good_old_days.jpg'])vintageAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
+for(const filename of ['vintage_tea_room.jpg','vintage_good_old_days.jpg','dance_purple_club.jpg','dance_retro_disco.jpg'])vintageAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
 const server = createServer((req,res) => {
   if(vintageAssets.has(req.url)){res.writeHead(200,{'Content-Type':'image/jpeg'});res.end(vintageAssets.get(req.url));return}
   if(newAssets.has(req.url)){res.writeHead(200,{'Content-Type':'image/png'});res.end(newAssets.get(req.url));return}
@@ -157,6 +157,23 @@ try {
     for(const label of labels)assert(frameText.includes(label),'Missing vintage photo slot: '+label);
     await dock.locator('[data-mobile-target="scenes"]').tap();
   }
+  async function checkDance(p){
+    for(const [id,filename] of [['dance-purple','dance_purple_club.jpg'],['dance-retro','dance_retro_disco.jpg']]){
+      await p.locator('[data-scene="'+id+'"]').click();
+      await p.waitForFunction(filename=>{const img=document.getElementById('stageBackgroundImage');return img?.src.endsWith(filename)&&img.complete&&img.naturalWidth>=1200},filename);
+      await p.waitForFunction(()=>{const stage=document.getElementById('stage'),host=document.getElementById('cameraBox'),banner=document.getElementById('lowerThird');const s=stage.getBoundingClientRect(),h=host.getBoundingClientRect();return stage.classList.contains('rtrn-dance')&&h.height>=s.height*.48&&h.height>h.width&&h.bottom<=banner.getBoundingClientRect().top+1});
+      assert(await p.locator('#rtrnSecondBox').isHidden());
+      assert(await p.locator('#rtrnDuoQuick').isDisabled());
+      assert.equal(await p.locator('#cameraVideo').evaluate(el=>getComputedStyle(el).objectFit),'contain');
+      await p.locator('#cameraMode').evaluate(el=>{el.value='cutout';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
+      await p.waitForFunction(()=>document.getElementById('cameraBox').classList.contains('cutout'));
+      assert.equal(await p.locator('#cameraBox').evaluate(el=>getComputedStyle(el).borderTopWidth),'0px');
+      await p.locator('#cameraMode').evaluate(el=>{el.value='frame';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
+      await p.waitForFunction(()=>!document.getElementById('cameraBox').classList.contains('cutout'));
+    }
+  }
+  await dock.locator('[data-mobile-target="scenes"]').tap();
+  await checkDance(page);
   assert.deepEqual(errors,[],'No uncaught browser errors');
   await mobile.close();
   const desktop = await browser.newPage({viewport:{width:1440,height:900}});
@@ -178,6 +195,7 @@ try {
   assert.equal(await desktop.locator('#mediaLibraryFold').evaluate(el=>el.open),false);
   assert(await desktop.locator('#rtrnRecordQuick').isVisible());
   await desktop.locator('#sceneFold > summary').click();
+  await checkDance(desktop);
   const ids=await desktop.locator('#sceneList [data-scene]').evaluateAll(nodes=>nodes.map(n=>n.dataset.scene));
   assert.equal(ids.filter(id=>id.startsWith('holiday-')).length,0);
   for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars'])assert(ids.includes(id),'Missing '+id);
