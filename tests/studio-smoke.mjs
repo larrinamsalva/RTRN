@@ -58,6 +58,24 @@ try {
   await page.waitForFunction(()=>!document.getElementById('rtrnRecordQuick').disabled,{},{timeout:15000});
   assert(await stopButton.isDisabled());
   assert(await page.locator('#rtrnVideoDownload').getAttribute('download'),'Finished recording has a downloadable file');
+  // The library must have a real persisted cover even when the phone cannot
+  // automatically extract a thumbnail from a MediaRecorder download.
+  await page.waitForFunction(()=>document.getElementById('rtrnReviewPlayer').poster.startsWith('data:image/jpeg'));
+  const cover=await page.locator('#rtrnReviewPlayer').getAttribute('poster');
+  const storedCover=await page.evaluate(async()=>{
+    const db=await new Promise((ok,no)=>{const r=indexedDB.open('RTRN_Saved_Shows_V6',1);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
+    try{const items=await new Promise((ok,no)=>{const r=db.transaction('shows').objectStore('shows').getAll();r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});return items[0]?.poster;}finally{db.close()}
+  });
+  assert.equal(storedCover,cover,'Saved show cover survives browser storage');
+  const coverInfo=await page.evaluate(async url=>{
+    const image=new Image();image.src=url;await image.decode();
+    const canvas=document.createElement('canvas');canvas.width=48;canvas.height=27;
+    const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,48,27);
+    const data=ctx.getImageData(0,0,48,27).data;const colors=new Set();
+    for(let i=0;i<data.length;i+=4)colors.add([data[i],data[i+1],data[i+2]].join(','));
+    return {width:image.naturalWidth,colors:colors.size};
+  },cover);
+  assert.equal(coverInfo.width,480);assert(coverInfo.colors>30,'Cover contains a rendered scene, not a blank image');
   const dock = page.locator('#mobileDock');
   const targets = [['photos','#rtrnPhotoArea'],['library','#rtrnMusicArea'],['reactions','#audienceFold'],['scenes','#sceneFold'],['settings','#rtrnBroadcastArea'],['stage','.stage-panel']];
   for(const [target,selector] of targets){
