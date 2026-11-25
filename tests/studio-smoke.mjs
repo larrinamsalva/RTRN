@@ -86,6 +86,12 @@ try {
     await page.locator('#rtrnSecondBox').waitFor({state:'visible'});
     const host=await page.locator('#cameraBox').boundingBox(),guest=await page.locator('#rtrnSecondBox').boundingBox();
     assert(host.x+host.width<guest.x,'Vintage camera boxes must not overlap');
+    const stage=await page.locator('#stage').boundingBox(),banner=await page.locator('#lowerThird').boundingBox();
+    const expectedTop=id==='vintage-tea'?38:45;
+    for(const box of [host,guest]){
+      assert(Math.abs((box.y-stage.y)/stage.height*100-expectedTop)<2,'Vintage seat should use the raised position');
+      assert(box.y+box.height<=banner.y+1,'Vintage camera must clear the headline banner on mobile');
+    }
     await dock.locator('[data-mobile-target="photos"]').tap();
     const frameText=await page.locator('#wallFrameList').textContent();
     for(const label of labels)assert(frameText.includes(label),'Missing vintage photo slot: '+label);
