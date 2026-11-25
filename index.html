@@ -2090,7 +2090,7 @@ const frameLayout={
  ],
 
  news:[
-  {id:'news-big',name:'Large RTRN news wall display',box:[359,15,458,278],shape:'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'},
+  {id:'news-big',name:'Main Logo',box:[351,10,469,297],shape:'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'},
   {id:'news-small',name:'Small gold picture on the left shelf',box:[74,186,135,76],shape:'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'}
  ],
  podcast:[
@@ -2157,6 +2157,8 @@ for(const [art,boxes] of Object.entries(tabletopPositions)){
   frameLayout[art]??=[];
   boxes.forEach((box,i)=>frameLayout[art].push(tabletop(art==='rain'?'snow':art,i===0?'left':i===1?'right':String(i+1),box)));
 }
+// The window variants share the same physical main sign and saved logo slot.
+for(const art of ['washers','grandma','robber','sunset','snow','rain'])frameLayout[art].unshift(frameLayout.news[0]);
 frameLayout.liveWeather=frameLayout.snow;
 const storeKey='rtrn-wall-pictures-v3';
 let saved={};
@@ -2254,6 +2256,7 @@ function drawFramePhotos(){
   const [x,y,w,h]=def.box;
   d.style.left=(def.percent?x:x/imgW*100)+'%';d.style.top=(def.percent?y:y/imgH*100)+'%';
   d.style.width=(def.percent?w:w/imgW*100)+'%';d.style.height=(def.percent?h:h/imgH*100)+'%';d.style.clipPath=def.shape;
+  if(def.id==='news-big')d.style.background='#191626';
   if(!url){if(!d.querySelector('.table-empty')){const span=document.createElement('span');span.className='table-empty';span.textContent='♡';d.replaceChildren(span)}activeEls.add(def.id);continue}
   if(mode==='video'){
     let v=d.querySelector('video');
@@ -2394,12 +2397,13 @@ const emptyFramePreview = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent
  for(const def of frameLayout[art]){
   const item=saved[def.id]||{},card=document.createElement('div');card.className='frame-edit-card';
   const title=document.createElement('strong');title.textContent='🖼️ '+def.name;card.append(title);
+  if(def.id==='news-big'){const help=document.createElement('p');help.className='frame-media-help';help.textContent='Replace the large Roads to Recognition wall sign in the News Desk and all window/weather scenes. Restore original brings the built-in logo back in all of them.';card.append(help);}
   const row=document.createElement('div');row.className='frame-edit-row';
   const thumb=document.createElement('img');thumb.alt='Preview of '+def.name;thumb.src=frameURL(item)||emptyFramePreview;if(item.libraryId&&!frameURL(item))loadLibraryURL(item.libraryId);
   const actions=document.createElement('div');actions.className='frame-edit-actions';
   const label=document.createElement('label');label.className='upload-label';label.textContent='📁 Choose photo';
   const file=document.createElement('input');file.type='file';file.accept='image/*';file.setAttribute('aria-label','Upload '+def.name);label.append(file);
-  const rm=document.createElement('button');rm.type='button';rm.className='photo-remove';rm.textContent='✖ Restore original';rm.disabled=!(item.url||item.libraryId);
+  const rm=document.createElement('button');rm.type='button';rm.className='photo-remove';rm.textContent='✖ Restore original';rm.disabled=!(item.url||item.libraryId||(def.id==='news-big'&&item.mode&&item.mode!=='photo'));
   actions.append(label,rm);
   const libLabel=document.createElement('div');libLabel.className='lib-photo-pick-title';libLabel.textContent='Or choose a saved library photo';
   const libSelect=document.createElement('select');libSelect.className='lib-photo-select';libSelect.setAttribute('aria-label','Saved library photos for '+def.name);
@@ -2939,8 +2943,14 @@ refresh();
       if(node.style.clipPath.startsWith('ellipse'))ctx.ellipse(b.x+b.w/2,b.y+b.h/2,b.w/2,b.h/2,0,0,Math.PI*2);
       else ctx.rect(b.x,b.y,b.w,b.h);
       ctx.clip();
-      if(img.tagName==='VIDEO'&&img.readyState>=2)drawCover(img,b.x,b.y,b.w,b.h);
-      if(img.tagName==='IMG'&&img.complete&&img.naturalWidth)drawCover(img,b.x,b.y,b.w,b.h);
+      if(node.dataset.frameId==='news-big'){
+        ctx.fillStyle='#191626';ctx.fillRect(b.x,b.y,b.w,b.h);
+        const iw=img.videoWidth||img.naturalWidth,ih=img.videoHeight||img.naturalHeight;
+        if(iw&&ih){const fit=getComputedStyle(img).objectFit;const scale=(fit==='cover'?Math.max:Math.min)(b.w/iw,b.h/ih);const raw=getComputedStyle(img).transform;const m=new DOMMatrix(raw==='none'?undefined:raw);const stageRect=stage.getBoundingClientRect();const w=iw*scale*m.a,h=ih*scale*m.d;ctx.drawImage(img,b.x+(b.w-w)/2+m.e*1280/stageRect.width,b.y+(b.h-h)/2+m.f*720/stageRect.height,w,h);}
+      }else{
+        if(img.tagName==='VIDEO'&&img.readyState>=2)drawCover(img,b.x,b.y,b.w,b.h);
+        if(img.tagName==='IMG'&&img.complete&&img.naturalWidth)drawCover(img,b.x,b.y,b.w,b.h);
+      }
       ctx.restore();
     }catch(_){ctx.restore()}
   }
