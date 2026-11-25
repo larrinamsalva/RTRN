@@ -2046,7 +2046,7 @@ const frameLayout={
  ]
 };
 // Coordinates are normalized percentages, independent of artwork pixel size.
-const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:art==='news'?(side==='left'?'Recognition — back table between chairs':'Recognition — window ledge by window washers'):(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
+const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:['news','washers','grandma','robber','sunset','snow','rain'].includes(art)?(side==='left'?'Recognition — back table between chairs':'Recognition — side table by window'):(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
 const tabletopPositions={
  originalPodcast:[[27,62.5,5.5,11.5],[75.2,51.5,3.8,10]],
  originalLive:[[27,57.5,5.5,11.5],[76.5,44.5,3.6,10]],
@@ -2063,12 +2063,12 @@ const tabletopPositions={
  purpleHaze:[[39.7,42,3.9,10.8],[55.4,42,4.4,10.8]],
  midnight:[[40.2,55,3.3,8.1],[54.6,55,3.3,8.1],[46.8,50.2,4.9,11.2]],
  stars:[[30.8,58.2,4.3,11.1],[65.5,58.2,5.2,11.5],[36.8,67.7,4.6,6.1],[60.1,67.7,4.8,6.1]],
- washers:[[13,55,6,11],[88,54,6,11]],
- grandma:[[13,55,6,11],[88,54,6,11]],
- robber:[[13,55,6,11],[88,54,6,11]],
- sunset:[[13,55,6,11],[88,54,6,11]],
- snow:[[13,55,6,11],[88,54,6,11]],
- rain:[[13,55,6,11],[88,54,6,11]],
+ washers:[[45.5,49.1,5,11.6],[79.6,49.4,4.7,11.1]],
+ grandma:[[45.5,49.1,5,11.6],[79.6,49.4,4.7,11.1]],
+ robber:[[45.5,49.1,5,11.6],[79.6,49.4,4.7,11.1]],
+ sunset:[[45.5,49.1,5,11.6],[79.6,49.4,4.7,11.1]],
+ snow:[[45.5,49.1,5,11.6],[79.6,49.4,4.7,11.1]],
+ rain:[[45.5,49.1,5,11.6],[79.6,49.4,4.7,11.1]],
  podcast:[[10,65,6,10],[85,65,6,10]]
 };
 for(const [art,boxes] of Object.entries(tabletopPositions)){
@@ -2565,7 +2565,7 @@ refresh();
   const isWindowScene = () => /^window-(washers|grandma|robber|sunset|weather)$/.test(state.scene);
   const isCustom = () => state.scene.startsWith('custom-scene-');
   const isOriginalDesk=()=>['original-podcast','original-live'].includes(state.scene);
-  const goldTableScene=()=>state.scene==='news'||isOriginalDesk()||/^cozy-[1-4]$/.test(state.scene);
+  const goldTableScene=()=>state.scene==='news'||isWindowScene()||isOriginalDesk()||/^cozy-[1-4]$/.test(state.scene);
   const hasSceneSeats = () => isOriginalDesk()||isCozy()||isWindowScene()||state.scene==='news'||isCustom();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
@@ -2633,7 +2633,7 @@ refresh();
     stage.classList.toggle('rtrn-gold-table-frames',goldTableScene());
     stage.classList.toggle('rtrn-original',original);
     stage.classList.toggle('rtrn-solo-mode',conf.layout!=='duo');
-    stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo'&&(state.scene==='news'||!goldTableScene()));
+    stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo'&&(state.scene==='news'||isWindowScene()||!goldTableScene()));
     stage.classList.toggle('rtrn-single-host-scene',seatCount()===1);
     desk.style.backgroundImage=original?`url("${ART[(SCENES.find(s=>s.id===state.scene)||{}).img]}")`:'';
     desk.style.clipPath=(isOutdoor()||isCustom())?'polygon(0 100%,100% 100%,100% 100%,0 100%)':state.scene==='original-live'
