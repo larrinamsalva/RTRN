@@ -74,6 +74,8 @@ try {
     if(target==='stage')assert(await page.locator('#rtrnRecordQuick').isVisible(),'record shortcut is accessible');
     console.log('Mobile navigation passed:',target);
   }
+  await page.waitForFunction(()=>{const img=document.getElementById('stageBackgroundImage');return img?.complete&&img.naturalWidth>0&&getComputedStyle(img).visibility==='visible'});
+  assert(await page.locator('#stageBackgroundError').isHidden(),'Mobile scene background must load without error');
   assert.deepEqual(errors,[],'No uncaught browser errors');
   await mobile.close();
   const desktop = await browser.newPage({viewport:{width:1440,height:900}});
@@ -96,9 +98,14 @@ try {
   for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars'])assert(ids.includes(id),'Missing '+id);
   await desktop.locator('[data-scene="window-weather"]').click();
   await desktop.locator('#rtrnBroadcastTab').click();
-  const before=await desktop.locator('#background').evaluate(el=>el.style.backgroundImage);
+  const stageImage=desktop.locator('#stageBackgroundImage');
+  await desktop.waitForFunction(()=>{const img=document.getElementById('stageBackgroundImage');return img?.complete&&img.naturalWidth>0&&getComputedStyle(img).visibility==='visible'});
+  const before=await stageImage.getAttribute('src');
+  assert(before,'Weather scene must have a source image');
   await desktop.locator('#weatherSelect').selectOption('rain');
-  assert.notEqual(await desktop.locator('#background').evaluate(el=>el.style.backgroundImage),before);
+  await desktop.waitForFunction(previous=>{const img=document.getElementById('stageBackgroundImage');return img?.getAttribute('src')!==previous&&img?.complete&&img.naturalWidth>0&&getComputedStyle(img).visibility==='visible'},before);
+  assert.notEqual(await stageImage.getAttribute('src'),before);
+  assert(await desktop.locator('#stageBackgroundError').isHidden(),'Weather scene image must load without error');
   for(const id of ['window-washers','window-grandma','window-robber','window-sunset','window-weather']){
     await desktop.locator('[data-scene="'+id+'"]').click();
     await desktop.locator('#rtrnSecondBox').waitFor({state:'visible'});
@@ -216,9 +223,9 @@ try {
   await desktop.locator('#rtrnPhotoTab').click();
   const upload=desktop.getByLabel('Upload Left desk / table photo',{exact:true});
   await upload.setInputFiles({name:'test.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR2sAAAAASUVORK5CYII=','base64')});
-  await desktop.waitForFunction(()=>!!document.querySelector('#tablePortraits [data-frame-id="cozy4-table-left"] img'));
+  await desktop.waitForFunction(()=>{const img=document.querySelector('#tablePortraits [data-frame-id="cozy4-table-left"] img');return img?.complete&&img.naturalWidth>0});
   await desktop.reload();
-  await desktop.waitForFunction(()=>!!document.querySelector('#tablePortraits [data-frame-id="cozy4-table-left"] img'));
+  await desktop.waitForFunction(()=>{const img=document.querySelector('#tablePortraits [data-frame-id="cozy4-table-left"] img');return img?.complete&&img.naturalWidth>0});
   await desktop.locator('#sceneFold > summary').click();
   await desktop.locator('#newSceneFiles').setInputFiles({name:'five-seat-test.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR2sAAAAASUVORK5CYII=','base64')});
   await desktop.locator('#addCustomScenes').click();
