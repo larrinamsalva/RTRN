@@ -49,6 +49,16 @@ try {
   assert(await stopButton.isDisabled());
   const stageRect=await page.locator('.stage-shell').boundingBox(), recordRect=await page.locator('.rtrn-record-top').boundingBox();
   assert(recordRect.y>=stageRect.y+stageRect.height-2 && recordRect.y-stageRect.y-stageRect.height<30,'Record controls immediately below preview');
+  const startCam=page.locator('#rtrnCameraQuick'),stopCam=page.locator('#rtrnCameraStopQuick');
+  const mixerRect=await page.locator('.rtrn-audio-mix').boundingBox(),cameraRect=await page.locator('.rtrn-camera-top').boundingBox();
+  assert(cameraRect.y>=mixerRect.y+mixerRect.height-1&&cameraRect.y-mixerRect.y-mixerRect.height<24,'Camera controls immediately below mobile volume sliders');
+  assert(await startCam.isEnabled());assert(await stopCam.isDisabled());
+  await startCam.tap();
+  await page.waitForFunction(()=>{const video=document.getElementById('cameraVideo');return video.srcObject?.getVideoTracks().some(t=>t.readyState==='live')&&video.readyState>=2&&!document.getElementById('rtrnCameraStopQuick').disabled});
+  assert(await startCam.isDisabled());
+  await stopCam.tap();
+  await page.waitForFunction(()=>!document.getElementById('cameraVideo').srcObject&&!document.getElementById('rtrnCameraQuick').disabled);
+  assert(await stopCam.isDisabled());
   await startButton.tap();
   await stopButton.waitFor({state:'visible'});
   await page.waitForFunction(()=>!document.getElementById('rtrnStopRecordQuick').disabled,{},{timeout:15000});
@@ -132,6 +142,10 @@ try {
   await mobile.close();
   const desktop = await browser.newPage({viewport:{width:1440,height:900}});
   await desktop.goto(url);
+  const desktopMixer=await desktop.locator('.rtrn-audio-mix').boundingBox(),desktopCamera=await desktop.locator('.rtrn-camera-top').boundingBox();
+  assert(desktopCamera.y>=desktopMixer.y+desktopMixer.height-1&&desktopCamera.y-desktopMixer.y-desktopMixer.height<24,'Camera controls immediately below desktop volume sliders');
+  assert(await desktop.locator('#rtrnCameraQuick').isVisible());
+  assert(await desktop.locator('#rtrnCameraStopQuick').isVisible());
   assert.equal(await desktop.locator('details[open]').count(),0,'All expandable sections start closed on desktop');
   await desktop.locator('#rtrnPhotoTab').click();
   assert(await desktop.locator('#rtrnPhotoArea').isVisible());
