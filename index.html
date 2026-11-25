@@ -585,10 +585,10 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 }
 </style>
 <style>.rtrn-record-top{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0;padding:0 8px}.rtrn-record-top .btn{min-height:48px;white-space:normal;font-weight:800}.rtrn-record-top #rtrnRecordQuick{background:#762d56;border-color:#ff9bc6;color:white}.rtrn-record-top #rtrnStopRecordQuick{background:#a52c45;color:white}.rtrn-record-top .btn:disabled{opacity:.5;cursor:not-allowed}body.output-mode .rtrn-record-top{display:none!important}</style><style id="table-frame-style">#tablePortraits{z-index:9}.frame-portrait.table-photo{box-sizing:border-box;border:clamp(1px,.25vw,4px) solid #d6b16b;border-radius:3px;background:linear-gradient(135deg,#614739,#20172d);box-shadow:1px 3px 6px #000a;display:grid;place-items:center}.table-photo .table-empty{color:#e7c994;font-size:clamp(6px,1vw,14px);line-height:1}.stage.rtrn-cozy .rtrn-original-desk{display:none}</style><style>.rtrn-audio-mix{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 12px;padding:10px;margin:4px 8px 8px;border:1px solid #76568c;border-radius:10px;background:#241733;color:#fff}.rtrn-audio-mix label{display:flex;justify-content:space-between;gap:6px;font-size:13px;align-items:center}.rtrn-audio-mix input{width:100%;min-width:0;accent-color:#c49cf4;min-height:30px}.rtrn-audio-mix label:nth-of-type(1){grid-column:1;grid-row:1}.rtrn-audio-mix input:nth-of-type(1){grid-column:1;grid-row:2}.rtrn-audio-mix label:nth-of-type(2){grid-column:2;grid-row:1}.rtrn-audio-mix input:nth-of-type(2){grid-column:2;grid-row:2}body.output-mode .rtrn-audio-mix{display:none!important}@media(max-width:480px){.rtrn-audio-mix{grid-template-columns:1fr}.rtrn-audio-mix label:nth-of-type(2){grid-column:1;grid-row:3}.rtrn-audio-mix input:nth-of-type(2){grid-column:1;grid-row:4}}</style><style>.stage.rtrn-portrait-seats .rtrn-cozy-seat,.stage.rtrn-portrait-seats .camera-box:not(.cutout){box-sizing:border-box;border:clamp(3px,.65vw,9px) ridge #d8b674!important;border-radius:5px!important;box-shadow:0 0 0 1px #61421e,0 3px 8px #0009,inset 0 0 0 2px #f6df9f;background:#30203c}.rtrn-seat-portrait{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}.rtrn-seat-portrait[hidden]{display:none!important}.stage.rtrn-portrait-seats .rtrn-cozy-seat span{font-size:clamp(12px,2vw,24px)}#rtrnPrimaryPortraitTools[hidden]{display:none!important}</style><style id="cozy-antique-photo-frames">
-.stage.rtrn-cozy .frame-portrait.table-photo{border:clamp(2px,.45vw,6px) ridge #d8b674;border-radius:3px;box-shadow:inset 0 0 0 1px #f8e4ac,0 2px 5px #0009;background:#35243f}
+.stage.rtrn-gold-table-frames .frame-portrait.table-photo{border:clamp(2px,.45vw,6px) ridge #d8b674;border-radius:3px;box-shadow:inset 0 0 0 1px #f8e4ac,0 2px 5px #0009;background:#35243f}
 .stage.rtrn-portrait-seats .rtrn-cozy-seat,.stage.rtrn-portrait-seats .camera-box:not(.cutout){border-color:#c69a54!important;box-shadow:0 0 0 1px #785025,0 4px 9px #0009,inset 0 0 0 2px #f8e4ac}
 .stage.rtrn-portrait-seats .rtrn-seat-portrait,.stage.rtrn-portrait-seats .rtrn-cozy-seat img{object-fit:contain;background:#30203c}
-</style><style id="cozy-final-table-frames">.stage.rtrn-cozy .frame-portrait.table-photo{border:0;background:#39293b;overflow:hidden;box-shadow:0 2px 4px #000b}.stage.rtrn-cozy .frame-portrait.table-photo:after{content:"";position:absolute;inset:0;pointer-events:none;box-sizing:border-box;border:clamp(2px,.55vw,7px) ridge #dbb76d;box-shadow:inset 0 0 0 1px #fff0bc,inset 0 0 0 2px #775025}.stage.rtrn-cozy .frame-portrait.table-photo img{padding:2px;box-sizing:border-box}</style></head>
+</style><style id="cozy-final-table-frames">.stage.rtrn-gold-table-frames .frame-portrait.table-photo{border:0;background:#39293b;overflow:hidden;box-shadow:0 2px 4px #000b}.stage.rtrn-gold-table-frames .frame-portrait.table-photo:after{content:"";position:absolute;inset:0;pointer-events:none;box-sizing:border-box;border:clamp(2px,.55vw,7px) ridge #dbb76d;box-shadow:inset 0 0 0 1px #fff0bc,inset 0 0 0 2px #775025}.stage.rtrn-gold-table-frames .frame-portrait.table-photo img{padding:2px;box-sizing:border-box}</style></head>
 <body>
 <div class="app">
 <header class="topbar"><div class="branding"><div aria-hidden="true" class="logo">R</div><div><h1>RTRN Studio Control Room V6 · Multi-Guest Seating</h1><p>Roads to Recognition Network · original sets + four cozy lounges · solo and multi-guest shows · recording</p></div></div><div class="top-actions"><span class="pill"><span class="pulse"></span> Studio ready</span><button class="btn" id="popBtn" title="Open a clean stage in another window">↗ Pop-out output</button><button class="btn btn-primary" id="fullBtn">⛶ Fullscreen stage</button></div></header>
@@ -2048,8 +2048,8 @@ const frameLayout={
 // Coordinates are normalized percentages, independent of artwork pixel size.
 const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
 const tabletopPositions={
- originalPodcast:[[24,59,7,12],[84,60,7,11]],
- originalLive:[[26,54,7,11],[85,55,7,11]],
+ originalPodcast:[[24,59,5,11],[78.2,49.5,4,11]],
+ originalLive:[[25,53.5,5,11],[78.5,43,4,11]],
  news:[[13,55,6,11],[88,54,6,11]],
  cozy1:[[8.5,65.5,5.5,12],[88.5,64.8,5.5,12]],
  cozy2:[[2,53,4.8,12],[94.5,54,4.8,11.5]],
@@ -2564,9 +2564,13 @@ refresh();
   const isCozy = () => /^cozy-[1-4]$/.test(state.scene)||isOutdoor();
   const isWindowScene = () => /^window-(washers|grandma|robber|sunset|weather)$/.test(state.scene);
   const isCustom = () => state.scene.startsWith('custom-scene-');
-  const hasSceneSeats = () => isCozy()||isWindowScene()||state.scene==='news'||isCustom();
+  const isOriginalDesk=()=>['original-podcast','original-live'].includes(state.scene);
+  const goldTableScene=()=>isOriginalDesk()||/^cozy-[1-4]$/.test(state.scene);
+  const hasSceneSeats = () => isOriginalDesk()||isCozy()||isWindowScene()||state.scene==='news'||isCustom();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
+    'original-podcast':{oneX:38.2,oneY:36,oneSize:22},
+    'original-live':{oneX:39,oneY:30.5,oneSize:22},
     'cozy-1':{oneX:39,oneY:50,oneSize:22,twoX:56,twoY:27,twoSize:27},
     'cozy-2':{oneX:15.5,oneY:48,oneSize:18,twoX:66.5,twoY:48,twoSize:18},
     'cozy-3':{oneX:13.5,oneY:43,oneSize:21,twoX:65.5,twoY:43,twoSize:21},
@@ -2613,7 +2617,7 @@ refresh();
   function setBox(box,x,y,size,cutout) {
     const width = inRange(size,(isCustom()||['porch','midnight','stars'].includes(state.scene))?11.5:/^cozy-[1-4]$/.test(state.scene)?11.5:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
     box.style.left=left+'%';box.style.top=top+'%';box.style.width=width+'%';
-    box.style.height=(state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isCustom()&&seatCount()>=3?Math.min(32,91-top):/^cozy-[1-4]$/.test(state.scene)?Math.min(36,width*1.65,91-top):(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
+    box.style.height=(state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isOriginalDesk()?Math.min(width*1.55,(state.scene==='original-live'?65:70)-top):isCustom()&&seatCount()>=3?Math.min(32,91-top):/^cozy-[1-4]$/.test(state.scene)?Math.min(36,width*1.65,91-top):(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
     box.classList.toggle('cutout',cutout);
     box.style.borderRadius=cutout?'0':'16px';
     box.style.borderWidth=cutout?'0':'3px';
@@ -2626,9 +2630,10 @@ refresh();
   function paintHostLayers() {
     const original=isOriginal(),cutout=state.cameraMode==='cutout'; const seat=sceneSeatConf();
     stage.classList.toggle('rtrn-cozy',/^cozy-/.test(state.scene));
+    stage.classList.toggle('rtrn-gold-table-frames',goldTableScene());
     stage.classList.toggle('rtrn-original',original);
     stage.classList.toggle('rtrn-solo-mode',conf.layout!=='duo');
-    stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo'&&!/^cozy-[1-4]$/.test(state.scene));
+    stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo'&&!goldTableScene());
     stage.classList.toggle('rtrn-single-host-scene',seatCount()===1);
     desk.style.backgroundImage=original?`url("${ART[(SCENES.find(s=>s.id===state.scene)||{}).img]}")`:'';
     desk.style.clipPath=(isOutdoor()||isCustom())?'polygon(0 100%,100% 100%,100% 100%,0 100%)':state.scene==='original-live'
@@ -2906,7 +2911,7 @@ refresh();
       const b=relativeBox(node);ctx.fillStyle='#25192e';ctx.fillRect(b.x,b.y,b.w,b.h);
       const img=node.querySelector('img');
       if(img?.complete&&img.naturalWidth){ctx.save();ctx.beginPath();ctx.rect(b.x+2,b.y+2,b.w-4,b.h-4);ctx.clip();const iw=img.naturalWidth,ih=img.naturalHeight;const scale=(img.style.objectFit==='cover'?Math.max:Math.min)(b.w/iw,b.h/ih);const m=new DOMMatrix(getComputedStyle(img).transform==='none'?undefined:getComputedStyle(img).transform);const dx=m.e*1280/stage.getBoundingClientRect().width,dy=m.f*720/stage.getBoundingClientRect().height;const w=iw*scale*m.a,h=ih*scale*m.d;ctx.drawImage(img,b.x+(b.w-w)/2+dx,b.y+(b.h-h)/2+dy,w,h);ctx.restore();}
-      if(/^cozy-[1-4]$/.test(state.scene)){const t=Math.min(6,b.w/8,b.h/8);ctx.strokeStyle='#785025';ctx.lineWidth=t;ctx.strokeRect(b.x+t/2,b.y+t/2,b.w-t,b.h-t);ctx.strokeStyle='#e9c77e';ctx.lineWidth=Math.max(1,t/2);ctx.strokeRect(b.x+t/2,b.y+t/2,b.w-t,b.h-t);ctx.strokeStyle='#fff0bc';ctx.lineWidth=1;ctx.strokeRect(b.x+t,b.y+t,b.w-2*t,b.h-2*t);}else{ctx.strokeStyle='#d6b16b';ctx.lineWidth=3;ctx.strokeRect(b.x,b.y,b.w,b.h);}
+      if(goldTableScene()){const t=Math.min(6,b.w/8,b.h/8);ctx.strokeStyle='#785025';ctx.lineWidth=t;ctx.strokeRect(b.x+t/2,b.y+t/2,b.w-t,b.h-t);ctx.strokeStyle='#e9c77e';ctx.lineWidth=Math.max(1,t/2);ctx.strokeRect(b.x+t/2,b.y+t/2,b.w-t,b.h-t);ctx.strokeStyle='#fff0bc';ctx.lineWidth=1;ctx.strokeRect(b.x+t,b.y+t,b.w-2*t,b.h-2*t);}else{ctx.strokeStyle='#d6b16b';ctx.lineWidth=3;ctx.strokeRect(b.x,b.y,b.w,b.h);}
     }
     if(document.getElementById('stage').classList.contains('birds-running')){
       const now=(Date.now()%16500)/16500;
