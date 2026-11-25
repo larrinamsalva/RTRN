@@ -588,7 +588,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 .stage.rtrn-portrait-seats .frame-portrait.table-photo{border:clamp(2px,.45vw,6px) ridge #d8b674;border-radius:3px;box-shadow:inset 0 0 0 1px #f8e4ac,0 2px 5px #0009;background:#35243f}
 .stage.rtrn-portrait-seats .rtrn-cozy-seat,.stage.rtrn-portrait-seats .camera-box:not(.cutout){border-color:#c69a54!important;box-shadow:0 0 0 1px #785025,0 4px 9px #0009,inset 0 0 0 2px #f8e4ac}
 .stage.rtrn-portrait-seats .rtrn-seat-portrait,.stage.rtrn-portrait-seats .rtrn-cozy-seat img{object-fit:contain;background:#30203c}
-</style></head>
+</style><style id="cozy-final-table-frames">.stage.rtrn-portrait-seats .frame-portrait.table-photo{border:0;background:#39293b;overflow:hidden;box-shadow:0 2px 4px #000b}.stage.rtrn-portrait-seats .frame-portrait.table-photo:after{content:"";position:absolute;inset:0;pointer-events:none;box-sizing:border-box;border:clamp(2px,.55vw,7px) ridge #dbb76d;box-shadow:inset 0 0 0 1px #fff0bc,inset 0 0 0 2px #775025}.stage.rtrn-portrait-seats .frame-portrait.table-photo img{padding:2px;box-sizing:border-box}</style></head>
 <body>
 <div class="app">
 <header class="topbar"><div class="branding"><div aria-hidden="true" class="logo">R</div><div><h1>RTRN Studio Control Room V6 · Multi-Guest Seating</h1><p>Roads to Recognition Network · original sets + four cozy lounges · solo and multi-guest shows · recording</p></div></div><div class="top-actions"><span class="pill"><span class="pulse"></span> Studio ready</span><button class="btn" id="popBtn" title="Open a clean stage in another window">↗ Pop-out output</button><button class="btn btn-primary" id="fullBtn">⛶ Fullscreen stage</button></div></header>
@@ -2053,8 +2053,8 @@ const tabletopPositions={
  news:[[13,55,6,11],[88,54,6,11]],
  cozy1:[[8,64,5.5,12],[88,64,5.5,12]],
  cozy2:[[1.5,54,5,11],[94,54,5,11]],
- cozy3:[[3,65,5,13],[92,65,5,13]],
- cozy4:[[37,65,5.5,13],[60,65,5.5,13]],
+ cozy3:[[0.8,48,4.6,11],[91.8,40,4.5,10]],
+ cozy4:[[0.3,49,3.9,11],[95.7,49,4,11]],
  beach:[[43.2,49.8,5.6,12.1],[51.1,49.8,5.6,12.1]],
  mountain:[[42.6,45,3.7,8.7],[51.4,49.1,3.5,5.5]],
  porch:[[39.2,53.4,4.3,8.2],[52,53.4,4.3,8.2]],
@@ -2569,8 +2569,8 @@ refresh();
   const cozyPresets={
     'cozy-1':{oneX:39,oneY:50,oneSize:22,twoX:56,twoY:27,twoSize:27},
     'cozy-2':{oneX:15.5,oneY:48,oneSize:18,twoX:66.5,twoY:48,twoSize:18},
-    'cozy-3':{oneX:14.5,oneY:45,oneSize:19,twoX:66.5,twoY:45,twoSize:19},
-    'cozy-4':{oneX:10,oneY:37,oneSize:14,twoX:32,twoY:37,twoSize:14},
+    'cozy-3':{oneX:13.5,oneY:43,oneSize:21,twoX:65.5,twoY:43,twoSize:21},
+    'cozy-4':{oneX:9,oneY:37,oneSize:16,twoX:31,twoY:37,twoSize:16},
     ...Object.fromEntries(['news','window-washers','window-grandma','window-robber','window-sunset','window-weather'].map(id=>[id,{oneX:13,oneY:35,oneSize:24,twoX:54,twoY:35,twoSize:24}])),
     beach:{oneX:9.5,oneY:30,oneSize:23,twoX:67.5,twoY:30,twoSize:23},
     mountain:{oneX:14.5,oneY:33,oneSize:19,twoX:70.5,twoY:33,twoSize:19},
@@ -2596,13 +2596,15 @@ refresh();
   }
   // Apply compact furniture-fit presets once; later manual adjustments persist.
   try { if(localStorage.getItem('rtrn-cozy-furniture-fit-v1')!=='1'){ for(const id of ['cozy-1','cozy-2','cozy-3','cozy-4']){const saved=cozySaved[id];if(saved){for(const key of ['oneX','oneY','oneSize','twoX','twoY','twoSize','seat3','seat4'])delete saved[key];}}localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-cozy-furniture-fit-v1','1');}}catch(_){}
+  // Update only old default geometry; retain individually adjusted positions.
+  try{if(localStorage.getItem('rtrn-cozy-final-fit-v1')!=='1'){for(const [id,old] of Object.entries({'cozy-3':{oneX:14.5,oneY:45,oneSize:19,twoX:66.5,twoY:45,twoSize:19,seat3:{x:40.5,y:45,size:19}},'cozy-4':{oneX:10,oneY:37,oneSize:14,twoX:32,twoY:37,twoSize:14,seat3:{x:56.5,y:37,size:14},seat4:{x:78.5,y:37,size:14}}})){const saved=cozySaved[id];if(!saved)continue;for(const [key,val] of Object.entries(old)){if(typeof val==='object'){if(saved[key])for(const [k,v] of Object.entries(val))if(saved[key][k]===v)delete saved[key][k];}else if(saved[key]===val)delete saved[key];}}localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-cozy-final-fit-v1','1');}}catch(_){}
   const seatCount=()=>isCustom()?Math.max(1,Math.min(5,Number(cozySaved[state.scene]?.count)||1)):['cozy-3','gazebo','gazebo-branded'].includes(state.scene)?3:['cozy-4','midnight','stars'].includes(state.scene)?4:['cozy-1','original-podcast','original-live'].includes(state.scene)?1:hasSceneSeats()?2:1;
   const customSeat=(n)=>{const count=seatCount(),width=Math.min(32,Math.floor(84/count));return {x:Math.round((100/count)*(n-.5)-width/2),y:32,size:width}};
   try{if(localStorage.getItem('rtrn-realistic-beach-seat-layout-v1')!=='1'){delete cozySaved.beach;localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-beach-seat-layout-v1','1')}}catch(_){}
   try{if(localStorage.getItem('rtrn-realistic-mountain-seat-layout-v1')!=='1'){delete cozySaved.mountain;localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-mountain-seat-layout-v1','1')}}catch(_){}
   const sceneSeatConf=()=>hasSceneSeats()?{...conf,...(isCustom()?{oneX:customSeat(1).x,oneY:32,oneSize:customSeat(1).size,twoX:customSeat(2).x,twoY:32,twoSize:customSeat(2).size}:cozyPresets[state.scene]),...(cozySaved[state.scene]||{})}:conf;
   window.RTRNSeatCount=seatCount;
-  window.RTRNExtraSeatPosition=n=>{const base=state.scene==='midnight'?(n===3?{x:57.5,y:39,size:15}:{x:78,y:42,size:16}):state.scene==='stars'?(n===3?{x:58.4,y:40,size:11.8}:{x:81,y:41,size:15}):isCustom()?customSeat(n):['gazebo','gazebo-branded'].includes(state.scene)?{x:73.2,y:37.5,size:18} :state.scene==='cozy-3'?{x:40.5,y:45,size:19}:state.scene==='cozy-4'?{x:n===3?56.5:78.5,y:37,size:14}:{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
+  window.RTRNExtraSeatPosition=n=>{const base=state.scene==='midnight'?(n===3?{x:57.5,y:39,size:15}:{x:78,y:42,size:16}):state.scene==='stars'?(n===3?{x:58.4,y:40,size:11.8}:{x:81,y:41,size:15}):isCustom()?customSeat(n):['gazebo','gazebo-branded'].includes(state.scene)?{x:73.2,y:37.5,size:18} :state.scene==='cozy-3'?{x:39.5,y:43,size:21}:state.scene==='cozy-4'?{x:n===3?55.5:77.5,y:37,size:16}:{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
   window.RTRNSetExtraSeatPosition=(n,key,value)=>{const saved=cozySaved[state.scene]??={};(saved['seat'+n]??={})[key]=Number(value);saveCozy()};
   const saveCozy=()=>{try{localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved))}catch(_){}};
   
@@ -2904,7 +2906,7 @@ refresh();
       const b=relativeBox(node);ctx.fillStyle='#25192e';ctx.fillRect(b.x,b.y,b.w,b.h);
       const img=node.querySelector('img');
       if(img?.complete&&img.naturalWidth){ctx.save();ctx.beginPath();ctx.rect(b.x+2,b.y+2,b.w-4,b.h-4);ctx.clip();const iw=img.naturalWidth,ih=img.naturalHeight;const scale=(img.style.objectFit==='cover'?Math.max:Math.min)(b.w/iw,b.h/ih);const m=new DOMMatrix(getComputedStyle(img).transform==='none'?undefined:getComputedStyle(img).transform);const dx=m.e*1280/stage.getBoundingClientRect().width,dy=m.f*720/stage.getBoundingClientRect().height;const w=iw*scale*m.a,h=ih*scale*m.d;ctx.drawImage(img,b.x+(b.w-w)/2+dx,b.y+(b.h-h)/2+dy,w,h);ctx.restore();}
-      ctx.strokeStyle='#d6b16b';ctx.lineWidth=3;ctx.strokeRect(b.x,b.y,b.w,b.h);
+      if(portraitScene()){const t=Math.min(6,b.w/8,b.h/8);ctx.strokeStyle='#785025';ctx.lineWidth=t;ctx.strokeRect(b.x+t/2,b.y+t/2,b.w-t,b.h-t);ctx.strokeStyle='#e9c77e';ctx.lineWidth=Math.max(1,t/2);ctx.strokeRect(b.x+t/2,b.y+t/2,b.w-t,b.h-t);ctx.strokeStyle='#fff0bc';ctx.lineWidth=1;ctx.strokeRect(b.x+t,b.y+t,b.w-2*t,b.h-2*t);}else{ctx.strokeStyle='#d6b16b';ctx.lineWidth=3;ctx.strokeRect(b.x,b.y,b.w,b.h);}
     }
     if(document.getElementById('stage').classList.contains('birds-running')){
       const now=(Date.now()%16500)/16500;
