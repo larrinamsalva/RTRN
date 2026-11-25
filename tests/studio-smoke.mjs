@@ -243,6 +243,10 @@ try {
   await desktop.reload();
   await desktop.waitForFunction(()=>document.getElementById('rtrnCustomSeatCount').value==='5'&&!document.getElementById('rtrnSeatPlaceholder5').hidden);
   console.log('Custom scene seating from one to five, fifth camera, solo and saved count passed.');
+  // Reload intentionally collapses the scene selector; open it as a user would.
+  assert.equal(await desktop.locator('#sceneFold').evaluate(el=>el.open),false);
+  await desktop.locator('#sceneFold > summary').click();
+  await desktop.locator('#sceneFold [data-scene="cozy-1"]').waitFor({state:'visible'});
   for(const scene of ['cozy-1','cozy-2','original-podcast','original-live']){
     await desktop.locator('[data-scene="'+scene+'"]').click();
     await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2&&document.getElementById('stage').classList.contains('rtrn-gold-table-frames'));
