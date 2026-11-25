@@ -162,6 +162,13 @@ try {
     await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2);
     if(count){await desktop.waitForFunction(n=>['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].filter(id=>{const e=document.getElementById(id);return !e.hidden&&getComputedStyle(e).display!=='none'}).length===n,count);}
   }
+  for(const [scene,left,right] of [['cozy-1',8.5,88.5],['cozy-2',2,94.5]]){
+    await desktop.locator('[data-scene="'+scene+'"]').click();
+    await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2);
+    const frames=await desktop.locator('#tablePortraits .table-photo').evaluateAll(nodes=>nodes.map(n=>({left:parseFloat(n.style.left),border:getComputedStyle(n,'::after').borderTopStyle})));
+    assert.deepEqual(frames.map(f=>f.left),[left,right],'Photos should sit on the outer tables');
+    assert(frames.every(f=>f.border==='ridge'),'Both end-table photos should have raised gold borders');
+  }
   await desktop.locator('[data-scene="cozy-3"]').click();
   assert(await desktop.locator('#rtrnSeatPlaceholder3').isVisible(),'Three-seat sofa must show its middle guest');
   assert(await desktop.locator('#rtrnSeatPlaceholder4').isHidden(),'Three-seat sofa must not show a fourth guest');
@@ -236,5 +243,17 @@ try {
   await desktop.reload();
   await desktop.waitForFunction(()=>document.getElementById('rtrnCustomSeatCount').value==='5'&&!document.getElementById('rtrnSeatPlaceholder5').hidden);
   console.log('Custom scene seating from one to five, fifth camera, solo and saved count passed.');
+  // Reload intentionally collapses the scene selector; open it as a user would.
+  assert.equal(await desktop.locator('#sceneFold').evaluate(el=>el.open),false);
+  await desktop.locator('#sceneFold > summary').click();
+  await desktop.locator('#sceneFold [data-scene="cozy-1"]').waitFor({state:'visible'});
+  for(const scene of ['cozy-1','cozy-2','original-podcast','original-live']){
+    await desktop.locator('[data-scene="'+scene+'"]').click();
+    await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2&&document.getElementById('stage').classList.contains('rtrn-gold-table-frames'));
+    const frames=await desktop.locator('#tablePortraits .table-photo').evaluateAll(nodes=>nodes.map(n=>({x:parseFloat(n.style.left),border:getComputedStyle(n,'::after').borderTopStyle})));
+    assert(frames.every(f=>f.border==='ridge'),'Gold picture frame molding must be visible');
+    assert(frames[0].x<30&&frames[1].x>75,'Frames belong on outer desk or side tables');
+    if(scene.startsWith('original-'))await desktop.waitForFunction(()=>parseFloat(document.getElementById('cameraBox').style.width)===22);
+  }
   console.log('Desktop workspace, scenic sets, tabletop photo and seat checks passed.');
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
