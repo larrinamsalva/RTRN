@@ -2563,10 +2563,10 @@ refresh();
   const hasSceneSeats = () => isCozy()||isWindowScene()||state.scene==='news'||isCustom();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
-    'cozy-1':{oneX:34,oneY:50,oneSize:32,twoX:56,twoY:27,twoSize:27},
-    'cozy-2':{oneX:11,oneY:44,oneSize:27,twoX:62,twoY:44,twoSize:27},
-    'cozy-3':{oneX:9,oneY:39,oneSize:30,twoX:61,twoY:39,twoSize:30},
-    'cozy-4':{oneX:8,oneY:39,oneSize:18,twoX:30, twoY:39,twoSize:18},
+    'cozy-1':{oneX:39,oneY:50,oneSize:22,twoX:56,twoY:27,twoSize:27},
+    'cozy-2':{oneX:15.5,oneY:48,oneSize:18,twoX:66.5,twoY:48,twoSize:18},
+    'cozy-3':{oneX:14.5,oneY:45,oneSize:19,twoX:66.5,twoY:45,twoSize:19},
+    'cozy-4':{oneX:10,oneY:37,oneSize:14,twoX:32,twoY:37,twoSize:14},
     ...Object.fromEntries(['news','window-washers','window-grandma','window-robber','window-sunset','window-weather'].map(id=>[id,{oneX:13,oneY:35,oneSize:24,twoX:54,twoY:35,twoSize:24}])),
     beach:{oneX:9.5,oneY:30,oneSize:23,twoX:67.5,twoY:30,twoSize:23},
     mountain:{oneX:14.5,oneY:33,oneSize:19,twoX:70.5,twoY:33,twoSize:19},
@@ -2590,22 +2590,24 @@ refresh();
   }catch(_) {
     cozySaved['cozy-4']={...(cozySaved['cozy-4']||{}),oneSize:17,twoSize:17,oneY:32,twoY:32};
   }
+  // Apply compact furniture-fit presets once; later manual adjustments persist.
+  try { if(localStorage.getItem('rtrn-cozy-furniture-fit-v1')!=='1'){ for(const id of ['cozy-1','cozy-2','cozy-3','cozy-4']){const saved=cozySaved[id];if(saved){for(const key of ['oneX','oneY','oneSize','twoX','twoY','twoSize','seat3','seat4'])delete saved[key];}}localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-cozy-furniture-fit-v1','1');}}catch(_){}
   const seatCount=()=>isCustom()?Math.max(1,Math.min(5,Number(cozySaved[state.scene]?.count)||1)):['gazebo','gazebo-branded'].includes(state.scene)?3:['cozy-4','midnight','stars'].includes(state.scene)?4:['cozy-1','original-podcast','original-live'].includes(state.scene)?1:hasSceneSeats()?2:1;
   const customSeat=(n)=>{const count=seatCount(),width=Math.min(32,Math.floor(84/count));return {x:Math.round((100/count)*(n-.5)-width/2),y:32,size:width}};
   try{if(localStorage.getItem('rtrn-realistic-beach-seat-layout-v1')!=='1'){delete cozySaved.beach;localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-beach-seat-layout-v1','1')}}catch(_){}
   try{if(localStorage.getItem('rtrn-realistic-mountain-seat-layout-v1')!=='1'){delete cozySaved.mountain;localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-mountain-seat-layout-v1','1')}}catch(_){}
   const sceneSeatConf=()=>hasSceneSeats()?{...conf,...(isCustom()?{oneX:customSeat(1).x,oneY:32,oneSize:customSeat(1).size,twoX:customSeat(2).x,twoY:32,twoSize:customSeat(2).size}:cozyPresets[state.scene]),...(cozySaved[state.scene]||{})}:conf;
   window.RTRNSeatCount=seatCount;
-  window.RTRNExtraSeatPosition=n=>{const base=state.scene==='midnight'?(n===3?{x:57.5,y:39,size:15}:{x:78,y:42,size:16}):state.scene==='stars'?(n===3?{x:58.4,y:40,size:11.8}:{x:81,y:41,size:15}):isCustom()?customSeat(n):['gazebo','gazebo-branded'].includes(state.scene)?{x:73.2,y:37.5,size:18}:{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
+  window.RTRNExtraSeatPosition=n=>{const base=state.scene==='midnight'?(n===3?{x:57.5,y:39,size:15}:{x:78,y:42,size:16}):state.scene==='stars'?(n===3?{x:58.4,y:40,size:11.8}:{x:81,y:41,size:15}):isCustom()?customSeat(n):['gazebo','gazebo-branded'].includes(state.scene)?{x:73.2,y:37.5,size:18} :state.scene==='cozy-4'?{x:n===3?56.5:78.5,y:37,size:14}:{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
   window.RTRNSetExtraSeatPosition=(n,key,value)=>{const saved=cozySaved[state.scene]??={};(saved['seat'+n]??={})[key]=Number(value);saveCozy()};
   const saveCozy=()=>{try{localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved))}catch(_){}};
   
   const sourceReady = () => !!secondStream || !!secondFileURL;
   const inRange = (v,lo,hi) => Math.min(hi,Math.max(lo,Number(v)||0));
   function setBox(box,x,y,size,cutout) {
-    const width = inRange(size,(isCustom()||['porch','midnight','stars'].includes(state.scene))?11.5:state.scene==='cozy-4'?17:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
+    const width = inRange(size,(isCustom()||['porch','midnight','stars'].includes(state.scene))?11.5:/^cozy-[1-4]$/.test(state.scene)?11.5:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
     box.style.left=left+'%';box.style.top=top+'%';box.style.width=width+'%';
-    box.style.height=(state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isCustom()&&seatCount()>=3?Math.min(32,91-top):state.scene==='cozy-4'?32:(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
+    box.style.height=(state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isCustom()&&seatCount()>=3?Math.min(32,91-top):/^cozy-[1-4]$/.test(state.scene)?Math.min(36,width*1.65,91-top):(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
     box.classList.toggle('cutout',cutout);
     box.style.borderRadius=cutout?'0':'16px';
     box.style.borderWidth=cutout?'0':'3px';
@@ -2616,7 +2618,7 @@ refresh();
     stage.classList.toggle('rtrn-cozy',/^cozy-/.test(state.scene));
     stage.classList.toggle('rtrn-original',original);
     stage.classList.toggle('rtrn-solo-mode',conf.layout!=='duo');
-    stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo');
+    stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo'&&!/^cozy-[1-4]$/.test(state.scene));
     stage.classList.toggle('rtrn-single-host-scene',seatCount()===1);
     desk.style.backgroundImage=original?`url("${ART[(SCENES.find(s=>s.id===state.scene)||{}).img]}")`:'';
     desk.style.clipPath=(isOutdoor()||isCustom())?'polygon(0 100%,100% 100%,100% 100%,0 100%)':state.scene==='original-live'
@@ -3139,7 +3141,7 @@ refresh();
  function drawSeats(){
    for(const item of seats){
      const pos=window.RTRNExtraSeatPosition(item.n),size=Math.min(45,Math.max(11.5,pos.size));
-      item.wrap.hidden=!active(item);Object.assign(item.wrap.style,{left:Math.min(100-size,pos.x)+'%',top:pos.y+'%',width:size+'%',height:Math.min(['midnight','stars'].includes(state.scene)?Math.min(24,size*1.4):['gazebo','gazebo-branded'].includes(state.scene)?25*size/18:32,94-pos.y)+'%'});
+      item.wrap.hidden=!active(item);Object.assign(item.wrap.style,{left:Math.min(100-size,pos.x)+'%',top:pos.y+'%',width:size+'%',height:Math.min(['midnight','stars'].includes(state.scene)?Math.min(24,size*1.4):['gazebo','gazebo-branded'].includes(state.scene)?25*size/18:state.scene==='cozy-4'?Math.min(36,size*1.65):32,94-pos.y)+'%'});
       for(const [key,suffix] of [['x','X'],['y','Y'],['size','Size']])$('rtrnSeat'+suffix+item.n).value=pos[key];
      if(!active(item)&&(item.stream||item.url))stopSeat(item);
      updateSeat(item);
