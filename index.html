@@ -932,6 +932,14 @@ const outdoorArt=beach=>scenicSVG('<defs><linearGradient id="sky" x2="0" y2="1">
 ART.beach=new URL('a_crisp_sunlit_photorealistic_beach_lounge_scene.png',location.href).href;ART.mountain=new URL('golden_mountain_lake_lounge.png',location.href).href;ART.porch=new URL('a_photorealistic_warmly_lit_countryside_front_por.png',location.href).href;ART.gazebo=new URL('a_highly_detailed_photorealistic_cozy_garden_gaz.png',location.href).href;ART.gazeboBranded=new URL('a_highly_detailed_photorealistic_richly_lit_gard.png',location.href).href;
 ART.purpleHaze=new URL('sunset_cannabis_field_lounge.png',location.href).href;ART.midnight=new URL('midnight_lounge_cannabis_studio.png',location.href).href;ART.stars=new URL('moonlit_purple_gold_garden_lounge.png',location.href).href;
 
+
+/* Original vector art: two 1950s-inspired rooms, built for two seated cameras. */
+const vintageFrame=(x,y,w,h)=>'<g><rect x="'+(x+3)+'" y="'+(y+5)+'" width="'+w+'" height="'+h+'" fill="#22160e" opacity=".35"/><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3" fill="url(#vgGold)" stroke="#583821" stroke-width="3"/><rect x="'+(x+10)+'" y="'+(y+10)+'" width="'+(w-20)+'" height="'+(h-20)+'" fill="#f4e2bd"/><svg x="'+(x+17)+'" y="'+(y+17)+'" width="'+(w-34)+'" height="'+(h-34)+'" viewBox="0 0 100 70" preserveAspectRatio="none"><rect width="100" height="70" fill="#c1b197"/><circle cx="75" cy="17" r="11" fill="#f8d690"/><path d="M0 55L28 20 49 53 70 32 100 58V70H0Z" fill="#63745a"/><path d="M0 60Q40 40 100 66V70H0Z" fill="#3e5143"/></svg></g>';
+const vintageChair=(x,tea)=>'<g transform="translate('+x+' 0)"><ellipse cx="180" cy="602" rx="192" ry="31" fill="#29190e" opacity=".28"/><path d="M50 550L38 608M315 550L328 608" stroke="#44291d" stroke-width="20" stroke-linecap="round"/><rect x="37" y="240" width="286" height="303" rx="78" fill="url(#vgSeat)" stroke="#5d4230" stroke-width="7"/><rect x="51" y="257" width="258" height="258" rx="64" fill="'+(tea?'url(#vgFlowers)':'url(#vgLeather)')+'" stroke="'+(tea?'#c4ac8d':'#c09363')+'" stroke-width="3"/>'+(tea?'':'<path d="M65 316H296M65 372H296M65 428H296M116 266V473M180 266V473M244 266V473" stroke="#5b3024" stroke-width="2" opacity=".6"/>')+'<rect x="40" y="470" width="280" height="95" rx="30" fill="url(#vgSeat)" stroke="#694b38" stroke-width="5"/><path d="M36 393Q5 383 5 435V530Q8 552 42 552H65V425Q61 402 36 393ZM324 393Q355 383 355 435V530Q352 552 318 552H295V425Q299 402 324 393Z" fill="url(#vgSeat)" stroke="#60422f" stroke-width="5"/><rect x="61" y="486" width="238" height="51" rx="23" fill="'+(tea?'url(#vgFlowers)':'url(#vgLeather)')+'" stroke="#b99a77" stroke-width="2"/></g>';
+const vintageCup=(x,y)=>'<g transform="translate('+x+' '+y+')"><ellipse cx="0" cy="17" rx="30" ry="7" fill="#bda68d"/><ellipse cx="0" cy="15" rx="29" ry="6" fill="#f8edd8"/><path d="M18 -5q25 -10 20 8q-5 12 -20 8" fill="none" stroke="#f6e9d7" stroke-width="6"/><path d="M-20 -8Q-19 16 0 16Q19 16 20 -8Z" fill="#fff1d9" stroke="#a7834d" stroke-width="1.5"/><ellipse cy="-8" rx="20" ry="5" fill="#8e542c"/><path d="M-13 5Q0 12 13 5" fill="none" stroke="#ac7480" stroke-width="2"/></g>';
+const vintageRoom=tea=>scenicSVG('<defs><linearGradient id="vgWall" x2="0" y2="1"><stop stop-color="'+(tea?'#e7d5bc':'#a9a187')+'"/><stop offset="1" stop-color="'+(tea?'#cbb398':'#77775d')+'"/></linearGradient><linearGradient id="vgFloor" x2="0" y2="1"><stop stop-color="#8b6348"/><stop offset="1" stop-color="#4a3025"/></linearGradient><linearGradient id="vgGold" x2="1" y2="1"><stop stop-color="#f8dda0"/><stop offset=".45" stop-color="#b18445"/><stop offset=".7" stop-color="#e2bf79"/><stop offset="1" stop-color="#765029"/></linearGradient><linearGradient id="vgSeat" x2=".8" y2="1"><stop stop-color="'+(tea?'#e5c3ac':'#ae7150')+'"/><stop offset=".6" stop-color="'+(tea?'#c49b86':'#75402c')+'"/><stop offset="1" stop-color="'+(tea?'#98786a':'#4d2a20')+'"/></linearGradient><linearGradient id="vgLeather" x2="1" y2="1"><stop stop-color="#a96b49"/><stop offset=".5" stop-color="#815039"/><stop offset="1" stop-color="#5b3128"/></linearGradient><pattern id="vgFlowers" width="54" height="54" patternUnits="userSpaceOnUse"><rect width="54" height="54" fill="#dbc4ad"/><g fill="#a96676"><circle cx="22" cy="22" r="6"/><circle cx="29" cy="17" r="7"/><circle cx="33" cy="25" r="6"/><circle cx="24" cy="30" r="7"/></g><circle cx="27" cy="23" r="4" fill="#e5bb78"/><path d="M18 30q-9 0 -10 10q10 2 15 -7M32 30q15 0 14 9q-9 1 -16 -5" fill="#68775b"/></pattern><pattern id="vgStripe" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M0 0V36M6 0V36" stroke="#f6e8c7" opacity=".19" stroke-width="2"/></pattern><radialGradient id="vgLight"><stop stop-color="#ffe8b1" stop-opacity=".26"/><stop offset="1" stop-color="#332012" stop-opacity=".16"/></radialGradient></defs><rect width="1280" height="720" fill="url(#vgWall)"/><rect width="1280" height="455" fill="url(#vgStripe)"/><rect y="412" width="1280" height="45" fill="#6e4b35"/><path d="M0 414H1280M0 450H1280" stroke="#d2ae7b" stroke-width="4"/><rect y="457" width="1280" height="263" fill="url(#vgFloor)"/><g stroke="#39251c" opacity=".45" stroke-width="3">'+Array.from({length:12},(_,i)=>'<path d="M'+(i*115)+' 457L'+(640+(i*115-640)*2)+' 720"/>').join('')+'<path d="M0 514H1280M0 594H1280M0 689H1280"/></g><ellipse cx="640" cy="600" rx="485" ry="99" fill="'+(tea?'#8d7775':'#52605a')+'" stroke="#d7b688" stroke-width="12"/><ellipse cx="640" cy="600" rx="455" ry="81" fill="none" stroke="#c8ae85" stroke-width="2" stroke-dasharray="9 8"/>'+(tea?'<g><rect x="60" y="42" width="312" height="230" rx="5" fill="#77563b"/><rect x="72" y="53" width="288" height="208" fill="#a4c6c0"/><path d="M72 215Q145 124 226 216T360 187V261H72Z" fill="#68865e"/><path d="M216 53V261M72 154H360" stroke="#f3ddbd" stroke-width="8"/><path d="M54 37H378L350 75Q310 104 280 66Q245 110 208 67Q162 103 132 66Q96 102 58 75Z" fill="#fff0d9"/><path d="M55 75Q125 129 78 267H45V75ZM376 75Q306 129 353 267H386V75Z" fill="#f5e2ca" stroke="#c5aa8c" stroke-width="2"/></g>'+vintageFrame(542,62,196,158)+'<g><path d="M1032 160V475" stroke="#735339" stroke-width="9"/><ellipse cx="1032" cy="477" rx="40" ry="9" fill="#63432f"/><path d="M990 89H1074L1110 182H954Z" fill="#e8c99e" stroke="#a47d4d" stroke-width="3"/><path d="M960 180H1104" stroke="#b38e5d" stroke-width="5"/></g>':vintageFrame(285,50,143,128)+vintageFrame(454,50,143,128)+vintageFrame(683,50,143,128)+vintageFrame(852,50,143,128)+'<g><rect x="32" y="225" width="154" height="107" rx="10" fill="#5a3825" stroke="#b69768" stroke-width="5"/><rect x="42" y="236" width="134" height="48" rx="4" fill="#b59b6e"/><path d="M52 244H166M52 252H166M52 260H166M52 268H166" stroke="#5d4937" stroke-width="3"/><rect x="56" y="292" width="60" height="15" fill="#e9cf95"/><circle cx="139" cy="302" r="9" fill="#ccb07a"/><circle cx="163" cy="302" r="9" fill="#ccb07a"/><path d="M30 336H190V453H30Z" fill="#714a32"/><path d="M25 336H195" stroke="#ba9368" stroke-width="9"/><rect x="1090" y="221" width="149" height="239" rx="38" fill="#714a36" stroke="#bc9658" stroke-width="6"/><path d="M1103 277Q1165 200 1226 277V361H1103Z" fill="#d6bb89"/><path d="M1110 289H1220M1110 301H1220M1110 313H1220M1110 325H1220" stroke="#8e5e41" stroke-width="4"/><rect x="1110" y="374" width="110" height="64" rx="12" fill="#3b2c24" stroke="#d4ae67" stroke-width="4"/></g>')+vintageChair(140,tea)+vintageChair(780,tea)+'<g><ellipse cx="640" cy="565" rx="125" ry="22" fill="#2d1a12" opacity=".25"/><path d="M553 435L569 563M727 435L711 563M640 438V556" stroke="#593a28" stroke-width="14" stroke-linecap="round"/><ellipse cx="640" cy="437" rx="125" ry="27" fill="#69442e"/><ellipse cx="640" cy="427" rx="125" ry="26" fill="#b58a5e"/>'+(tea?'<path d="M515 426Q640 393 765 426L748 462Q640 441 532 462Z" fill="#f5e7d0" stroke="#e2c7a3" stroke-width="3" stroke-dasharray="4 4"/><ellipse cx="690" cy="426" rx="35" ry="11" fill="#fff0da"/>'+Array.from({length:5},(_,i)=>'<circle cx="'+(669+i*10)+'" cy="'+(420+(i%2)*8)+'" r="7" fill="#b98249" stroke="#7b4d2c"/>').join('')+vintageCup(557,421)+vintageCup(737,420)+'<path d="M605 412q-27 -22 -32 -3q-1 15 22 14M632 405l22 -15 -9 28" fill="none" stroke="#f8ead7" stroke-width="7"/><ellipse cx="615" cy="412" rx="25" ry="20" fill="#f8ead7" stroke="#c3a46e" stroke-width="2"/><ellipse cx="615" cy="393" rx="19" ry="5" fill="#e4c49b"/>':vintageCup(568,420)+vintageCup(730,420)+'<rect x="605" y="409" width="63" height="26" rx="8" fill="#2e2923"/><path d="M602 407q33 -21 67 0l-5 10q-29 -12 -57 0Z" fill="#201e1c"/><circle cx="638" cy="423" r="10" fill="#c5b8a2" stroke="#342d27" stroke-width="3"/>')+'</g><rect width="1280" height="720" fill="url(#vgLight)" pointer-events="none"/>');
+ART.vintageTea=vintageRoom(true);ART.vintageMan=vintageRoom(false);
+
 const SCENES=[
 {id:'original-podcast',name:'Original Podcast Studio',desc:'Purple-and-green desk, chairs and picture frames',img:'originalPodcast',label:'ROADS TO RECOGNITION • CONVERSATION',headline:'Stories worth sharing.',group:'💜 Original Purple & Green Studios'},
 {id:'original-live',name:'Original Live Studio',desc:'Purple-and-green news desk and original decorations',img:'originalLive',label:'ROADS TO RECOGNITION • LIVE',headline:'Kindness gets the spotlight.',group:'💜 Original Purple & Green Studios'},
@@ -957,7 +965,9 @@ const SCENES=[
 {"id":"gazebo-branded","name":"RTRN Signature Rose Gazebo","desc":"Branded garden set · host and two guests","img":"gazeboBranded","label":"ROADS TO RECOGNITION • GARDEN CONVERSATIONS","headline":"Every story deserves a place to bloom.","group":"🏞️ Outdoor Studios","fictional":false},
 {"id":"purple-haze","name":"Purple Haze Field Retreat · 21+","desc":"Two outdoor chairs · host and guest","img":"purpleHaze","label":"ROADS TO RECOGNITION • AFTER DARK","headline":"Relaxed conversations and real stories.","group":"🌙 After Dark Studios","fictional":false},
 {"id":"midnight","name":"Midnight Lounge · 21+","desc":"Four velvet chairs · host and three guests","img":"midnight","label":"ROADS TO RECOGNITION • AFTER DARK","headline":"Every voice has a story.","group":"🌙 After Dark Studios","fictional":false},
-{"id":"stars","name":"Under the Stars","desc":"Four outdoor chairs · host and three guests","img":"stars","label":"ROADS TO RECOGNITION • UNDER THE STARS","headline":"Stories worth sharing under the stars.","group":"🌙 After Dark Studios","fictional":false}
+{"id":"stars","name":"Under the Stars","desc":"Four outdoor chairs · host and three guests","img":"stars","label":"ROADS TO RECOGNITION • UNDER THE STARS","headline":"Stories worth sharing under the stars.","group":"🌙 After Dark Studios","fictional":false},
+{id:"vintage-tea",name:"Tea & Cookies Memories",desc:"1950s tea room · two seats · wall and center table photos",img:"vintageTea",label:"RTRN • GENERATIONS OF MEMORIES",headline:"A cup of tea and a lifetime of stories.",group:"Generations of Memories",fictional:false,solemn:true},
+{id:"vintage-man",name:"Good Old Days — 1950s Edition",desc:"Vintage lounge · two seats · four wall photos",img:"vintageMan",label:"RTRN • GENERATIONS OF MEMORIES",headline:"Remembering the good old days.",group:"Generations of Memories",fictional:false,solemn:true}
 ];
 const defaults={catchphrase:'Kindness gets the spotlight. Laughter sneaks through the window!',scene:'original-podcast',headline:'Stories worth sharing.',host:'Larrina',banner:true,ticker:true,live:false,mark:true,cameraMode:'frame',cameraSize:28,keyThreshold:46,script:'',cameraEnabled:false,ambient:true,quietWindow:false,autoGags:false,soundEnabled:true,effectVolume:55,newsText:'PIGEON PATROL DEMANDS OVERTIME IN BREADCRUMBS!',guestName:'Guest',guestPhotoId:''};
 const el=id=>document.getElementById(id);
@@ -1230,7 +1240,7 @@ let cueSeq=0;const receivedCues=new Set();
 function uniqueCue(m){if(!m||m.cueId===undefined)return true;if(receivedCues.has(m.cueId))return false;receivedCues.add(m.cueId);if(receivedCues.size>100)receivedCues.clear();return true;}
 function renderExtras(){
  const win=el('cityWindow');win.dataset.scene=state.scene;
- win.hidden=!(state.ambient&&!state.quietWindow)||state.scene.startsWith('custom-scene-')||state.scene.startsWith('window-')||['beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars'].includes(state.scene);
+ win.hidden=!(state.ambient&&!state.quietWindow)||state.scene.startsWith('custom-scene-')||state.scene.startsWith('window-')||['vintage-tea','vintage-man','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars'].includes(state.scene);
  el('birds').style.display=birdActive?'block':'none';
  el('ambientToggle').checked=!!state.ambient;
  el('quietToggle').checked=!!state.quietWindow;
@@ -2078,6 +2088,8 @@ refresh();
 /* RTRN V3.1 wall-frame editor. Matches slots to original 1279 × 720 artwork. */
 (function(){
 const frameLayout={
+ vintageTea:[{id:'vintage-tea-wall',name:'Tea room — wall picture',box:[559,79,162,124],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'}],
+ vintageMan:[...Array.from({length:4},(_,i)=>({id:'vintage-man-wall-'+(i+1),name:'Wall picture '+(i+1),box:[[302,67,109,94],[471,67,109,94],[700,67,109,94],[869,67,109,94]][i],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'}))],
  originalPodcast:[
   {id:'original-podcast-logo',name:'Main Logo',mainLogo:true,box:[1200,76,420,199],shape:'polygon(0% 16%,100% 0%,100% 94%,0% 100%)'},
   {id:'original-podcast-large',name:'Original large gold picture frame',box:[207,129,321,287],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'},
@@ -2129,8 +2141,9 @@ const frameLayout={
  ]
 };
 // Coordinates are normalized percentages, independent of artwork pixel size.
-const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:['news','washers','grandma','robber','sunset','snow','rain'].includes(art)?(side==='left'?'Small picture 1 — back table between chairs':'Small picture 2 — side table by window'):(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
+const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:art==='vintageTea'?'Tea room — center table picture':['news','washers','grandma','robber','sunset','snow','rain'].includes(art)?(side==='left'?'Small picture 1 — back table between chairs':'Small picture 2 — side table by window'):(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
 const tabletopPositions={
+ vintageTea:[[49.2,47.8,4.5,10.3]],
  originalPodcast:[[27,62.5,5.5,11.5],[75.2,51.5,3.8,10]],
  originalLive:[[27,57.5,5.5,11.5],[76.5,44.5,3.6,10]],
  news:[[45.5,49.1,5,11.6],[79.6,49.4,4.7,11.1]],
@@ -2652,14 +2665,17 @@ refresh();
   const secondBox = $('rtrnSecondBox'), secondVideo = $('rtrnSecondVideo'), secondCanvas = $('rtrnSecondCanvas');
   let secondStream = null, secondFileURL = '', secondLoop = 0, tributeURL = '';
   const isOutdoor = () => ['beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars'].includes(state.scene);
-  const isCozy = () => /^cozy-[1-4]$/.test(state.scene)||isOutdoor();
+  const isVintage=()=>['vintage-tea','vintage-man'].includes(state.scene);
+  const isCozy = () => /^cozy-[1-4]$/.test(state.scene)||isOutdoor()||isVintage();
   const isWindowScene = () => /^window-(washers|grandma|robber|sunset|weather)$/.test(state.scene);
   const isCustom = () => state.scene.startsWith('custom-scene-');
   const isOriginalDesk=()=>['original-podcast','original-live'].includes(state.scene);
-  const goldTableScene=()=>state.scene==='news'||isWindowScene()||isOriginalDesk()||/^cozy-[1-4]$/.test(state.scene);
+  const goldTableScene=()=>isVintage()||state.scene==='news'||isWindowScene()||isOriginalDesk()||/^cozy-[1-4]$/.test(state.scene);
   const hasSceneSeats = () => isOriginalDesk()||isCozy()||isWindowScene()||state.scene==='news'||isCustom();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
+    'vintage-tea':{oneX:15.5,oneY:37,oneSize:19,twoX:65.5,twoY:37,twoSize:19},
+    'vintage-man':{oneX:15.5,oneY:37,oneSize:19,twoX:65.5,twoY:37,twoSize:19},
     'original-podcast':{oneX:38.2,oneY:36,oneSize:22},
     'original-live':{oneX:39,oneY:30.5,oneSize:22},
     'cozy-1':{oneX:39,oneY:50,oneSize:22,twoX:56,twoY:27,twoSize:27},
@@ -2708,7 +2724,7 @@ refresh();
   function setBox(box,x,y,size,cutout) {
     const width = inRange(size,(isCustom()||['porch','midnight','stars'].includes(state.scene))?11.5:/^cozy-[1-4]$/.test(state.scene)?11.5:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
     box.style.left=left+'%';box.style.top=top+'%';box.style.width=width+'%';
-    box.style.height=(state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isOriginalDesk()?Math.min(width*1.55,(state.scene==='original-live'?65:70)-top):isCustom()&&seatCount()>=3?Math.min(32,91-top):/^cozy-[1-4]$/.test(state.scene)?Math.min(36,width*1.65,91-top):(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
+    box.style.height=(isVintage()?Math.min(29,width*1.5):state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isOriginalDesk()?Math.min(width*1.55,(state.scene==='original-live'?65:70)-top):isCustom()&&seatCount()>=3?Math.min(32,91-top):/^cozy-[1-4]$/.test(state.scene)?Math.min(36,width*1.65,91-top):(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
     box.classList.toggle('cutout',cutout);
     box.style.borderRadius=cutout?'0':'16px';
     box.style.borderWidth=cutout?'0':'3px';
@@ -2727,7 +2743,7 @@ refresh();
     stage.classList.toggle('rtrn-solo-video-smaller',conf.layout==='solo'&&(state.scene==='news'||isWindowScene()||!goldTableScene()));
     stage.classList.toggle('rtrn-single-host-scene',seatCount()===1);
     desk.style.backgroundImage=original?`url("${ART[(SCENES.find(s=>s.id===state.scene)||{}).img]}")`:'';
-    desk.style.clipPath=(isOutdoor()||isCustom())?'polygon(0 100%,100% 100%,100% 100%,0 100%)':state.scene==='original-live'
+    desk.style.clipPath=(isVintage()||isOutdoor()||isCustom())?'polygon(0 100%,100% 100%,100% 100%,0 100%)':state.scene==='original-live'
       ?'polygon(0 65%,100% 65%,100% 100%,0 100%)'
       :(isCozy()?'polygon(0 72%,100% 72%,100% 100%,0 100%)':'polygon(0 69%,100% 69%,100% 100%,0 100%)');
     // Both original purple-and-green desk sets have one host position only.
@@ -2798,7 +2814,7 @@ refresh();
     if(layout==='duo')Object.assign(conf,{oneX:23,oneY:22,oneSize:36,twoX:50,twoY:22,twoSize:34});
     save();syncControls();paintHostLayers();
   }
-  window.RTRNChooseSceneSeats=id=>{if(id.startsWith('custom-scene-')){chooseLayout(seatCount()>1?'duo':'solo');return}if(['cozy-2','cozy-3','cozy-4','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars','news','window-washers','window-grandma','window-robber','window-sunset','window-weather'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
+  window.RTRNChooseSceneSeats=id=>{if(id.startsWith('custom-scene-')){chooseLayout(seatCount()>1?'duo':'solo');return}if(['vintage-tea','vintage-man','cozy-2','cozy-3','cozy-4','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars','news','window-washers','window-grandma','window-robber','window-sunset','window-weather'].includes(id))chooseLayout('duo');else if(['cozy-1','original-podcast','original-live'].includes(id))chooseLayout('solo');};
   $('rtrnLayout').addEventListener('change',e=>chooseLayout(e.target.value));
   $('rtrnCustomSeatCount').addEventListener('change',e=>{if(!isCustom())return;const count=Number(e.target.value);cozySaved[state.scene]={count};saveCozy();chooseLayout(count>1?'duo':'solo');window.RTRNDrawExtraSeats?.()});
   $('rtrnSoloQuick').addEventListener('click',()=>chooseLayout('solo'));
