@@ -2079,18 +2079,19 @@ refresh();
 (function(){
 const frameLayout={
  originalPodcast:[
+  {id:'original-podcast-logo',name:'Main Logo',mainLogo:true,box:[1200,76,420,199],shape:'polygon(0% 16%,100% 0%,100% 94%,0% 100%)'},
   {id:'original-podcast-large',name:'Original large gold picture frame',box:[207,129,321,287],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'},
   {id:'original-podcast-oval',name:'Original gold oval frame',box:[1072,196,88,178],shape:'ellipse(49% 48% at 50% 50%)'},
   {id:'original-podcast-small',name:'Original small wall frame',box:[1373,382,142,89],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'}
  ],
  originalLive:[
-  {id:'original-live-screen',name:'Original Live — wall display (photo or video)',box:[1163,93,447,248],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'},
+  {id:'original-live-screen',name:'Main Logo',mainLogo:true,box:[1158,66,484,253],shape:'polygon(0% 10%,100% 0%,100% 88%,97% 89%,95% 100%,0% 100%)'},
   {id:'original-live-wall',name:'Original Live — additional wall frame',box:[753,77,180,120],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'},
   {id:'original-live-desk',name:'Original Live — small desk photo/video',box:[1070,593,120,87],shape:'polygon(0 0,100% 0,100% 100%,0 100%)'}
  ],
 
  news:[
-  {id:'news-big',name:'Main Logo',box:[351,10,469,297],shape:'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'},
+  {id:'news-big',name:'Main Logo',mainLogo:true,box:[351,10,469,297],shape:'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'},
   {id:'news-small',name:'Small gold picture on the left shelf',box:[74,186,135,76],shape:'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'}
  ],
  podcast:[
@@ -2257,7 +2258,7 @@ function drawFramePhotos(){
   const [x,y,w,h]=def.box;
   d.style.left=(def.percent?x:x/imgW*100)+'%';d.style.top=(def.percent?y:y/imgH*100)+'%';
   d.style.width=(def.percent?w:w/imgW*100)+'%';d.style.height=(def.percent?h:h/imgH*100)+'%';d.style.clipPath=def.shape;
-  if(def.id==='news-big')d.style.background='#191626';
+  if(def.mainLogo)d.style.background='#191626';
   if(!url){if(!d.querySelector('.table-empty')){const span=document.createElement('span');span.className='table-empty';span.textContent='♡';d.replaceChildren(span)}activeEls.add(def.id);continue}
   if(mode==='video'){
     let v=d.querySelector('video');
@@ -2396,17 +2397,17 @@ const emptyFramePreview = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent
  list.innerHTML='';
  if(!(frameLayout[art]||[]).length){const e=document.createElement('div');e.className='frame-disabled';e.textContent='This background does not contain editable picture frames.';list.append(e);return}
  // Keep the small photo upload controls above the large logo workbench.
- const defs=[...frameLayout[art]].sort((a,b)=>Number(b.table===true)-Number(a.table===true)||Number(a.id==='news-big')-Number(b.id==='news-big'));
+ const defs=[...frameLayout[art]].sort((a,b)=>Number(b.table===true)-Number(a.table===true)||Number(a.mainLogo===true)-Number(b.mainLogo===true));
  for(const def of defs){
   const item=saved[def.id]||{},card=document.createElement('div');card.className='frame-edit-card';card.dataset.frameId=def.id;
   const title=document.createElement('strong');title.textContent='🖼️ '+def.name;card.append(title);
-  if(def.id==='news-big'){const help=document.createElement('p');help.className='frame-media-help';help.textContent='Replace the large Roads to Recognition wall sign in the News Desk and all window/weather scenes. Restore original brings the built-in logo back in all of them.';card.append(help);}
+  if(def.mainLogo){const help=document.createElement('p');help.className='frame-media-help';help.textContent=def.id==='news-big'?'Replace the large Roads to Recognition wall sign in the News Desk and all window/weather scenes. Restore original brings the built-in logo back in all of them.':'Replace the large Roads to Recognition sign in this original studio. Restore original brings the built-in sign back.';card.append(help);}
   const row=document.createElement('div');row.className='frame-edit-row';
   const thumb=document.createElement('img');thumb.alt='Preview of '+def.name;thumb.src=frameURL(item)||emptyFramePreview;if(item.libraryId&&!frameURL(item))loadLibraryURL(item.libraryId);
   const actions=document.createElement('div');actions.className='frame-edit-actions';
   const label=document.createElement('label');label.className='upload-label';label.textContent='📁 Choose photo';
   const file=document.createElement('input');file.type='file';file.accept='image/*';file.setAttribute('aria-label','Upload '+def.name);label.append(file);
-  const rm=document.createElement('button');rm.type='button';rm.className='photo-remove';rm.textContent='✖ Restore original';rm.disabled=!(item.url||item.libraryId||(def.id==='news-big'&&item.mode&&item.mode!=='photo'));
+  const rm=document.createElement('button');rm.type='button';rm.className='photo-remove';rm.textContent='✖ Restore original';rm.disabled=!(item.url||item.libraryId||(def.mainLogo&&item.mode&&item.mode!=='photo'));
   actions.append(label,rm);
   const libLabel=document.createElement('div');libLabel.className='lib-photo-pick-title';libLabel.textContent='Or choose a saved library photo';
   const libSelect=document.createElement('select');libSelect.className='lib-photo-select';libSelect.setAttribute('aria-label','Saved library photos for '+def.name);
@@ -2944,9 +2945,12 @@ refresh();
     try{
       ctx.save();ctx.beginPath();
       if(node.style.clipPath.startsWith('ellipse'))ctx.ellipse(b.x+b.w/2,b.y+b.h/2,b.w/2,b.h/2,0,0,Math.PI*2);
-      else ctx.rect(b.x,b.y,b.w,b.h);
+      else if(['news-big','original-podcast-logo','original-live-screen'].includes(node.dataset.frameId)&&node.style.clipPath.startsWith('polygon(')){
+        const points=node.style.clipPath.match(/-?\d+(?:\.\d+)?%/g)?.map(parseFloat)||[];
+        if(points.length>=6){ctx.moveTo(b.x+points[0]*b.w/100,b.y+points[1]*b.h/100);for(let i=2;i<points.length;i+=2)ctx.lineTo(b.x+points[i]*b.w/100,b.y+points[i+1]*b.h/100);ctx.closePath();}else ctx.rect(b.x,b.y,b.w,b.h);
+      }else ctx.rect(b.x,b.y,b.w,b.h);
       ctx.clip();
-      if(node.dataset.frameId==='news-big'){
+      if(['news-big','original-podcast-logo','original-live-screen'].includes(node.dataset.frameId)){
         ctx.fillStyle='#191626';ctx.fillRect(b.x,b.y,b.w,b.h);
         const iw=img.videoWidth||img.naturalWidth,ih=img.videoHeight||img.naturalHeight;
         if(iw&&ih){const fit=getComputedStyle(img).objectFit;const scale=(fit==='cover'?Math.max:Math.min)(b.w/iw,b.h/ih);const raw=getComputedStyle(img).transform;const m=new DOMMatrix(raw==='none'?undefined:raw);const stageRect=stage.getBoundingClientRect();const w=iw*scale*m.a,h=ih*scale*m.d;ctx.drawImage(img,b.x+(b.w-w)/2+m.e*1280/stageRect.width,b.y+(b.h-h)/2+m.f*720/stageRect.height,w,h);}
