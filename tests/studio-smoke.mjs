@@ -33,6 +33,40 @@ const url = 'http://127.0.0.1:'+server.address().port;
 try {
   const mobile = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce',acceptDownloads:true});
   const page = await mobile.newPage();
+  // Feed a deterministic microphone signal and observe the actual mixed
+  // audio track given to MediaRecorder, not the slider's displayed value.
+  await page.addInitScript(()=>{
+    const original=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    let testAudio,oscillator,analyser,mixedSource;
+    navigator.mediaDevices.getUserMedia=async constraints=>{
+      if(constraints.audio&&constraints.video===false){
+        if(!testAudio){testAudio=new AudioContext();oscillator=testAudio.createOscillator();oscillator.frequency.value=440;oscillator.start();}
+        await testAudio.resume();
+        const gain=testAudio.createGain();gain.gain.value=.2;
+        const dest=testAudio.createMediaStreamDestination();
+        oscillator.connect(gain);gain.connect(dest);
+        return dest.stream;
+      }
+      return original(constraints);
+    };
+    const NativeRecorder=window.MediaRecorder;
+    window.MediaRecorder=class extends NativeRecorder{
+      constructor(stream,options){
+        super(stream,options);
+        if(testAudio&&stream.getAudioTracks().length&&stream.getVideoTracks().length){
+          mixedSource?.disconnect();
+          analyser=testAudio.createAnalyser();analyser.fftSize=1024;
+          mixedSource=testAudio.createMediaStreamSource(new MediaStream(stream.getAudioTracks()));
+          mixedSource.connect(analyser);
+        }
+      }
+    };
+    window.testVoiceRMS=()=>{
+      if(!analyser)return 0;
+      const samples=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(samples);
+      return Math.sqrt(samples.reduce((sum,x)=>sum+x*x,0)/samples.length);
+    };
+  });
   const errors = [];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);
@@ -53,6 +87,15 @@ try {
   await stopButton.waitFor({state:'visible'});
   await page.waitForFunction(()=>!document.getElementById('rtrnStopRecordQuick').disabled,{},{timeout:15000});
   assert(await startButton.isDisabled());
+  await page.waitForFunction(()=>window.testVoiceRMS()>.05);
+  const fullVolume=await page.evaluate(()=>window.testVoiceRMS());
+  await page.locator('#rtrnVoiceVolume').fill('20');
+  await page.waitForFunction(full=>{const v=window.testVoiceRMS();return v>full*.08&&v<full*.4},fullVolume);
+  assert.equal(await page.locator('#rtrnVoiceLevel').textContent(),'20%');
+  await page.locator('#rtrnVoiceVolume').fill('0');
+  await page.waitForFunction(()=>window.testVoiceRMS()<.002);
+  await page.locator('#rtrnVoiceVolume').fill('100');
+  await page.waitForFunction(full=>window.testVoiceRMS()>full*.7,fullVolume);
   await page.waitForTimeout(1300);
   await stopButton.tap();
   await page.waitForFunction(()=>!document.getElementById('rtrnRecordQuick').disabled,{},{timeout:15000});
@@ -76,6 +119,17 @@ try {
     return {width:image.naturalWidth,colors:colors.size};
   },cover);
   assert.equal(coverInfo.width,480);assert(coverInfo.colors>30,'Cover contains a rendered scene, not a blank image');
+  // Starting a second show must not reuse a stopped mixer track.
+  await startButton.tap();
+  await page.waitForFunction(()=>!document.getElementById('rtrnStopRecordQuick').disabled);
+  await page.waitForFunction(()=>window.testVoiceRMS()>.05);
+  await page.locator('#rtrnVoiceVolume').fill('0');
+  await page.waitForFunction(()=>window.testVoiceRMS()<.002);
+  await page.locator('#rtrnVoiceVolume').fill('100');
+  await page.waitForFunction(()=>window.testVoiceRMS()>.05);
+  await stopButton.tap();
+  await page.waitForFunction(()=>!document.getElementById('rtrnRecordQuick').disabled);
+  console.log('Recorded voice attenuation, mute, restore and consecutive recording passed.');
   const dock = page.locator('#mobileDock');
   const targets = [['photos','#rtrnPhotoArea'],['library','#rtrnMusicArea'],['reactions','#audienceFold'],['scenes','#sceneFold'],['settings','#rtrnBroadcastArea'],['stage','.stage-panel']];
   for(const [target,selector] of targets){
