@@ -866,7 +866,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <p class="mini">Editing needs a browser that supports canvas video recording. Long shows take longer and use storage space. Guest calling remains in the hosted room rather than inside this offline studio.</p>
 </section>
 </div>
-<div class="control-block" id="weatherView" hidden><label for="weatherSelect">Window weather</label><select id="weatherSelect"><option value="snow">❄ Snow</option><option value="rain">🌧 Rain</option></select></div><div class="control-block comedy-controls"><h2 class="section-eyebrow">05 / Animated city window</h2>
+<div class="control-block" id="weatherView" hidden><label for="weatherSelect">Window weather</label><select id="weatherSelect"><option value="live">Live local weather (NWS)</option><option value="snow">❄ Snow (manual)</option><option value="rain">🌧 Rain (manual)</option></select><label for="weatherLocation">U.S. weather location</label><select id="weatherLocation"><option value="">Choose location</option><option value="corning">Corning, CA</option><option value="chico">Chico, CA</option><option value="redbluff">Red Bluff, CA</option><option value="redding">Redding, CA</option><option value="device">Use my device location (permission required)</option></select><button type="button" class="btn" id="weatherRefresh">Refresh weather</button><p id="weatherLiveStatus" role="status" aria-live="polite"></p><small>Weather data: <a href="https://www.weather.gov/" target="_blank" rel="noopener noreferrer">National Weather Service</a>. The window is a simulated illustration, not a live camera. Device location is only requested when you press Refresh.</small></div><div class="control-block comedy-controls"><h2 class="section-eyebrow">05 / Animated city window</h2>
 <p>The scenes have moving cars, bikes, walkers, and waving fans. Switch them off for emotional stories.</p>
 <label class="switch-line" for="ambientToggle"><span>🚙 Moving background</span><input checked="" id="ambientToggle" type="checkbox"/></label>
 <label class="switch-line" for="quietToggle"><span>💜 Quiet Window (tributes)</span><input id="quietToggle" type="checkbox"/></label>
@@ -900,6 +900,33 @@ ART.grandma=windowCrop('515 54 340 340');ART.robber=windowCrop('928 30 345 350')
 ART.sunset=windowView('<defs><linearGradient id="ss" x2="0" y2="1"><stop stop-color="#523b91"/><stop offset=".56" stop-color="#e97785"/><stop offset="1" stop-color="#ffd68b"/></linearGradient></defs><rect width="238" height="388" fill="url(#ss)"/><circle cx="135" cy="216" r="42" fill="#fff0b0"/><path d="M0 258L60 200 105 263 151 230 238 270V388H0Z" fill="#554562"/><path d="M0 303L45 277 104 316 182 281 238 315V388H0Z" fill="#242e45"/>');
 const weatherWindow=snow=>windowView('<rect width="238" height="388" fill="#788da3"/><path d="M0 280L52 226 99 280 169 205 238 278V388H0Z" fill="'+(snow?'#e9f0f1':'#46596b')+'"/>'+Array.from({length:64},(_,i)=>{const x=(i*79+11)%238,y=(i*113+15)%388;return snow?'<circle cx="'+x+'" cy="'+y+'" r="'+(2+i%4)+'" fill="#fff" opacity=".85"/>':'<path d="M'+x+' '+y+'l-9 25" stroke="#d7eaff" stroke-opacity=".65" stroke-width="2"/>'}).join(''));
 ART.snow=weatherWindow(true);ART.rain=weatherWindow(false);
+const liveWeatherKind=(description='')=>{
+ const d=String(description).toLowerCase();
+ if(/thunder|lightning/.test(d))return 'storm';
+ if(/freezing|sleet|ice pellet|wintry mix|snow/.test(d))return 'snow';
+ if(/rain|drizzle|shower/.test(d))return 'rain';
+ if(/fog|mist|haze|smoke/.test(d))return 'fog';
+ if(/partly|mostly sunny|mostly clear|few clouds|scattered/.test(d))return 'partly';
+ if(/cloud|overcast/.test(d))return 'cloudy';
+ if(/clear|sunny|fair/.test(d))return 'clear';
+ return 'unknown';
+};
+let liveWeatherArtKey='';
+function prepareLiveWeatherArt(data){
+ const fresh=data&&Number.isFinite(data.received)&&Date.now()-data.received<45*60000;
+ const kind=fresh?liveWeatherKind(data.description):'unknown',night=fresh&&data.day===false;
+ const key=kind+'-'+night;
+ if(key===liveWeatherArtKey&&ART.liveWeather)return;
+ liveWeatherArtKey=key;
+ const wet=['rain','storm','snow'].includes(kind), cloudy=['cloudy','partly','fog','unknown'].includes(kind);
+ const sky=night?'#14223d':wet?'#586778':cloudy?'#9aaab9':'#65b8ec';
+ const orb=(kind==='clear'||kind==='partly')?'<circle cx="171" cy="78" r="29" fill="'+(night?'#e9edfc':'#ffe6a0')+'"/>':'';
+ const clouds=(cloudy||wet)?'<g fill="'+(night?'#445066':kind==='storm'?'#444656':'#e3e8ed')+'" opacity=".85"><ellipse cx="45" cy="80" rx="62" ry="20"/><ellipse cx="78" cy="65" rx="39" ry="25"/><ellipse cx="188" cy="142" rx="63" ry="23"/></g>':'';
+ const particles=wet?Array.from({length:52},(_,i)=>{const x=(i*79+11)%238,y=(i*113+15)%388;return kind==='snow'?'<circle cx="'+x+'" cy="'+y+'" r="'+(2+i%3)+'" fill="#fff" opacity=".85"/>':'<path d="M'+x+' '+y+'l-8 24" stroke="#d7eaff" stroke-opacity=".68" stroke-width="2"/>'}).join(''):'';
+ ART.liveWeather=windowView('<rect width="238" height="388" fill="'+sky+'"/>'+orb+clouds+'<path d="M0 280L52 226 99 280 169 205 238 278V388H0Z" fill="'+(kind==='snow'?'#e9f0f1':night?'#253447':'#526c62')+'"/>'+particles+(kind==='storm'?'<path d="M133 150l-23 48h20l-15 46 49-62h-25l15-32Z" fill="#fff3ab" opacity=".8"/>':'')+(kind==='fog'?'<rect width="238" height="388" fill="#e3e8ed" opacity=".57"/>':'')+'<rect x="9" y="349" width="220" height="30" rx="5" fill="#20182e" opacity=".88"/><text x="119" y="369" text-anchor="middle" fill="#fff" font-size="11" font-family="sans-serif">'+(kind==='unknown'?'WEATHER UNAVAILABLE':'NWS - SIMULATED VIEW')+'</text>');
+}
+prepareLiveWeatherArt(null);
+
 const outdoorChair=(x,beach)=>'<g transform="translate('+x+' 0)"><ellipse cx="160" cy="585" rx="154" ry="22" fill="#182b33" opacity=".28"/><path d="M46 464L13 595M274 464L306 595M56 540L43 590M266 540L281 590" stroke="#45332c" stroke-width="18" stroke-linecap="round"/><rect x="24" y="225" width="270" height="295" rx="42" fill="#5f3a2b" stroke="#cda978" stroke-width="12"/><rect x="40" y="241" width="238" height="260" rx="28" fill="'+(beach?'url(#stripe)':'url(#cushion)')+'"/><path d="M20 480Q160 452 300 480L280 553Q160 578 40 553Z" fill="'+(beach?'#e2c28a':'#655276')+'" stroke="#9d7755" stroke-width="8"/><path d="M15 445H80M240 445H305" stroke="#cda978" stroke-width="19" stroke-linecap="round"/></g>';
 const outdoorArt=beach=>scenicSVG('<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="'+(beach?'#389ac6':'#496f94')+'"/><stop offset="1" stop-color="'+(beach?'#f6dca5':'#dce6df')+'"/></linearGradient><linearGradient id="ground" x2="0" y2="1"><stop stop-color="'+(beach?'#e8c994':'#58725c')+'"/><stop offset="1" stop-color="'+(beach?'#b68a59':'#263e37')+'"/></linearGradient><linearGradient id="cushion" x2="1" y2="1"><stop stop-color="#b09ac5"/><stop offset="1" stop-color="#53435f"/></linearGradient><pattern id="stripe" width="38" height="38" patternUnits="userSpaceOnUse"><rect width="38" height="38" fill="#f1ebd4"/><rect width="19" height="38" fill="#426f84"/></pattern></defs><rect width="1280" height="720" fill="url(#sky)"/><circle cx="1050" cy="112" r="55" fill="#fff0bb"/>'+(beach?'<path d="M0 280Q640 240 1280 280V500H0Z" fill="#278f9c"/><path d="M0 365Q320 385 640 360T1280 365M0 410Q320 430 640 405T1280 410" fill="none" stroke="#c7eae2" stroke-width="7"/><path d="M0 446Q380 414 640 466T1280 440V720H0Z" fill="url(#ground)"/><path d="M80 438Q124 230 94 75" stroke="#795443" stroke-width="20" fill="none"/><g fill="#366d58"><path d="M94 75Q25 15 0 101Q48 77 94 75M94 75Q167 4 225 88Q150 62 94 75M94 75Q166 85 193 165Q136 116 94 75M94 75Q20 110 12 175Q57 112 94 75"/></g>':'<path d="M0 362L215 76 345 242 495 40 680 250 850 96 1100 360 1280 200V550H0Z" fill="#788d99"/><path d="M125 195L215 76 293 176 241 154 216 183 195 144Z M399 159L495 40 592 150 520 117 496 144 471 111Z M780 178L850 96 931 190 873 163 851 183 832 149Z" fill="#f2f5ef"/><path d="M0 391Q250 340 540 403T1280 390V720H0Z" fill="url(#ground)"/>'+Array.from({length:15},(_,i)=>{let x=i*91-32,h=85+(i*57)%130;return '<path d="M'+x+' 435l40 -'+h+' 40 '+h+'Z" fill="'+(i%2?'#355b49':'#294d46')+'"/>'}).join(''))+'<rect x="600" y="495" width="80" height="84" rx="7" fill="#6d4c35"/><ellipse cx="640" cy="496" rx="90" ry="25" fill="#d0a77b"/>'+outdoorChair(160,beach)+outdoorChair(800,beach));
 ART.beach=new URL('a_crisp_sunlit_photorealistic_beach_lounge_scene.png',location.href).href;ART.mountain=new URL('golden_mountain_lake_lounge.png',location.href).href;ART.porch=new URL('a_photorealistic_warmly_lit_countryside_front_por.png',location.href).href;ART.gazebo=new URL('a_highly_detailed_photorealistic_cozy_garden_gaz.png',location.href).href;ART.gazeboBranded=new URL('a_highly_detailed_photorealistic_richly_lit_gard.png',location.href).href;
@@ -922,7 +949,7 @@ const SCENES=[
 {"id":"window-grandma","name":"Grandma & Pigeon Patrol","desc":"Grandma outside the studio window","img":"grandma","label":"RTRN • FICTIONAL COMEDY","headline":"Stories worth sharing.","group":"🪟 Window & Weather Scenes","fictional":true},
 {"id":"window-robber","name":"Robber & Pigeon Patrol","desc":"Fictional window comedy","img":"robber","label":"RTRN • FICTIONAL COMEDY","headline":"Stories worth sharing.","group":"🪟 Window & Weather Scenes","fictional":true},
 {"id":"window-sunset","name":"Sunset Window","desc":"Warm evening sky for any occasion","img":"sunset","label":"ROADS TO RECOGNITION","headline":"Stories worth sharing.","group":"🪟 Window & Weather Scenes","fictional":false},
-{"id":"window-weather","name":"Snow & Rain Window","desc":"Switch between snowy and rainy views","img":"snow","label":"ROADS TO RECOGNITION","headline":"Stories worth sharing.","group":"🪟 Window & Weather Scenes","fictional":false},
+{"id":"window-weather","name":"Live Weather Window","desc":"Live U.S. conditions or manual snow and rain","img":"snow","label":"ROADS TO RECOGNITION","headline":"Stories worth sharing.","group":"🪟 Window & Weather Scenes","fictional":false},
 {"id":"beach","name":"Beach Conversation","desc":"Two beach chairs · host and guest","img":"beach","label":"ROADS TO RECOGNITION","headline":"Stories worth sharing.","group":"🏞️ Outdoor Studios","fictional":false},
 {"id":"mountain","name":"Mountain Nature Retreat","desc":"Two nature chairs · host and guest","img":"mountain","label":"ROADS TO RECOGNITION","headline":"Stories worth sharing.","group":"🏞️ Outdoor Studios","fictional":false},
 {"id":"porch","name":"Country Front Porch","desc":"Two wooden rocking chairs · host and guest","img":"porch","label":"ROADS TO RECOGNITION • PORCH CONVERSATIONS","headline":"Come sit a spell and share your story.","group":"🏞️ Outdoor Studios","fictional":false},
@@ -935,7 +962,7 @@ const SCENES=[
 const defaults={catchphrase:'Kindness gets the spotlight. Laughter sneaks through the window!',scene:'original-podcast',headline:'Stories worth sharing.',host:'Larrina',banner:true,ticker:true,live:false,mark:true,cameraMode:'frame',cameraSize:28,keyThreshold:46,script:'',cameraEnabled:false,ambient:true,quietWindow:false,autoGags:false,soundEnabled:true,effectVolume:55,newsText:'PIGEON PATROL DEMANDS OVERTIME IN BREADCRUMBS!',guestName:'Guest',guestPhotoId:''};
 const el=id=>document.getElementById(id);
 const outputMode=new URLSearchParams(location.search).get('output')==='1';
-let state={...defaults,weatherMode:'snow'};try{let saved=JSON.parse(localStorage.getItem('rtrn-v1')||'{}');state={...state,...saved,cameraEnabled:false};}catch(e){}
+let state={...defaults,weatherMode:'live',weatherData:null};try{let saved=JSON.parse(localStorage.getItem('rtrn-v1')||'{}');state={...state,...saved,cameraEnabled:false};}catch(e){}
 if(/^holiday-/.test(state.scene))state.scene='window-sunset';
 let channel=null;try{channel=new BroadcastChannel('rtrn-studio-sync')}catch(e){}
 let outputWindow=null,stream=null,camTimer=0,lastCamDraw=0,flashTimer=null;
@@ -971,9 +998,9 @@ function setState(patch,broadcast=true){state={...state,...patch};render();if(br
 function pickScene(id){const s=SCENES.find(s=>s.id===id);if(!s)return;setState({scene:id,headline:s.headline,...(s.solemn?{quietWindow:true,autoGags:false}: {})});window.RTRNChooseSceneSeats?.(id);}
 function safeText(target,value){el(target).textContent=value}
 function render(){
- const weather=SCENES.find(x=>x.id==='window-weather');weather.img=state.weatherMode==='rain'?'rain':'snow';
+ const weather=SCENES.find(x=>x.id==='window-weather');weather.img=state.weatherMode==='live'?'liveWeather':state.weatherMode==='rain'?'rain':'snow';if(weather.img==='liveWeather')prepareLiveWeatherArt(state.weatherData);
  const s=SCENES.find(x=>x.id===state.scene)||SCENES[0];
- el('weatherView').hidden=state.scene!=='window-weather';el('weatherSelect').value=weather.img;
+ el('weatherView').hidden=state.scene!=='window-weather';el('weatherSelect').value=state.weatherMode;weatherStatus();
  el('background').style.backgroundImage=`url("${ART[s.img]}")`;
  for(const b of sceneList.querySelectorAll('[data-scene]'))b.classList.toggle('active',b.dataset.scene===s.id);
  el('birds').style.display=birdActive?'block':'none';
@@ -1525,7 +1552,62 @@ rtrnAudienceSoundboard.addEventListener('click',function(event){
 },true);
 el('clearEffects').addEventListener('click',()=>clearEffects());
 el('surpriseButton').addEventListener('click',()=>triggerGag(el('gagSelect').value));
-el('weatherSelect').addEventListener('change',e=>setState({weatherMode:e.target.value==='rain'?'rain':'snow'}));
+
+let weatherPlace='';try{weatherPlace=localStorage.getItem('rtrn-weather-place')||''}catch(_){}
+const weatherPlaces={corning:[39.93,-122.18],chico:[39.73,-121.84],redbluff:[40.18,-122.24],redding:[40.59,-122.39]};
+let deviceWeatherPoint=null,weatherRequest=0,weatherBusy=false,weatherLastAttempt=0,weatherError='';
+const weatherLocation=el('weatherLocation');
+weatherLocation.value=Object.hasOwn(weatherPlaces,weatherPlace)||weatherPlace==='device'?weatherPlace:'';
+function weatherStatus(){
+ const d=state.weatherData;
+ const fresh=d&&Number.isFinite(d.received)&&Date.now()-d.received<45*60000;
+ el('weatherRefresh').disabled=weatherBusy||state.weatherMode!=='live'||!weatherLocation.value;
+ el('weatherLocation').disabled=state.weatherMode!=='live';
+ el('weatherLiveStatus').textContent=state.weatherMode!=='live'?'Manual scenery (not current weather).':weatherBusy?'Getting NWS weather...':weatherError?weatherError:!fresh?'Choose a location and refresh to load current conditions.':d.place+' | '+d.description+(Number.isFinite(d.temp)?' | '+Math.round(d.temp)+' F':'')+' | '+d.source+' '+new Date(d.validAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' | Refreshes every 15 minutes.';
+}
+async function weatherJSON(url){
+ const u=new URL(url);if(u.origin!=='https://api.weather.gov')throw Error('Unexpected weather service');
+ const response=await fetch(u,{signal:AbortSignal.timeout(12000)});
+ if(!response.ok)throw Error('Weather service returned '+response.status);
+ return response.json();
+}
+async function refreshLiveWeather(allowLocation=false){
+ if(outputMode||state.weatherMode!=='live'||state.scene!=='window-weather'||weatherBusy)return;
+ const choice=weatherLocation.value;if(!choice)return;
+ const id=++weatherRequest;weatherBusy=true;weatherError='';weatherLastAttempt=Date.now();weatherStatus();
+ try{
+  let point=weatherPlaces[choice];
+  if(choice==='device'){
+   if(!deviceWeatherPoint&&allowLocation){
+    if(!navigator.geolocation)throw Error('Device location is unavailable');
+    deviceWeatherPoint=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(p=>resolve([p.coords.latitude,p.coords.longitude]),reject,{enableHighAccuracy:false,timeout:12000,maximumAge:600000}));
+   }
+   point=deviceWeatherPoint;
+  }
+  if(!point)throw Error('Use Refresh and allow device location, or choose a city');
+  const grid=(await weatherJSON('https://api.weather.gov/points/'+point.map(n=>n.toFixed(2)).join(','))).properties;
+  const hourlyPromise=weatherJSON(grid.forecastHourly);
+  const obsPromise=(async()=>{const stations=await weatherJSON(grid.observationStations);for(const station of (stations.features||[]).slice(0,3)){try{const p=(await weatherJSON(station.id+'/observations/latest')).properties;if(p.textDescription&&Date.now()-Date.parse(p.timestamp)<90*60000&&Date.now()>=Date.parse(p.timestamp))return p}catch(_){}}return null})();
+  const [forecast,obs]=await Promise.all([hourlyPromise.catch(()=>null),obsPromise.catch(()=>null)]);
+  const now=Date.now(),period=forecast?.properties?.periods?.find(p=>Date.parse(p.startTime)<=now&&now<Date.parse(p.endTime));
+  if(!obs&&!period)throw Error('No recent observation or current hourly forecast');
+  const place=grid.relativeLocation?.properties;
+  const observed=!!obs;
+  const data={place:place?[place.city,place.state].filter(Boolean).join(', '):'Selected location',description:observed?obs.textDescription:period.shortForecast,day:period?.isDaytime??null,temp:observed?(Number.isFinite(obs.temperature?.value)?obs.temperature.value*9/5+32:null):Number.isFinite(period.temperature)?(period.temperatureUnit==='C'?period.temperature*9/5+32:period.temperature):null,source:observed?'NWS observation':'NWS hourly forecast',validAt:observed?obs.timestamp:period.startTime,received:now};
+  if(id===weatherRequest&&state.weatherMode==='live'&&weatherLocation.value===choice){weatherError='';setState({weatherData:data});}
+ }catch(e){if(id===weatherRequest){weatherError='Weather unavailable: '+(e.message||'location permission denied')+'. Try Refresh or manual scenery.';setState({weatherData:null});}}
+ finally{if(id===weatherRequest){weatherBusy=false;weatherStatus();}}
+}
+function selectWeatherPlace(){
+ ++weatherRequest;weatherBusy=false;weatherError='';weatherPlace=weatherLocation.value;
+ try{localStorage.setItem('rtrn-weather-place',weatherPlace)}catch(_){}
+ setState({weatherData:null});if(weatherPlace!=='device')refreshLiveWeather();else weatherStatus();
+}
+weatherLocation.addEventListener('change',selectWeatherPlace);
+el('weatherRefresh').addEventListener('click',()=>refreshLiveWeather(true));
+el('weatherSelect').addEventListener('change',e=>{++weatherRequest;weatherBusy=false;weatherError='';setState({weatherMode:['live','snow','rain'].includes(e.target.value)?e.target.value:'snow'});if(state.weatherMode==='live')refreshLiveWeather();weatherStatus();});
+setInterval(()=>{if(!outputMode&&state.scene==='window-weather'&&state.weatherMode==='live'){if(state.weatherData&&Date.now()-state.weatherData.received>=45*60000)setState({weatherData:null});if(Date.now()-weatherLastAttempt>=15*60000&&weatherLocation.value&&(weatherLocation.value!=='device'||deviceWeatherPoint))refreshLiveWeather();}},30000);
+
 for(const [id,key] of [['ambientToggle','ambient'],['quietToggle','quietWindow'],['autoGagsToggle','autoGags'],['soundToggle','soundEnabled']]){
  el(id).addEventListener('change',e=>setState({[key]:e.target.checked}));
 }
@@ -2075,6 +2157,7 @@ for(const [art,boxes] of Object.entries(tabletopPositions)){
   frameLayout[art]??=[];
   boxes.forEach((box,i)=>frameLayout[art].push(tabletop(art==='rain'?'snow':art,i===0?'left':i===1?'right':String(i+1),box)));
 }
+frameLayout.liveWeather=frameLayout.snow;
 const storeKey='rtrn-wall-pictures-v3';
 let saved={};
 try {saved=JSON.parse(localStorage.getItem(storeKey)||'{}')||{}}catch(e){}
