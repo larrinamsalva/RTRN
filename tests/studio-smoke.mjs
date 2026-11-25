@@ -157,12 +157,21 @@ try {
     await desktop.locator('#rtrnSoloQuick').click();
     assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
   }
-  for(const [id,count] of [['cozy-1',1],['cozy-2',2],['cozy-3',2],['cozy-4',4],['beach',2],['mountain',2],['porch',2],['gazebo',3],['gazebo-branded',3],['original-podcast',1],['original-live',1],['news',2]]){
+  for(const [id,count] of [['cozy-1',1],['cozy-2',2],['cozy-3',3],['cozy-4',4],['beach',2],['mountain',2],['porch',2],['gazebo',3],['gazebo-branded',3],['original-podcast',1],['original-live',1],['news',2]]){
     await desktop.locator('[data-scene="'+id+'"]').click();
     await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2);
     if(count){await desktop.waitForFunction(n=>['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].filter(id=>{const e=document.getElementById(id);return !e.hidden&&getComputedStyle(e).display!=='none'}).length===n,count);}
   }
+  await desktop.locator('[data-scene="cozy-3"]').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder3').isVisible(),'Three-seat sofa must show its middle guest');
+  assert(await desktop.locator('#rtrnSeatPlaceholder4').isHidden(),'Three-seat sofa must not show a fourth guest');
+  assert(await desktop.locator('#stage').evaluate(el=>el.classList.contains('rtrn-portrait-seats')),'Cozy 3 portrait frames must be enabled');
+  await desktop.locator('#rtrnSoloQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder3').isHidden(),'Solo must hide the middle guest');
+  await desktop.locator('#rtrnDuoQuick').click();
+  assert(await desktop.locator('#rtrnSeatPlaceholder3').isVisible(),'Guest mode must restore the middle guest');
   await desktop.locator('[data-scene="cozy-4"]').click();
+  assert(await desktop.locator('#stage').evaluate(el=>el.classList.contains('rtrn-portrait-seats')),'Cozy 4 portrait frames must be enabled');
   await desktop.locator('#rtrnSoloQuick').click();
   assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
   assert(!(await desktop.locator('#rtrnSeatPlaceholder3').isVisible()));
