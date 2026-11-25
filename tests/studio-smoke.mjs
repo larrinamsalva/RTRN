@@ -243,5 +243,13 @@ try {
   await desktop.reload();
   await desktop.waitForFunction(()=>document.getElementById('rtrnCustomSeatCount').value==='5'&&!document.getElementById('rtrnSeatPlaceholder5').hidden);
   console.log('Custom scene seating from one to five, fifth camera, solo and saved count passed.');
+  for(const scene of ['cozy-1','cozy-2','original-podcast','original-live']){
+    await desktop.locator('[data-scene="'+scene+'"]').click();
+    await desktop.waitForFunction(()=>document.querySelectorAll('#tablePortraits .table-photo').length===2&&document.getElementById('stage').classList.contains('rtrn-gold-table-frames'));
+    const frames=await desktop.locator('#tablePortraits .table-photo').evaluateAll(nodes=>nodes.map(n=>({x:parseFloat(n.style.left),border:getComputedStyle(n,'::after').borderTopStyle})));
+    assert(frames.every(f=>f.border==='ridge'),'Gold picture frame molding must be visible');
+    assert(frames[0].x<30&&frames[1].x>75,'Frames belong on outer desk or side tables');
+    if(scene.startsWith('original-'))await desktop.waitForFunction(()=>parseFloat(document.getElementById('cameraBox').style.width)===22);
+  }
   console.log('Desktop workspace, scenic sets, tabletop photo and seat checks passed.');
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
