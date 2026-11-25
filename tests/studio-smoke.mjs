@@ -13,7 +13,10 @@ const gazeboAssetName='a_highly_detailed_photorealistic_cozy_garden_gaz.png';
 const gazeboAsset=await readFile(new URL('../'+gazeboAssetName,import.meta.url));
 const brandedGazeboAssetName='a_highly_detailed_photorealistic_richly_lit_gard.png';
 const brandedGazeboAsset=await readFile(new URL('../'+brandedGazeboAssetName,import.meta.url));
+const newAssets = new Map();
+for(const filename of ['sunset_cannabis_field_lounge.png','midnight_lounge_cannabis_studio.png','moonlit_purple_gold_garden_lounge.png'])newAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
 const server = createServer((req,res) => {
+  if(newAssets.has(req.url)){res.writeHead(200,{'Content-Type':'image/png'});res.end(newAssets.get(req.url));return}
   if(req.url==='/'+beachAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(beachAsset);return}
   if(req.url==='/'+mountainAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(mountainAsset);return}
   if(req.url==='/'+porchAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(porchAsset);return}
@@ -90,7 +93,7 @@ try {
   await desktop.locator('#sceneFold > summary').click();
   const ids=await desktop.locator('#sceneList [data-scene]').evaluateAll(nodes=>nodes.map(n=>n.dataset.scene));
   assert.equal(ids.filter(id=>id.startsWith('holiday-')).length,0);
-  for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch','gazebo','gazebo-branded'])assert(ids.includes(id),'Missing '+id);
+  for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars'])assert(ids.includes(id),'Missing '+id);
   await desktop.locator('[data-scene="window-weather"]').click();
   await desktop.locator('#rtrnBroadcastTab').click();
   const before=await desktop.locator('#background').evaluate(el=>el.style.backgroundImage);
@@ -133,6 +136,19 @@ try {
   assert(await desktop.locator('#rtrnSeatPlaceholder3').isHidden());
   await desktop.locator('#rtrnDuoQuick').click();
   assert(await desktop.locator('#rtrnSeatPlaceholder3').isVisible());
+  }
+  for(const [id,count,frames] of [['purple-haze',2,2],['midnight',4,3],['stars',4,4]]){
+    await desktop.waitForFunction(id=>{const img=document.querySelector('[data-scene="'+id+'"] img');return img?.complete&&img.naturalWidth>=1200&&img.naturalHeight>=650},id);
+    await desktop.locator('[data-scene="'+id+'"]').click();
+    const seatIds=['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4','rtrnSeatPlaceholder5'];
+    await desktop.waitForFunction(({seatIds,count})=>seatIds.filter(id=>{const el=document.getElementById(id);return !el.hidden&&getComputedStyle(el).display!=='none'}).length===count,{seatIds,count});
+    await desktop.waitForFunction(n=>document.querySelectorAll('#tablePortraits .table-photo').length===n,frames);
+    const boxes=await Promise.all(seatIds.slice(0,count).map(id=>desktop.locator('#'+id).boundingBox()));
+    for(let i=1;i<boxes.length;i++)assert(boxes[i-1].x+boxes[i-1].width<boxes[i].x,'Overlapping seats: '+id);
+    await desktop.locator('#rtrnSoloQuick').click();
+    for(const seat of seatIds.slice(1))assert(await desktop.locator('#'+seat).isHidden(),'Solo must hide '+seat);
+    await desktop.locator('#rtrnDuoQuick').click();
+    await desktop.waitForFunction(({seatIds,count})=>seatIds.filter(id=>{const el=document.getElementById(id);return !el.hidden&&getComputedStyle(el).display!=='none'}).length===count,{seatIds,count});
   }
   for(const id of ['beach','mountain','porch']){
     await desktop.locator('[data-scene="'+id+'"]').click();
