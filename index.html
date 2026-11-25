@@ -2128,7 +2128,7 @@ const frameLayout={
  ]
 };
 // Coordinates are normalized percentages, independent of artwork pixel size.
-const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:['news','washers','grandma','robber','sunset','snow','rain'].includes(art)?(side==='left'?'Recognition — back table between chairs':'Recognition — side table by window'):(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
+const tabletop=(art,side,box)=>({id:art+'-table-'+side,name:['news','washers','grandma','robber','sunset','snow','rain'].includes(art)?(side==='left'?'Small picture 1 — back table between chairs':'Small picture 2 — side table by window'):(side==='left'?'Left':side==='right'?'Right':'Frame '+side)+' desk / table photo',box,percent:true,table:true,shape:'polygon(0 0,100% 0,100% 100%,0 100%)'});
 const tabletopPositions={
  originalPodcast:[[27,62.5,5.5,11.5],[75.2,51.5,3.8,10]],
  originalLive:[[27,57.5,5.5,11.5],[76.5,44.5,3.6,10]],
@@ -2158,8 +2158,9 @@ for(const [art,boxes] of Object.entries(tabletopPositions)){
   boxes.forEach((box,i)=>frameLayout[art].push(tabletop(art==='rain'?'snow':art,i===0?'left':i===1?'right':String(i+1),box)));
 }
 // The window variants share the same physical main sign and saved logo slot.
-for(const art of ['washers','grandma','robber','sunset','snow','rain'])frameLayout[art].unshift(frameLayout.news[0]);
+for(const art of ['washers','grandma','robber','sunset','snow','rain'])frameLayout[art].unshift(frameLayout.news[0],frameLayout.news[1]);
 frameLayout.liveWeather=frameLayout.snow;
+// Keep the photo library picker and frame editor in sync with all visible slots.
 const storeKey='rtrn-wall-pictures-v3';
 let saved={};
 try {saved=JSON.parse(localStorage.getItem(storeKey)||'{}')||{}}catch(e){}
@@ -2394,8 +2395,10 @@ const emptyFramePreview = 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent
  const {art}=activeArt();
  list.innerHTML='';
  if(!(frameLayout[art]||[]).length){const e=document.createElement('div');e.className='frame-disabled';e.textContent='This background does not contain editable picture frames.';list.append(e);return}
- for(const def of frameLayout[art]){
-  const item=saved[def.id]||{},card=document.createElement('div');card.className='frame-edit-card';
+ // Keep the small photo upload controls above the large logo workbench.
+ const defs=[...frameLayout[art]].sort((a,b)=>Number(b.table===true)-Number(a.table===true)||Number(a.id==='news-big')-Number(b.id==='news-big'));
+ for(const def of defs){
+  const item=saved[def.id]||{},card=document.createElement('div');card.className='frame-edit-card';card.dataset.frameId=def.id;
   const title=document.createElement('strong');title.textContent='🖼️ '+def.name;card.append(title);
   if(def.id==='news-big'){const help=document.createElement('p');help.className='frame-media-help';help.textContent='Replace the large Roads to Recognition wall sign in the News Desk and all window/weather scenes. Restore original brings the built-in logo back in all of them.';card.append(help);}
   const row=document.createElement('div');row.className='frame-edit-row';
