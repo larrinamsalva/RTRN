@@ -53,6 +53,16 @@ try {
   await stopButton.waitFor({state:'visible'});
   await page.waitForFunction(()=>!document.getElementById('rtrnStopRecordQuick').disabled,{},{timeout:15000});
   assert(await startButton.isDisabled());
+  const setVoice=async value=>page.locator('#rtrnVoiceVolume').evaluate((el,v)=>{el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));},String(value));
+  await setVoice(100);
+  await page.waitForFunction(()=>window.RTRNRecorder.voiceLevel()>.001,null,{timeout:10000});
+  await setVoice(0);
+  await page.waitForFunction(()=>window.RTRNRecorder.voiceLevel()<.00001,null,{timeout:5000});
+  assert.equal(await page.locator('#rtrnVoiceLevel').textContent(),'0%');
+  await setVoice(100);
+  await page.waitForFunction(()=>window.RTRNRecorder.voiceLevel()>.001,null,{timeout:10000});
+  assert.equal(await page.locator('#rtrnVoiceLevel').textContent(),'100%');
+  assert.equal(await page.locator('#rtrnMusicVolume').inputValue(),'50','Voice slider must not change music');
   await page.waitForTimeout(1300);
   await stopButton.tap();
   await page.waitForFunction(()=>!document.getElementById('rtrnRecordQuick').disabled,{},{timeout:15000});
