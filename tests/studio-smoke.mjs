@@ -172,6 +172,14 @@ try {
   assert(await desktop.locator('#rtrnSeatPlaceholder3').isVisible(),'Guest mode must restore the middle guest');
   await desktop.locator('[data-scene="cozy-4"]').click();
   assert(await desktop.locator('#stage').evaluate(el=>el.classList.contains('rtrn-portrait-seats')),'Cozy 4 portrait frames must be enabled');
+  // Check actual stage-relative positions, not viewport pixels.
+  for(const [scene,count,width] of [['cozy-3',3,21],['cozy-4',4,16]]){
+    await desktop.locator('[data-scene="'+scene+'"]').click();
+    await desktop.waitForFunction(({count,width})=>['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].slice(0,count).every(id=>{const e=document.getElementById(id);return !e.hidden&&parseFloat(e.style.width)===width;}),{count,width});
+    const frames=await desktop.locator('#tablePortraits .table-photo').evaluateAll(nodes=>nodes.map(n=>({left:parseFloat(n.style.left),right:parseFloat(n.style.left)+parseFloat(n.style.width),border:getComputedStyle(n,'::after').borderTopStyle})));
+    assert.equal(frames.length,2);assert(frames[0].right<10&&frames[1].left>90,'Small photos belong on outer end tables');assert(frames.every(f=>f.border==='ridge'),'Small photos need visible gold frame molding');
+  }
+
   await desktop.locator('#rtrnSoloQuick').click();
   assert(!(await desktop.locator('#rtrnSecondBox').isVisible()));
   assert(!(await desktop.locator('#rtrnSeatPlaceholder3').isVisible()));
