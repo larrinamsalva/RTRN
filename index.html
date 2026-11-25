@@ -2700,8 +2700,8 @@ refresh();
   const hasSceneSeats = () => isOriginalDesk()||isCozy()||isWindowScene()||state.scene==='news'||isCustom();
   const isOriginal = () => state.scene==='original-podcast'||state.scene==='original-live'||hasSceneSeats();
   const cozyPresets={
-    'vintage-tea':{oneX:8.5,oneY:46,oneSize:19,twoX:74,twoY:46,twoSize:19},
-    'vintage-man':{oneX:15.5,oneY:55,oneSize:19,twoX:69,twoY:55,twoSize:19},
+    'vintage-tea':{oneX:8.5,oneY:38,oneSize:19,twoX:74,twoY:38,twoSize:19},
+    'vintage-man':{oneX:15.5,oneY:45,oneSize:19,twoX:69,twoY:45,twoSize:19},
     'original-podcast':{oneX:38.2,oneY:36,oneSize:22},
     'original-live':{oneX:39,oneY:30.5,oneSize:22},
     'cozy-1':{oneX:39,oneY:50,oneSize:22,twoX:56,twoY:27,twoSize:27},
@@ -2741,6 +2741,8 @@ refresh();
   try{if(localStorage.getItem('rtrn-realistic-mountain-seat-layout-v1')!=='1'){delete cozySaved.mountain;localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-mountain-seat-layout-v1','1')}}catch(_){}
   // Reset only legacy vintage default positions; preserve custom adjustments and saved photos.
   try{if(localStorage.getItem('rtrn-realistic-vintage-seat-layout-v1')!=='1'){for(const id of ['vintage-tea','vintage-man']){const saved=cozySaved[id];if(!saved)continue;for(const [key,value] of Object.entries({oneX:15.5,oneY:37,oneSize:19,twoX:65.5,twoY:37,twoSize:19})){if(saved[key]===value)delete saved[key];}}localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-realistic-vintage-seat-layout-v1','1');}}catch(_){}
+  // Lift the previous vintage default camera positions above the lower-third banner.
+  try{if(localStorage.getItem('rtrn-vintage-banner-clearance-v1')!=='1'){for(const [id,oldY] of [['vintage-tea',46],['vintage-man',55]]){const saved=cozySaved[id];if(!saved)continue;for(const key of ['oneY','twoY'])if(saved[key]===oldY)delete saved[key];}localStorage.setItem('rtrn-cozy-seats-v6',JSON.stringify(cozySaved));localStorage.setItem('rtrn-vintage-banner-clearance-v1','1');}}catch(_){}
   const sceneSeatConf=()=>hasSceneSeats()?{...conf,...(isCustom()?{oneX:customSeat(1).x,oneY:32,oneSize:customSeat(1).size,twoX:customSeat(2).x,twoY:32,twoSize:customSeat(2).size}:cozyPresets[state.scene]),...(cozySaved[state.scene]||{})}:conf;
   window.RTRNSeatCount=seatCount;
   window.RTRNExtraSeatPosition=n=>{const base=state.scene==='midnight'?(n===3?{x:57.5,y:39,size:15}:{x:78,y:42,size:16}):state.scene==='stars'?(n===3?{x:58.4,y:40,size:11.8}:{x:81,y:41,size:15}):isCustom()?customSeat(n):['gazebo','gazebo-branded'].includes(state.scene)?{x:73.2,y:37.5,size:18} :state.scene==='cozy-3'?{x:39.5,y:43,size:21}:state.scene==='cozy-4'?{x:n===3?55.5:77.5,y:37,size:16}:{x:n===3?55:77,y:32,size:17};return {...base,...(cozySaved[state.scene]?.['seat'+n]||{})}};
