@@ -1864,6 +1864,11 @@ render();setInterval(()=>{const t=el('clockText');if(t)t.textContent=`${state.li
 <script>
 // Finalize live WebM recordings locally: finite Segment, Duration, SeekHead and video keyframe Cues.
 // No transcoding or network transfer. Preserve all encoded audio/video blocks.
+// Prefer H.264/AAC MP4 for ordinary Windows/phone media players.
+window.RTRNRecordingFormat=function(){
+ const choices=['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm'];
+ return choices.find(type=>window.MediaRecorder?.isTypeSupported(type))||'';
+};
 window.RTRNFinalizeShow=async function(blob){
  if(!/webm/i.test(blob.type))return blob;
  const b=new Uint8Array(await blob.arrayBuffer());
@@ -3413,13 +3418,7 @@ refresh();
     $('rtrnRecordStatus').textContent=message;$('rtrnRecordStatus').dataset.recording=String(recording);
     $('rtrnQuickStatus').textContent=message;
   }
-  function recordingFormat(){
-    const safari=/Safari/.test(navigator.userAgent)&&!/Chrome|CriOS|Edg/.test(navigator.userAgent);
-    const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
-    const choices=(safari||mobile)?['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp8,opus','video/webm']:
-      ['video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm','video/mp4;codecs=h264,aac','video/mp4'];
-    return choices.find(type=>MediaRecorder.isTypeSupported(type))||'';
-  }
+  function recordingFormat(){return window.RTRNRecordingFormat();}
   let recordingBusy=false;
   function recordButtons(phase){
     const starting=phase==='starting',active=phase==='recording',saving=phase==='saving';
@@ -3480,7 +3479,9 @@ refresh();
         if(window.RTRNShowLibrary?.saveRecording)window.RTRNShowLibrary.saveRecording(blob,link.download,poster).catch(console.warn);
         link.click();
       };
-      recorder.start(1000);startTime=Date.now();
+      // MP4: allow the browser to finalize one complete movie rather than requesting live chunks.
+      if(mime.includes('mp4'))recorder.start();else recorder.start(1000);
+      startTime=Date.now();
       drawProgram();videoStream.getVideoTracks()[0]?.requestFrame?.();
       recordButtons('recording');
       $('rtrnVideoDownload').hidden=true;
@@ -3751,7 +3752,7 @@ const setMode=(next)=>{mode=next;$('rtrnEditMode').textContent='Edit mode: '+(mo
 $('rtrnCutSelection').addEventListener('click',()=>setMode('cut'));
 $('rtrnBleepSelection').addEventListener('click',()=>setMode('bleep'));
 setMode('bleep');
-const mimeType=()=>['video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=h264,aac','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+const mimeType=()=>window.RTRNRecordingFormat();
 $('rtrnExportEdited').addEventListener('click',async()=>{
  if(editing){message('An export is already running.');return}
  if(!selectedBlob){message('Select or import a show first.');return}
@@ -3805,7 +3806,7 @@ $('rtrnExportEdited').addEventListener('click',async()=>{
    raf=requestAnimationFrame(render);
   };
   video.addEventListener('ended',()=>{if(!ended){ended=true;try{recorder.stop()}catch(_){}}});
-  await video.play();recorder.start(1000);render();
+  await video.play();if(mime.includes('mp4'))recorder.start();else recorder.start(1000);render();
   message('● Exporting edited copy in real time. Keep this window open.');
  }catch(err){finish();message('Could not export edited copy: '+(err.message||err))}
 });
