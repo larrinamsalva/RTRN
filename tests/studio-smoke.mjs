@@ -234,6 +234,18 @@ try {
   await desktop.locator('#musicPrev').click();
   await desktop.waitForFunction(()=>document.getElementById('nowPlaying').textContent.includes('Exclusive A.wav')&&!document.getElementById('musicPlayer').paused);
   assert(await desktop.evaluate(()=>{const old=window.oldMusicPlayer;return !old.isConnected&&old.paused&&old.muted&&!old.getAttribute('src')}),'Previous fully retires the prior audio pipeline');
+  // A second independent playback source must not survive Stop Music.
+  await desktop.evaluate(async()=>{
+    const url=document.getElementById('musicPlayer').src;
+    const extra=document.createElement('audio');extra.src=url;extra.loop=true;document.body.append(extra);window.extraMusic=extra;
+    await extra.play();
+    const orphan=document.createElement('audio');orphan.src=url;orphan.loop=true;document.body.append(orphan);
+    window.RTRNRecorder.connectAudio(orphan);await orphan.play();orphan.remove();window.orphanMusic=orphan;
+  });
+  await desktop.locator('#rtrnStopMusicQuick').click();
+  assert(await desktop.evaluate(()=>document.getElementById('musicPlayer').paused&&window.extraMusic.paused&&window.orphanMusic.paused&&!window.orphanMusic.getAttribute('src')),'Stop Music silences independent and detached sources');
+  await desktop.evaluate(()=>{window.extraMusic.remove();delete window.extraMusic;delete window.orphanMusic;});
+
   await desktop.evaluate(()=>{const cards=[...document.querySelectorAll('#musicList .media-card')];for(const name of ['Exclusive A.wav','Exclusive B.wav'])cards.find(c=>c.textContent.includes(name)).querySelector('button').click()});
   await desktop.waitForFunction(()=>document.getElementById('nowPlaying').textContent.includes('Exclusive B.wav')&&!document.getElementById('musicPlayer').paused);
   await desktop.evaluate(()=>{[...document.querySelectorAll('#musicList .media-card')].find(c=>c.textContent.includes('Exclusive A.wav')).querySelector('button').click();document.getElementById('rtrnStopMusicQuick').click()});
