@@ -206,7 +206,7 @@ try {
     const sampleRate=8000, samples=sampleRate*12, bytes=new Uint8Array(44+samples*2), v=new DataView(bytes.buffer);
     for(const [offset,text] of [[0,'RIFF'],[8,'WAVE'],[12,'fmt '],[36,'data']])for(let i=0;i<text.length;i++)bytes[offset+i]=text.charCodeAt(i);
     v.setUint32(4,36+samples*2,true);v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sampleRate,true);v.setUint32(28,sampleRate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);v.setUint32(40,samples*2,true);
-    for(const name of ['Exclusive A.wav','Exclusive B.wav'])await window.RTRNMediaLibrary.addFile('music',new File([bytes],name,{type:'audio/wav'}));
+    for(const [name,hz] of [['Exclusive A.wav',220],['Exclusive B.wav',440]]){for(let i=0;i<samples;i++)v.setInt16(44+i*2,Math.round(5000*Math.sin(2*Math.PI*hz*i/sampleRate)),true);await window.RTRNMediaLibrary.addFile('music',new File([bytes],name,{type:'audio/wav'}));}
   });
   await desktop.reload();
   async function openSongs(p){
@@ -220,6 +220,20 @@ try {
   await playTrack(desktop,'Exclusive A.wav').waitFor({state:'attached'});
   await playTrack(desktop,'Exclusive B.wav').waitFor({state:'visible'});
   await playTrack(desktop,'Exclusive A.wav').click();
+  await desktop.waitForFunction(()=>!document.getElementById('musicPlayer').paused);
+  // Exercise the actual Next and Previous buttons while music is playing.
+  await desktop.locator('#rtrnAudioSetup').evaluate(el=>{el.open=true});
+  await desktop.locator('#rtrnAudioSpeakerTest').click();
+  await desktop.waitForFunction(()=>document.getElementById('rtrnAudioStatus').textContent.includes('Test tone played'));
+  await desktop.locator('#rtrnAudioSetup').evaluate(el=>{el.open=false});
+  await desktop.evaluate(()=>{window.oldMusicPlayer=document.getElementById('musicPlayer');window.RTRNRecorder.connectAudio(window.oldMusicPlayer)});
+  await desktop.locator('#musicNext').click();
+  await desktop.waitForFunction(()=>document.getElementById('nowPlaying').textContent.includes('Exclusive B.wav')&&!document.getElementById('musicPlayer').paused);
+  assert(await desktop.evaluate(()=>{const old=window.oldMusicPlayer,p=document.getElementById('musicPlayer');return old!==p&&!old.isConnected&&old.paused&&old.muted&&!old.getAttribute('src')&&document.querySelectorAll('#musicPlayer').length===1}),'Next fully retires the prior audio pipeline');
+  await desktop.evaluate(()=>{window.oldMusicPlayer=document.getElementById('musicPlayer')});
+  await desktop.locator('#musicPrev').click();
+  await desktop.waitForFunction(()=>document.getElementById('nowPlaying').textContent.includes('Exclusive A.wav')&&!document.getElementById('musicPlayer').paused);
+  assert(await desktop.evaluate(()=>{const old=window.oldMusicPlayer;return !old.isConnected&&old.paused&&old.muted&&!old.getAttribute('src')}),'Previous fully retires the prior audio pipeline');
   await desktop.evaluate(()=>{const cards=[...document.querySelectorAll('#musicList .media-card')];for(const name of ['Exclusive A.wav','Exclusive B.wav'])cards.find(c=>c.textContent.includes(name)).querySelector('button').click()});
   await desktop.waitForFunction(()=>document.getElementById('nowPlaying').textContent.includes('Exclusive B.wav')&&!document.getElementById('musicPlayer').paused);
   await desktop.evaluate(()=>{[...document.querySelectorAll('#musicList .media-card')].find(c=>c.textContent.includes('Exclusive A.wav')).querySelector('button').click();document.getElementById('rtrnStopMusicQuick').click()});
