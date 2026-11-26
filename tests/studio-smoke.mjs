@@ -199,6 +199,34 @@ try {
   assert(await desktop.locator('#rtrnPhotoArea').isVisible());
   await desktop.locator('#rtrnMusicTab').click();
   assert(await desktop.locator('#rtrnMusicArea').isVisible());
+  // Real playable WAV fixtures: rapid track changes, Stop during loading, and
+  // exclusive music across same-origin studio tabs.
+  await desktop.evaluate(async()=>{
+    const sampleRate=8000, samples=sampleRate*12, bytes=new Uint8Array(44+samples*2), v=new DataView(bytes.buffer);
+    for(const [offset,text] of [[0,'RIFF'],[8,'WAVE'],[12,'fmt '],[36,'data']])for(let i=0;i<text.length;i++)bytes[offset+i]=text.charCodeAt(i);
+    v.setUint32(4,36+samples*2,true);v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sampleRate,true);v.setUint32(28,sampleRate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);v.setUint32(40,samples*2,true);
+    for(const name of ['Exclusive A.wav','Exclusive B.wav'])await window.RTRNMediaLibrary.addFile('music',new File([bytes],name,{type:'audio/wav'}));
+  });
+  await desktop.reload();
+  const playTrack=(p,name)=>p.locator('#musicList .media-card').filter({hasText:name}).getByRole('button',{name:'▶ Play',exact:true});
+  await playTrack(desktop,'Exclusive A.wav').waitFor({state:'attached'});
+  await playTrack(desktop,'Exclusive B.wav').waitFor({state:'attached'});
+  await desktop.evaluate(()=>{const cards=[...document.querySelectorAll('#musicList .media-card')];for(const name of ['Exclusive A.wav','Exclusive B.wav'])cards.find(c=>c.textContent.includes(name)).querySelector('button').click()});
+  await desktop.waitForFunction(()=>document.getElementById('nowPlaying').textContent.includes('Exclusive B.wav')&&!document.getElementById('musicPlayer').paused);
+  await desktop.evaluate(()=>{[...document.querySelectorAll('#musicList .media-card')].find(c=>c.textContent.includes('Exclusive A.wav')).querySelector('button').click();document.getElementById('rtrnStopMusicQuick').click()});
+  await desktop.waitForTimeout(300);
+  assert(await desktop.locator('#musicPlayer').evaluate(el=>el.paused&&el.currentTime===0),'Stop cancels pending track');
+  await playTrack(desktop,'Exclusive A.wav').evaluate(el=>el.click());
+  await desktop.waitForFunction(()=>!document.getElementById('musicPlayer').paused);
+  const musicTab=await desktop.context().newPage();await musicTab.goto(url);
+  await playTrack(musicTab,'Exclusive B.wav').waitFor({state:'attached'});
+  await playTrack(musicTab,'Exclusive B.wav').evaluate(el=>el.click());
+  await musicTab.waitForFunction(()=>!document.getElementById('musicPlayer').paused);
+  await desktop.waitForFunction(()=>document.getElementById('musicPlayer').paused);
+  await desktop.locator('#rtrnStopMusicQuick').evaluate(el=>el.click());
+  await musicTab.waitForFunction(()=>document.getElementById('musicPlayer').paused&&document.getElementById('musicPlayer').currentTime===0);
+  await musicTab.close();
+  await desktop.locator('#rtrnMusicTab').click();
   await desktop.reload();
   assert.equal(await desktop.locator('details[open]').count(),0,'Remembered workspaces still start collapsed after reload');
   await desktop.locator('#mediaLibraryFold > summary').click();
