@@ -188,7 +188,8 @@ try {
   await checkDance(page);
   assert.deepEqual(errors,[],'No uncaught browser errors');
   await mobile.close();
-  const desktop = await browser.newPage({viewport:{width:1440,height:900}});
+  const desktopContext = await browser.newContext({viewport:{width:1440,height:900}});
+  const desktop = await desktopContext.newPage();
   await desktop.goto(url);
   const desktopMixer=await desktop.locator('.rtrn-audio-mix').boundingBox(),desktopCamera=await desktop.locator('.rtrn-camera-top').boundingBox();
   assert(desktopCamera.y>=desktopMixer.y+desktopMixer.height-1&&desktopCamera.y-desktopMixer.y-desktopMixer.height<24,'Camera controls immediately below desktop volume sliders');
@@ -226,7 +227,7 @@ try {
   assert(await desktop.locator('#musicPlayer').evaluate(el=>el.paused&&el.currentTime===0),'Stop cancels pending track');
   await playTrack(desktop,'Exclusive A.wav').click();
   await desktop.waitForFunction(()=>!document.getElementById('musicPlayer').paused);
-  const musicTab=await desktop.context().newPage();await musicTab.goto(url);
+  const musicTab=await desktopContext.newPage();await musicTab.goto(url);
   await playTrack(musicTab,'Exclusive B.wav').waitFor({state:'attached'});
   await openSongs(musicTab);
   await playTrack(musicTab,'Exclusive B.wav').click();
