@@ -163,13 +163,25 @@ try {
       await p.waitForFunction(filename=>{const img=document.getElementById('stageBackgroundImage');return img?.src.endsWith(filename)&&img.complete&&img.naturalWidth>=1200},filename);
       await p.waitForFunction(()=>{const stage=document.getElementById('stage'),host=document.getElementById('cameraBox'),banner=document.getElementById('lowerThird');const s=stage.getBoundingClientRect(),h=host.getBoundingClientRect();return stage.classList.contains('rtrn-dance')&&h.height>=s.height*.48&&h.height>h.width&&h.bottom<=banner.getBoundingClientRect().top+1});
       assert(await p.locator('#rtrnSecondBox').isHidden());
-      assert(await p.locator('#rtrnDuoQuick').isDisabled());
+      assert(await p.locator('#rtrnDuoQuick').isEnabled());
+      await p.locator('#rtrnDuoQuick').click();
+      await p.waitForFunction(()=>{
+        const stage=document.getElementById('stage').getBoundingClientRect();
+        const host=document.getElementById('cameraBox').getBoundingClientRect();
+        const guest=document.getElementById('rtrnSecondBox').getBoundingClientRect();
+        const banner=document.getElementById('lowerThird').getBoundingClientRect();
+        return guest.width>0&&guest.height>guest.width&&host.height>host.width&&Math.abs(host.width-guest.width)<2&&Math.abs(host.height-guest.height)<2&&host.right+stage.width*.05<=guest.left&&guest.right<=stage.right&&Math.max(host.bottom,guest.bottom)<=banner.top+1;
+      });
+      assert.equal(await p.locator('#rtrnSecondVideo').evaluate(el=>getComputedStyle(el).objectFit),'contain');
       assert.equal(await p.locator('#cameraVideo').evaluate(el=>getComputedStyle(el).objectFit),'contain');
       await p.locator('#cameraMode').evaluate(el=>{el.value='cutout';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
       await p.waitForFunction(()=>document.getElementById('cameraBox').classList.contains('cutout'));
       assert.equal(await p.locator('#cameraBox').evaluate(el=>getComputedStyle(el).borderTopWidth),'0px');
+      assert.equal(await p.locator('#rtrnSecondBox').evaluate(el=>getComputedStyle(el).borderTopWidth),'0px');
       await p.locator('#cameraMode').evaluate(el=>{el.value='frame';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
       await p.waitForFunction(()=>!document.getElementById('cameraBox').classList.contains('cutout'));
+      await p.locator('#rtrnSoloQuick').click();
+      await p.waitForFunction(()=>{const s=document.getElementById('stage').getBoundingClientRect(),h=document.getElementById('cameraBox').getBoundingClientRect();return document.getElementById('rtrnSecondBox').hidden&&Math.abs(h.left+h.width/2-s.left-s.width/2)<2});
     }
   }
   await dock.locator('[data-mobile-target="scenes"]').tap();
