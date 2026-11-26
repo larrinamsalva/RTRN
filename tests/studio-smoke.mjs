@@ -97,6 +97,25 @@ try {
   await page.waitForFunction(()=>!document.getElementById('rtrnRecordQuick').disabled,{},{timeout:15000});
   assert(await stopButton.isDisabled());
   assert(await page.locator('#rtrnVideoDownload').getAttribute('download'),'Finished recording has a downloadable file');
+  // Verify the actual downloadable file, not only the presence of its link.
+  async function verifySeekable(p){
+    return p.evaluate(async()=>{
+      const source=document.getElementById('rtrnVideoDownload').href;
+      const v=document.createElement('video');v.muted=true;v.playsInline=true;
+      function wait(event){return new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('Video '+event+' timed out')),10000);v.addEventListener(event,()=>{clearTimeout(t);resolve()},{once:true});v.addEventListener('error',()=>{clearTimeout(t);reject(Error('Video decode failed'))},{once:true})})}
+      try{
+        const loaded=wait('loadedmetadata');v.src=source;await loaded;
+        if(!Number.isFinite(v.duration)||v.duration<=0)throw Error('Missing finite video duration');
+        let seek=wait('seeked');v.currentTime=v.duration*.6;await seek;
+        if(v.currentTime<=0)throw Error('Forward seek failed');
+        seek=wait('seeked');v.currentTime=0;await seek;
+        await v.play();await new Promise(r=>setTimeout(r,180));
+        return v.currentTime>0&&!v.paused;
+      }finally{v.pause();v.removeAttribute('src');v.load()}
+    });
+  }
+  assert(await verifySeekable(page),'Downloaded mobile show supports rewind and replay');
+
   // The library must have a real persisted cover even when the phone cannot
   // automatically extract a thumbnail from a MediaRecorder download.
   await page.waitForFunction(()=>document.getElementById('rtrnReviewPlayer').poster.startsWith('data:image/jpeg'));
@@ -191,6 +210,23 @@ try {
   const desktopContext = await browser.newContext({viewport:{width:1440,height:900}});
   const desktop = await desktopContext.newPage();
   await desktop.goto(url);
+  // Force the WebM path even on browsers that prefer MP4 for studio recording.
+  const webm=await desktop.evaluate(async()=>{
+    const canvas=document.createElement('canvas');canvas.width=160;canvas.height=90;
+    const ctx=canvas.getContext('2d'),stream=canvas.captureStream(12);
+    const rec=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp8'}),chunks=[];
+    rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+    const done=new Promise(r=>rec.onstop=r);
+    rec.start(200);
+    for(let i=0;i<15;i++){ctx.fillStyle=i%2?'purple':'green';ctx.fillRect(0,0,160,90);await new Promise(r=>setTimeout(r,85))}
+    rec.stop();await done;stream.getTracks().forEach(t=>t.stop());
+    const raw=new Blob(chunks,{type:rec.mimeType}),fixed=await window.RTRNFinalizeShow(raw);
+    const link=document.getElementById('rtrnVideoDownload');link.href=URL.createObjectURL(fixed);
+    return {raw:raw.size,fixed:fixed.size};
+  });
+  assert(webm.fixed>0&&webm.raw>0,'Finalized WebM has video data');
+  assert(await verifySeekable(desktop),'Finalized WebM supports finite duration, seek, and replay');
+  await desktop.reload();
   const desktopMixer=await desktop.locator('.rtrn-audio-mix').boundingBox(),desktopCamera=await desktop.locator('.rtrn-camera-top').boundingBox();
   assert(desktopCamera.y>=desktopMixer.y+desktopMixer.height-1&&desktopCamera.y-desktopMixer.y-desktopMixer.height<24,'Camera controls immediately below desktop volume sliders');
   assert(await desktop.locator('#rtrnCameraQuick').isVisible());
