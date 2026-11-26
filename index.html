@@ -1890,9 +1890,25 @@ function stopMusic(broadcast=true,keepSelection=true){
   else if(keepSelection&&musicURL)player.src=musicURL;
   if(broadcast)signalMusic();
 }
-window.addEventListener('storage',e=>{if(e.key===musicSignalKey&&e.newValue)stopMusic(false);});
-window.RTRNStopMusic=()=>stopMusic();
-document.addEventListener('play',e=>{if(e.target===$('musicPlayer')&&!e.target.paused)signalMusic()},true);
+window.addEventListener('storage',e=>{if(e.key===musicSignalKey&&e.newValue){stopMusic(false);quietOtherPlayback();}});
+// A saved-show preview can keep sounding even after switching workspaces.
+function quietOtherPlayback(all=false){
+  const review=$('rtrnReviewPlayer');
+  if(review&&!review.paused)review.pause();
+  window.RTRNRecorder?.releaseDetachedMedia();
+  if(!all)return;
+  // Stop audible prerecorded sources, including detached soundboard players.
+  // Never stop a live camera stream or the show recorder.
+  for(const media of document.querySelectorAll('audio,video')){
+    if(media===$('musicPlayer')||media.srcObject||media.dataset.rtrnExport==='1')continue;
+    if(!media.paused&&!media.muted){media.pause();try{media.currentTime=0}catch(_){}}
+  }
+  if(typeof soundPlayers!=='undefined')for(const player of Object.values(soundPlayers)){
+    player.pause();try{player.currentTime=0}catch(_){}
+  }
+}
+window.RTRNStopMusic=()=>{stopMusic();quietOtherPlayback(true);};
+document.addEventListener('play',e=>{if(e.target===$('musicPlayer')&&!e.target.paused){quietOtherPlayback();signalMusic()}},true);
 let mediaChannel=null;
 const mediaVideoUrls=new Map();
 try {mediaChannel=new BroadcastChannel('rtrn-show-media');mediaChannel.onmessage=()=>refresh();}catch(e){}
@@ -1999,7 +2015,7 @@ function renderMusic(){
  $('moreMusic').hidden=arr.length<=musicPage;
 }
 async function playMusic(id){
- stopMusic(false,false);const request=musicRequest;musicPending=true;
+ stopMusic(false,false);quietOtherPlayback();const request=musicRequest;musicPending=true;
  try{
   const item=await getItem(id);if(request!==musicRequest)return;
   if(!item || item.kind!=='music')throw new Error('Track no longer exists.');
@@ -2368,6 +2384,8 @@ function drawFramePhotos(){
   activeEls.add(def.id);
  }
  for(const d of [...surface.children,...tableSurface.children])if(!activeEls.has(d.dataset.frameId))d.remove();
+ for(const v of oldVideos.values())if(!v.isConnected){v.muted=true;v.pause();window.RTRNRecorder?.disconnectAudio(v);v.removeAttribute('src');v.load()}
+ window.RTRNRecorder?.releaseDetachedMedia();
 }
 
 function compressPhoto(file){
@@ -3184,7 +3202,8 @@ refresh();
   // Separate program buses: microphone and guest speech, music, and effects.
   // Do not use the device's speaker volume as a recording mixer.
   let voiceBus=null,musicBus=null,voiceMeter=null;
-  const wired=new WeakMap();
+  const wired=new Map();
+  function releaseDetachedMedia(){for(const [element,source] of wired){if(!element.isConnected&&!Object.values(soundPlayers).includes(element)){try{element.muted=true;element.pause();source.disconnect();element.removeAttribute('src');element.load()}catch(_){}wired.delete(element)}}}
   function setGain(node,value){
     if(!node||!audioCtx)return;
     const now=audioCtx.currentTime;node.gain.cancelScheduledValues(now);node.gain.setValueAtTime(value,now);
@@ -3225,7 +3244,7 @@ refresh();
       }else{source.connect(audioCtx.destination);source.connect(destination);wired.set(element,source);}
     }catch(_){}
   }
-  window.RTRNRecorder={connectAudio,disconnectAudio:element=>{const source=wired.get(element);if(source){try{source.disconnect()}catch(_){}wired.delete(element)}},syncMusicPlayer:applyMix,voiceLevel:()=>{
+  window.RTRNRecorder={connectAudio,releaseDetachedMedia,disconnectAudio:element=>{const source=wired.get(element);if(source){try{source.disconnect()}catch(_){}wired.delete(element)}},syncMusicPlayer:applyMix,voiceLevel:()=>{
     if(!voiceMeter)return null;
     const data=new Float32Array(voiceMeter.fftSize);voiceMeter.getFloatTimeDomainData(data);
     return Math.sqrt(data.reduce((total,x)=>total+x*x,0)/data.length);
@@ -3669,7 +3688,7 @@ $('rtrnExportEdited').addEventListener('click',async()=>{
  abortExport=()=>{aborted=true;if(!recorder||recorder.state!=='recording'){finish();return;}try{recorder.stop()}catch(_){finish()}
  message('Export stopped. Original show remains unchanged.')};
  try{
-  video=document.createElement('video');video.playsInline=true;video.preload='auto';video.style.display='none';
+  video=document.createElement('video');video.dataset.rtrnExport='1';video.playsInline=true;video.preload='auto';video.style.display='none';
   sourceURL=URL.createObjectURL(selectedBlob);video.src=sourceURL;document.body.appendChild(video);
   await new Promise((ok,no)=>{if(video.readyState>=1)return ok();video.addEventListener('loadedmetadata',ok,{once:true});video.addEventListener('error',()=>no(new Error('Cannot read video')),{once:true})});
   if(!isFinite(video.duration)||end>video.duration+0.1)throw Error('End time must fit inside the video ('+video.duration.toFixed(1)+' seconds).');
