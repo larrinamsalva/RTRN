@@ -1862,6 +1862,89 @@ render();setInterval(()=>{const t=el('clockText');if(t)t.textContent=`${state.li
 })();
 </script>
 <script>
+// Finalize live WebM recordings locally: finite Segment, Duration, SeekHead and video keyframe Cues.
+// No transcoding or network transfer. Preserve all encoded audio/video blocks.
+window.RTRNFinalizeShow=async function(blob){
+ if(!/webm/i.test(blob.type))return blob;
+ const b=new Uint8Array(await blob.arrayBuffer());
+ const I={segment:0x18538067,info:0x1549a966,tracks:0x1654ae6b,cluster:0x1f43b675,cues:0x1c53bb6b,seek:0x114d9b74};
+ function read(p,id=false){
+  if(p>=b.length||!b[p])throw Error('Invalid EBML header');
+  let n=1,mask=128;while(!(b[p]&mask)){n++;mask>>=1}
+  if(n>(id?4:8)||p+n>b.length)throw Error('Invalid EBML length');
+  let value=id?b[p]:b[p]& (mask-1),unknown=!id&&value===mask-1;
+  for(let j=1;j<n;j++){value=value*256+b[p+j];unknown=unknown&&b[p+j]===255}
+  if(!unknown&&!Number.isSafeInteger(value))throw Error('Oversize EBML element');
+  return {value,n,unknown};
+ }
+ function header(p,limit){const id=read(p,true),size=read(p+id.n),start=p+id.n+size.n,end=size.unknown?limit:start+size.value;if(end>limit||start>limit)throw Error('Truncated WebM');return {id:id.value,p,start,end,unknown:size.unknown}}
+ function children(start,end){const list=[];for(let p=start;p<end;){const e=header(p,end);if(e.unknown)throw Error('Unexpected unknown child size');list.push(e);p=e.end}return list}
+ function num(e){let v=0;for(let p=e.start;p<e.end;p++)v=v*256+b[p];return v}
+ function uint(v,n=0){if(!Number.isSafeInteger(v)||v<0)throw Error('Invalid WebM integer');if(!n){n=1;while(v>=256**n)n++}const out=new Uint8Array(n);for(let i=n-1;i>=0;i--){out[i]=v%256;v=Math.floor(v/256)}return out}
+ function size(v){let n=1;while(v>=2**(7*n)-1)n++;const out=uint(v,n);out[0]|=1<<(8-n);return out}
+ function join(parts){const out=new Uint8Array(parts.reduce((a,p)=>a+p.length,0));let pos=0;for(const p of parts){out.set(p,pos);pos+=p.length}return out}
+ function element(id,data){return join([uint(id),size(data.length),data])}
+ function u(id,v,n=0){return element(id,uint(v,n))}
+ const topIds=new Set([I.info,I.tracks,I.cluster,I.cues,I.seek,0x1254c367,0x1043a770,0x1941a469]);
+ let segment=null;
+ for(let p=0;p<b.length;){const e=header(p,b.length);if(e.id===I.segment){segment=e;break}if(e.unknown)throw Error('Unknown header');p=e.end}
+ if(!segment)throw Error('WebM Segment missing');
+ const top=[];
+ for(let p=segment.start;p<segment.end;){const e=header(p,segment.end);
+  if(e.unknown){if(e.id!==I.cluster)throw Error('Unknown Segment child');
+   let q=e.start;while(q<segment.end){const child=header(q,segment.end);if(topIds.has(child.id))break;if(child.unknown)throw Error('Unknown Cluster child');q=child.end}e.end=q;
+  }top.push(e);p=e.end
+ }
+ const info=top.find(e=>e.id===I.info),tracks=top.find(e=>e.id===I.tracks);
+ if(!info||!tracks)throw Error('WebM metadata missing');
+ const infoKids=children(info.start,info.end),scaleEl=infoKids.find(e=>e.id===0x2ad7b1),scale=scaleEl?num(scaleEl):1000000;
+ let videoTrack=0;
+ for(const t of children(tracks.start,tracks.end).filter(e=>e.id===0xae)){
+  const kids=children(t.start,t.end),type=kids.find(e=>e.id===0x83),number=kids.find(e=>e.id===0xd7);
+  if(type&&number&&num(type)===1){videoTrack=num(number);break}
+ }
+ if(!videoTrack||!scale)throw Error('Video track missing');
+ const clusters=[];let last=0,lastVideo=0,previousVideo=0;
+ for(const e of top.filter(e=>e.id===I.cluster)){
+  const kids=children(e.start,e.end),t=kids.find(k=>k.id===0xe7),base=t?num(t):0,keys=[];
+  function block(k,key,relative){
+   const track=read(k.start);const p=k.start+track.n;if(p+3>k.end)return;
+   let offset=b[p]*256+b[p+1];if(offset>=32768)offset-=65536;
+   const time=base+offset;last=Math.max(last,time);
+   if(track.value===videoTrack){if(time>lastVideo){previousVideo=lastVideo;lastVideo=time}if(key===true||(key===null&&(b[p+2]&128)))keys.push({time:Math.max(0,time),relative});}
+  }
+  for(const k of kids){if(k.id===0xa3)block(k,null,k.p-e.start);
+   else if(k.id===0xa0){const group=children(k.start,k.end),blk=group.find(x=>x.id===0xa1);if(blk)block(blk,!group.some(x=>x.id===0xfb),k.p-e.start);}
+  }
+  // Rebuild only the Cluster header if it had an unknown size.
+  const parts=e.unknown?[uint(I.cluster),size(e.end-e.start),blob.slice(e.start,e.end)]:[blob.slice(e.p,e.end)];
+  clusters.push({e,keys,parts,length:parts.reduce((n,p)=>n+(p.size??p.length),0)});
+ }
+ if(!clusters.length||!clusters.some(c=>c.keys.length))throw Error('No video keyframe found');
+ const existing=infoKids.find(e=>e.id===0x4489);
+ let duration=last+Math.max(1,Math.min(100000000/scale,lastVideo-previousVideo||1000000000/24/scale));
+ if(existing&&(existing.end-existing.start===4||existing.end-existing.start===8)){
+  const view=new DataView(b.buffer,existing.start,existing.end-existing.start),old=existing.end-existing.start===4?view.getFloat32(0):view.getFloat64(0);
+  if(Number.isFinite(old)&&old>=last)duration=old;
+ }
+ const dur=new Uint8Array(8);new DataView(dur.buffer).setFloat64(0,duration);
+ const infoData=element(I.info,join([...infoKids.filter(e=>e.id!==0x4489&&e.id!==0xbf).map(e=>b.subarray(e.p,e.end)),element(0x4489,dur)]));
+ const trackData=blob.slice(tracks.p,tracks.end);
+ function seekHead(entries){return element(I.seek,join(entries.map(([id,pos])=>element(0x4dbb,join([element(0x53ab,uint(id)),u(0x53ac,pos,8)])))))}
+ const headLength=seekHead([[I.info,0],[I.tracks,0],[I.cues,0]]).length;
+ const infoPos=headLength,trackPos=infoPos+infoData.length;
+ // Preserve optional metadata, but discard old indexes and top-level CRCs.
+ const extras=top.filter(e=>![I.info,I.tracks,I.cluster,I.cues,I.seek,0xbf,0xec].includes(e.id)).map(e=>blob.slice(e.p,e.end));
+ let pos=trackPos+trackData.size+extras.reduce((n,p)=>n+p.size,0);
+ const points=[],clusterParts=[];
+ for(const c of clusters){for(const k of c.keys)points.push({time:k.time,pos,relative:k.relative});clusterParts.push(...c.parts);pos+=c.length}
+ points.sort((a,b)=>a.time-b.time);
+ const cues=element(I.cues,join(points.map(k=>element(0xbb,join([u(0xb3,k.time),element(0xb7,join([u(0xf7,videoTrack),u(0xf1,k.pos),u(0xf0,k.relative)]))])))));
+ const seek=seekHead([[I.info,infoPos],[I.tracks,trackPos],[I.cues,pos]]);
+ return new Blob([blob.slice(0,segment.p),uint(I.segment),size(pos+cues.length),seek,infoData,trackData,...extras,...clusterParts,cues],{type:blob.type});
+};
+</script>
+<script>
 /* RTRN V3.1 - Media Library. Original uploads saved as Blobs in IndexedDB. */
 (function(){
 'use strict';
@@ -3377,22 +3460,22 @@ refresh();
       recorder=new MediaRecorder(recordStream,{mimeType:mime,videoBitsPerSecond:2400000,audioBitsPerSecond:128000});
       recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
       recorder.onerror=e=>status('Recording error: '+(e.error?.message||'Check phone storage and try again.'));
-      recorder.onstop=()=>{
+      recorder.onstop=async()=>{
         cancelAnimationFrame(raf);videoStream.getTracks().forEach(t=>t.stop());
         micStream?.getTracks().forEach(t=>t.stop());micStream=null;
         micSource?.disconnect();voiceGain?.disconnect();micSource=null;voiceGain=null;
         recordStream?.getTracks().forEach(t=>t.stop());recordStream=null;
-        recordButtons('idle');
-        if(!chunks.length){status('No video was captured. Please try a short test.');return}
+        if(!chunks.length){recordButtons('idle');status('No video was captured. Please try a short test.');return}
         if(outputURL)URL.revokeObjectURL(outputURL);
         const type=recorder.mimeType||mime;
-        const blob=new Blob(chunks,{type});chunks=[];
+        let blob=new Blob(chunks,{type});chunks=[];
+        let seekWarning='';try{blob=await window.RTRNFinalizeShow(blob)}catch(err){seekWarning=' Original saved; rewind may be limited.';console.warn('WebM finalization:',err)}
         outputURL=URL.createObjectURL(blob);
         const ext=type.includes('mp4')?'mp4':'webm';
         const link=$('rtrnVideoDownload');
         link.href=outputURL;link.download=`RTRN-finished-show-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.${ext}`;
         link.textContent='Download finished show ('+(blob.size/1024/1024).toFixed(1)+' MB)';
-        link.hidden=false;status('Show ready. Tap “Download finished show” to save it to your phone or computer.');
+        link.hidden=false;recordButtons('idle');status('Show ready. Tap “Download finished show” to save it to your phone or computer.'+seekWarning);
         const poster=window.RTRNShowLibrary?.makePoster(canvas)||'';
         if(window.RTRNShowLibrary?.saveRecording)window.RTRNShowLibrary.saveRecording(blob,link.download,poster).catch(console.warn);
         link.click();
@@ -3653,7 +3736,7 @@ $('rtrnVideoImport').addEventListener('change',e=>{
 });
 $('rtrnDownloadSaved').addEventListener('click',async()=>{
  const id=$('rtrnSavedSelect').value;if(!id){message('Choose a saved show first.');return}
- try{const item=await get(id);if(item)linkDownload(item.blob,item.name)}catch(err){message(err.message)}
+ try{const item=await get(id);if(item){let blob=item.blob;try{blob=await window.RTRNFinalizeShow(blob)}catch(err){console.warn('WebM finalization:',err);message('Original downloaded; rewind may be limited.')}linkDownload(blob,item.name)}}catch(err){message(err.message)}
 });
 $('rtrnDeleteSaved').addEventListener('click',async()=>{
  const id=$('rtrnSavedSelect').value;if(!id){message('Choose a saved show first.');return}
@@ -3702,7 +3785,7 @@ $('rtrnExportEdited').addEventListener('click',async()=>{
   const pieces=[];recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:2300000});
   recorder.ondataavailable=e=>{if(e.data?.size)pieces.push(e.data)};
   recorder.onstop=async()=>{try{
-    if(!aborted&&pieces.length){const blob=new Blob(pieces,{type:recorder.mimeType||mime});
+    if(!aborted&&pieces.length){let blob=new Blob(pieces,{type:recorder.mimeType||mime});try{blob=await window.RTRNFinalizeShow(blob)}catch(err){console.warn('WebM finalization:',err);}
      const ext=(recorder.mimeType||mime).includes('mp4')?'mp4':'webm';const name='RTRN-edited-'+Date.now()+'.'+ext;
      linkDownload(blob,name);await saveRecording(blob,name,makePoster(canvas));message('Edited copy exported and downloaded. Original is unchanged.');
     }else if(!aborted)message('Nothing was exported.');
