@@ -226,7 +226,7 @@ try {
   await desktop.locator('#rtrnAudioSpeakerTest').click();
   await desktop.waitForFunction(()=>document.getElementById('rtrnAudioStatus').textContent.includes('Test tone played'));
   await desktop.locator('#rtrnAudioSetup').evaluate(el=>{el.open=false});
-  await desktop.evaluate(()=>{window.oldMusicPlayer=document.getElementById('musicPlayer')});
+  await desktop.evaluate(()=>{window.oldMusicPlayer=document.getElementById('musicPlayer');window.RTRNRecorder.connectAudio(window.oldMusicPlayer)});
   await desktop.locator('#musicNext').click();
   await desktop.waitForFunction(()=>document.getElementById('nowPlaying').textContent.includes('Exclusive B.wav')&&!document.getElementById('musicPlayer').paused);
   assert(await desktop.evaluate(()=>{const old=window.oldMusicPlayer,p=document.getElementById('musicPlayer');return old!==p&&!old.isConnected&&old.paused&&old.muted&&!old.getAttribute('src')&&document.querySelectorAll('#musicPlayer').length===1}),'Next fully retires the prior audio pipeline');
