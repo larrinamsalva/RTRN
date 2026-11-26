@@ -228,8 +228,8 @@ try {
   await playTrack(desktop,'Exclusive A.wav').click();
   await desktop.waitForFunction(()=>!document.getElementById('musicPlayer').paused);
   const musicTab=await desktopContext.newPage();await musicTab.goto(url);
-  await playTrack(musicTab,'Exclusive B.wav').waitFor({state:'attached'});
   await openSongs(musicTab);
+  await playTrack(musicTab,'Exclusive B.wav').waitFor({state:'visible'});
   await playTrack(musicTab,'Exclusive B.wav').click();
   await musicTab.waitForFunction(()=>!document.getElementById('musicPlayer').paused);
   await desktop.waitForFunction(()=>document.getElementById('musicPlayer').paused);
