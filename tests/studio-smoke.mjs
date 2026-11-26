@@ -208,9 +208,12 @@ try {
     for(const name of ['Exclusive A.wav','Exclusive B.wav'])await window.RTRNMediaLibrary.addFile('music',new File([bytes],name,{type:'audio/wav'}));
   });
   await desktop.reload();
+  async function openSongs(p){await p.locator('#rtrnMusicTab').click();await p.locator('#mediaLibraryFold > summary').click();await p.locator('#musicPlaylistFold > summary').click();}
+  await openSongs(desktop);
   const playTrack=(p,name)=>p.locator('#musicList .media-card').filter({hasText:name}).getByRole('button',{name:'▶ Play',exact:true});
   await playTrack(desktop,'Exclusive A.wav').waitFor({state:'attached'});
-  await playTrack(desktop,'Exclusive B.wav').waitFor({state:'attached'});
+  await playTrack(desktop,'Exclusive B.wav').waitFor({state:'visible'});
+  await playTrack(desktop,'Exclusive A.wav').click();
   await desktop.evaluate(()=>{const cards=[...document.querySelectorAll('#musicList .media-card')];for(const name of ['Exclusive A.wav','Exclusive B.wav'])cards.find(c=>c.textContent.includes(name)).querySelector('button').click()});
   await desktop.waitForFunction(()=>document.getElementById('nowPlaying').textContent.includes('Exclusive B.wav')&&!document.getElementById('musicPlayer').paused);
   await desktop.evaluate(()=>{[...document.querySelectorAll('#musicList .media-card')].find(c=>c.textContent.includes('Exclusive A.wav')).querySelector('button').click();document.getElementById('rtrnStopMusicQuick').click()});
@@ -220,12 +223,14 @@ try {
   await desktop.waitForFunction(()=>!document.getElementById('musicPlayer').paused);
   const musicTab=await desktop.context().newPage();await musicTab.goto(url);
   await playTrack(musicTab,'Exclusive B.wav').waitFor({state:'attached'});
-  await playTrack(musicTab,'Exclusive B.wav').evaluate(el=>el.click());
+  await openSongs(musicTab);
+  await playTrack(musicTab,'Exclusive B.wav').click();
   await musicTab.waitForFunction(()=>!document.getElementById('musicPlayer').paused);
   await desktop.waitForFunction(()=>document.getElementById('musicPlayer').paused);
   await desktop.locator('#rtrnStopMusicQuick').evaluate(el=>el.click());
   await musicTab.waitForFunction(()=>document.getElementById('musicPlayer').paused&&document.getElementById('musicPlayer').currentTime===0);
   await musicTab.close();
+  await desktop.locator('#mediaLibraryFold > summary').click();
   await desktop.locator('#rtrnMusicTab').click();
   await desktop.reload();
   assert.equal(await desktop.locator('details[open]').count(),0,'Remembered workspaces still start collapsed after reload');
