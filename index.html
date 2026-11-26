@@ -1872,13 +1872,27 @@ let currentId=null, musicURL=null, photoUrls=new Map(), photoPending=new Map();
 let musicRequest=0, musicPending=false;
 const musicSignalKey='rtrn-exclusive-music-signal';
 function signalMusic(){try{localStorage.setItem(musicSignalKey,Date.now()+':'+Math.random())}catch(_){}}
-function stopMusic(broadcast=true,rewind=true){
-  musicRequest++;musicPending=false;const player=$('musicPlayer');player.pause();if(rewind)try{player.currentTime=0}catch(_){}
+// Retire the entire old media pipeline, not just its playback position.
+function replaceMusicPlayer(url){
+  const old=$('musicPlayer'),fresh=document.createElement('audio');
+  fresh.id='musicPlayer';fresh.controls=true;fresh.preload='metadata';
+  old.muted=true;old.pause();window.RTRNRecorder?.disconnectAudio(old);
+  old.removeAttribute('src');old.srcObject=null;old.load();
+  old.replaceWith(fresh);window.RTRNRecorder?.syncMusicPlayer();
+  if(url)fresh.src=url;
+  return fresh;
+}
+function stopMusic(broadcast=true,keepSelection=true){
+  musicRequest++;musicPending=false;
+  const player=$('musicPlayer');
+  if(player.getAttribute('src')||!player.paused||(!keepSelection&&musicURL))
+    replaceMusicPlayer(keepSelection?musicURL:null);
+  else if(keepSelection&&musicURL)player.src=musicURL;
   if(broadcast)signalMusic();
 }
 window.addEventListener('storage',e=>{if(e.key===musicSignalKey&&e.newValue)stopMusic(false);});
 window.RTRNStopMusic=()=>stopMusic();
-$('musicPlayer').addEventListener('play',()=>signalMusic());
+document.addEventListener('play',e=>{if(e.target===$('musicPlayer')&&!e.target.paused)signalMusic()},true);
 let mediaChannel=null;
 const mediaVideoUrls=new Map();
 try {mediaChannel=new BroadcastChannel('rtrn-show-media');mediaChannel.onmessage=()=>refresh();}catch(e){}
@@ -1985,23 +1999,23 @@ function renderMusic(){
  $('moreMusic').hidden=arr.length<=musicPage;
 }
 async function playMusic(id){
- stopMusic(false);const request=musicRequest;musicPending=true;
+ stopMusic(false,false);const request=musicRequest;musicPending=true;
  try{
   const item=await getItem(id);if(request!==musicRequest)return;
   if(!item || item.kind!=='music')throw new Error('Track no longer exists.');
-  const player=$('musicPlayer');player.pause();player.removeAttribute('src');player.load();
+  const player=$('musicPlayer');
   if(musicURL)URL.revokeObjectURL(musicURL);
   musicURL=URL.createObjectURL(item.blob);player.src=musicURL;currentId=id;
   $('nowPlaying').textContent='🎵 Now playing: '+item.name;
-  await player.play();if(request!==musicRequest)return;
+  await player.play();if(request!==musicRequest||player!==$('musicPlayer'))return;
   renderMusic();status('Playing '+item.name);
  }catch(e){if(request===musicRequest)status('Could not play that track: '+e.message,true);}
  finally{if(request===musicRequest)musicPending=false;}
 }
 function playAdjacent(delta,autoplay=false){const list=filteredMusic();if(!list.length)return;let i=list.findIndex(x=>x.id===currentId);let next=i+delta;if(i<0)next=0;if(next<0||next>=list.length){if(!$('musicLoop').checked)return;next=(next+list.length)%list.length;}playMusic(list[next].id);}
 $('musicPlaylistFold').addEventListener('toggle',()=>{const node=$('musicPlaylistSummary');if(node)node.textContent=node.textContent.replace(/tap arrow to (?:close|view)/, 'tap arrow to '+($('musicPlaylistFold').open?'close':'view'));}); $('musicPrev').addEventListener('click',()=>playAdjacent(-1));$('musicNext').addEventListener('click',()=>playAdjacent(1));
-$('musicPlayer').addEventListener('ended',()=>{if(!musicPending&&$('musicPlayer').ended&&$('musicLoop').checked)playAdjacent(1,true)});
-$('musicPlayer').addEventListener('error',()=>{if(currentId)status('This browser could not decode the selected audio. Try an MP3 or WAV file.',true)});
+document.addEventListener('ended',e=>{if(e.target===$('musicPlayer')&&!musicPending&&e.target.ended&&$('musicLoop').checked)playAdjacent(1,true)},true);
+document.addEventListener('error',e=>{if(e.target===$('musicPlayer')&&currentId&&e.target.error)status('This browser could not decode the selected audio. Try an MP3 or WAV file.',true)},true);
 $('musicSearch').addEventListener('input',()=>{musicPage=60;renderMusic()});$('moreMusic').addEventListener('click',()=>{musicPage+=60;renderMusic()});
 function renderFrameTargets(){
  const el=$('photoFrameTarget'),prev=el.value;el.replaceChildren();
@@ -2032,7 +2046,7 @@ function renderPhotos(){
 }
 $('photoSearch').addEventListener('input',()=>{photoPage=40;renderPhotos()});$('morePhotos').addEventListener('click',()=>{photoPage+=40;renderPhotos()});
 async function renameMedia(item){const next=prompt('Rename '+item.kind+':',item.name);if(next===null)return;try{await rename(item.id,next);await refresh()}catch(e){status(e.message,true)}}
-async function deleteMedia(item){if(!confirm('Delete "'+item.name+'" from this device? Make a backup first if you need it.'))return;try{await remove(item.id);if(currentId===item.id){stopMusic(false);$('musicPlayer').removeAttribute('src');$('musicPlayer').load();currentId=null;$('nowPlaying').textContent='No music selected';if(musicURL)URL.revokeObjectURL(musicURL);musicURL=null;}await refresh();status('Deleted '+item.name+'.')}catch(e){status('Could not delete: '+e.message,true)}}
+async function deleteMedia(item){if(!confirm('Delete "'+item.name+'" from this device? Make a backup first if you need it.'))return;try{await remove(item.id);if(currentId===item.id){stopMusic(false,false);$('musicPlayer').removeAttribute('src');$('musicPlayer').load();currentId=null;$('nowPlaying').textContent='No music selected';if(musicURL)URL.revokeObjectURL(musicURL);musicURL=null;}await refresh();status('Deleted '+item.name+'.')}catch(e){status('Could not delete: '+e.message,true)}}
 async function downloadMedia(item){try{const record=await getItem(item.id);if(!record)throw new Error('File not found.');saveFile(record.blob,record.name);status('Downloading '+record.name)}catch(e){status(e.message,true)}}
 async function refresh(){try{const [m,p]=await Promise.all([list('music'),list('photo')]);music=m;photos=p;renderMusic();renderPhotos();window.dispatchEvent(new CustomEvent('rtrn-library-list-ready',{detail:{photos:p}}));}catch(e){status('Cannot access saved media: '+e.message+'. Try Chrome or Edge outside private browsing.',true)}}
 const sceneStatus=$('sceneStatus');if(sceneStatus)new MutationObserver(()=>renderFrameTargets()).observe(sceneStatus,{childList:true,characterData:true,subtree:true});
@@ -3189,11 +3203,11 @@ refresh();
     $(id).addEventListener('input',change);$(id).addEventListener('change',change);
   }
   for(const [prefix,key] of [['Voice','voice'],['Music','music']])for(const [suffix,delta] of [['Minus',-5],['Plus',5]])$('rtrn'+prefix+suffix).addEventListener('click',()=>{mix[key]=level(mix[key]+delta,50);applyMix();rememberMix()});
-  $('musicPlayer').addEventListener('volumechange',()=>{
-    if(wired.has($('musicPlayer')))return;
+  document.addEventListener('volumechange',e=>{
+    if(e.target!==$('musicPlayer')||wired.has(e.target))return;
     const value=Math.round($('musicPlayer').volume*100);
     if(value!==mix.music){mix.music=value;$('rtrnMusicVolume').value=value;$('rtrnMusicLevel').textContent=value+'%';rememberMix()}
-  });
+  },true);
   applyMix();
   function connectAudio(element){
     if(!audioCtx||!element||wired.has(element))return;
@@ -3211,7 +3225,7 @@ refresh();
       }else{source.connect(audioCtx.destination);source.connect(destination);wired.set(element,source);}
     }catch(_){}
   }
-  window.RTRNRecorder={connectAudio,voiceLevel:()=>{
+  window.RTRNRecorder={connectAudio,disconnectAudio:element=>{const source=wired.get(element);if(source){try{source.disconnect()}catch(_){}wired.delete(element)}},syncMusicPlayer:applyMix,voiceLevel:()=>{
     if(!voiceMeter)return null;
     const data=new Float32Array(voiceMeter.fftSize);voiceMeter.getFloatTimeDomainData(data);
     return Math.sqrt(data.reduce((total,x)=>total+x*x,0)/data.length);
@@ -3285,7 +3299,7 @@ refresh();
   $('rtrnAudioMicStop').addEventListener('click',()=>{stopMicTest();audioNotice('Microphone test stopped.')});
   navigator.mediaDevices?.addEventListener?.('devicechange',()=>{if(audioSetup.open)refreshAudio()});
   window.addEventListener('pagehide',stopMicTest);
-  $('musicPlayer').addEventListener('play',()=>{if(audioCtx)connectAudio($('musicPlayer'))});
+  document.addEventListener('play',e=>{if(e.target===$('musicPlayer')&&!e.target.paused&&audioCtx){connectAudio(e.target);audioCtx.resume().catch(()=>{})}},true);
   $('framePortraits').addEventListener('play',e=>{if(audioCtx&&e.target.tagName==='VIDEO'&&!e.target.muted)connectAudio(e.target)},true);
   function keepDrawing(){drawProgram();if(recorder?.state==='recording'){
     const seconds=Math.floor((Date.now()-startTime)/1000);
