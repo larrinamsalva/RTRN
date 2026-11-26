@@ -16,9 +16,9 @@ const brandedGazeboAsset=await readFile(new URL('../'+brandedGazeboAssetName,imp
 const newAssets = new Map();
 for(const filename of ['sunset_cannabis_field_lounge.png','midnight_lounge_cannabis_studio.png','moonlit_purple_gold_garden_lounge.png'])newAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
 const vintageAssets=new Map();
-for(const filename of ['vintage_tea_room.jpg','vintage_good_old_days.jpg','dance_purple_club.jpg','dance_retro_disco.jpg'])vintageAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
+for(const filename of ['vintage_tea_room.jpg','vintage_good_old_days.jpg','dance_purple_club.png','dance_retro_disco.png'])vintageAssets.set('/'+filename,await readFile(new URL('../'+filename,import.meta.url)));
 const server = createServer((req,res) => {
-  if(vintageAssets.has(req.url)){res.writeHead(200,{'Content-Type':'image/jpeg'});res.end(vintageAssets.get(req.url));return}
+  if(vintageAssets.has(req.url)){res.writeHead(200,{'Content-Type':req.url.endsWith('.png')?'image/png':'image/jpeg'});res.end(vintageAssets.get(req.url));return}
   if(newAssets.has(req.url)){res.writeHead(200,{'Content-Type':'image/png'});res.end(newAssets.get(req.url));return}
   if(req.url==='/'+beachAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(beachAsset);return}
   if(req.url==='/'+mountainAssetName){res.writeHead(200,{'Content-Type':'image/png'});res.end(mountainAsset);return}
@@ -158,7 +158,7 @@ try {
     await dock.locator('[data-mobile-target="scenes"]').tap();
   }
   async function checkDance(p){
-    for(const [id,filename] of [['dance-purple','dance_purple_club.jpg'],['dance-retro','dance_retro_disco.jpg']]){
+    for(const [id,filename] of [['dance-purple','dance_purple_club.png'],['dance-retro','dance_retro_disco.png']]){
       await p.locator('[data-scene="'+id+'"]').click();
       await p.waitForFunction(filename=>{const img=document.getElementById('stageBackgroundImage');return img?.src.endsWith(filename)&&img.complete&&img.naturalWidth>=1200},filename);
       await p.waitForFunction(()=>{const stage=document.getElementById('stage'),host=document.getElementById('cameraBox'),banner=document.getElementById('lowerThird');const s=stage.getBoundingClientRect(),h=host.getBoundingClientRect();return stage.classList.contains('rtrn-dance')&&h.height>=s.height*.48&&h.height>h.width&&h.bottom<=banner.getBoundingClientRect().top+1});
