@@ -571,6 +571,16 @@ try {
   await desktop.locator('#rtrnInterviewSeat').selectOption('2');
   await desktop.locator('#rtrnInterviewMode').selectOption('script');
   await desktop.locator('#rtrnInterviewUpload').setInputFiles([guestFile('01-intro.webm'),guestFile('02-joke.webm')]);
+  const question=desktop.locator('#rtrnInterviewQuestion');
+  await question.fill('Tell us about yourself.');
+  await desktop.locator('#rtrnInterviewNext').click();
+  await question.fill('What is your favorite joke?');
+  await desktop.locator('#rtrnInterviewUp').click();
+  assert.equal(await question.inputValue(),'What is your favorite joke?');
+  await desktop.locator('#rtrnInterviewDown').click();
+  assert.equal(await question.inputValue(),'What is your favorite joke?');
+  await desktop.locator('#rtrnInterviewPrev').click();
+  assert.equal(await question.inputValue(),'Tell us about yourself.');
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.src&&v.paused&&v.readyState>=2});
   await desktop.locator('#rtrnInterviewIdle').setInputFiles(guestFile('listening.webm'));
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
@@ -589,6 +599,7 @@ try {
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
   await desktop.locator('#rtrnInterviewSeat').selectOption('5');
   await desktop.locator('#rtrnInterviewMode').selectOption('video');
+  assert(await question.isHidden());
   await desktop.locator('#rtrnInterviewUpload').setInputFiles(guestFile('guest-five.webm'));
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSeatVideo5');return v.src&&v.paused&&!v.hidden&&v.readyState>=2});
   await desktop.locator('#rtrnInterviewPlay').click();
@@ -634,6 +645,7 @@ try {
   assert.deepEqual(await desktop.locator('#rtrnInterviewQueue option').allTextContents(),['1 · 01-intro.webm','2 · 02-joke.webm']);
   assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'1');
   assert.equal(await desktop.locator('#rtrnInterviewIdleName').textContent(),'listening.webm');
+  assert.equal(await question.inputValue(),'What is your favorite joke?','Saved notes restore after reload');
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
   await desktop.locator('#rtrnInterviewPlay').click();
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.loop&&!v.muted&&!v.paused});
@@ -665,6 +677,7 @@ try {
   await desktop.locator('#rtrnInterviewPlay').click();
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.muted&&!v.paused&&v.readyState>=2});
   await desktop.locator('#rtrnInterviewStop').click();
+  assert.equal(await question.inputValue(),'What is your favorite joke?','Notes restore from backup');
   console.log('Portable backup export, invalid backup rejection, import and playback passed.');
   // Rehearsal must cue the first answer, prevent recording, and reset after practice.
   await desktop.locator('#rtrnInterviewRehearse').click();
@@ -690,9 +703,18 @@ try {
   await desktop.locator('#rtrnInterviewPlay').click();
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return document.getElementById('rtrnInterviewQueue').value==='1'&&v.loop&&v.muted&&!v.paused});
   assert.equal(await desktop.locator('#rtrnInterviewCueProgress').textContent(),'Clip 2 of 2');
+  assert.equal(await question.inputValue(),'What is your favorite joke?','Automatic cue updates the question');
   await desktop.locator('#rtrnInterviewPlay').click();
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
   assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'1','Final answer must not wrap');
   console.log('Manual and automatic cue, muted listening and final answer behavior passed.');
+  await desktop.locator('#rtrnInterviewRemove').click();
+  assert.equal(await question.inputValue(),'Tell us about yourself.');
+  await desktop.locator('#rtrnInterviewClear').click();
+  assert(await question.isDisabled());
+  assert.equal(await question.inputValue(),'');
+  await desktop.locator('#rtrnInterviewUpload').setInputFiles(guestFile('new-answer.webm'));
+  assert.equal(await question.inputValue(),'','New answer must not inherit removed notes');
+  console.log('Private host notes, ordering, save/restore, cue and removal passed.');
 
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
