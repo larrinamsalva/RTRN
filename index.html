@@ -636,6 +636,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewRemove" type="button">Remove selected clip</button><button class="btn" id="rtrnInterviewClear" type="button">Clear clips</button></div>
 <p class="mini">Clips stay on this device for the current studio session. Use numbered filenames for answers. Start recording, ask the question, then play the answer. No automatic advance. Use headphones to avoid microphone echo.</p>
 </div>
+<div class="rtrn-action-grid"><label for="rtrnInterviewProjectName">Interview project name</label><input id="rtrnInterviewProjectName" maxlength="100" placeholder="e.g. Comedy interview"><label for="rtrnInterviewProjects">Saved interviews</label><select id="rtrnInterviewProjects"><option value="">Choose saved interview</option></select><button class="btn" type="button" id="rtrnInterviewSave">Save interview</button><button class="btn" type="button" id="rtrnInterviewLoad">Load interview</button><button class="btn" type="button" id="rtrnInterviewDelete">Delete saved interview</button></div><p class="mini" id="rtrnInterviewProjectStatus" role="status" aria-live="polite">Projects store video files and guest queues on this device only. Load while not recording.</p>
 <p class="mini" id="rtrnInterviewStatus" role="status" aria-live="polite">Choose a guest source.</p>
 </div></details>
 <p class="mobile-tip">📱 Tap Scenes below to try backgrounds. The menu stays open until you close it. Rotate your phone for a wider studio view.</p></div></div>
@@ -3692,6 +3693,69 @@ refresh();
  const states=new Map([2,3,4,5].map(n=>[n,{mode:'live',clips:[],idle:null,index:0,epoch:0,phase:'off',message:'Choose a guest source.'}]));
  const sel=$('rtrnInterviewSeat'),mode=$('rtrnInterviewMode'),queue=$('rtrnInterviewQueue'),upload=$('rtrnInterviewUpload'),idleInput=$('rtrnInterviewIdle');
  const stateFor=()=>states.get(Number(sel.value)), seatFor=()=>Number(sel.value);
+ // Explicit named projects, with original File objects stored in IndexedDB.
+ const projectName=$('rtrnInterviewProjectName'), projectList=$('rtrnInterviewProjects'), projectStatus=$('rtrnInterviewProjectStatus');
+ let projectBusy=false, projectDB=null;
+ function openProjects(){
+   if(!projectDB)projectDB=new Promise((resolve,reject)=>{
+     const req=indexedDB.open('rtrn-interview-projects',1);
+     req.onupgradeneeded=()=>req.result.createObjectStore('projects',{keyPath:'name'});
+     req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);req.onblocked=()=>reject(Error('Close other studio tabs and try again.'));
+   }).catch(err=>{projectDB=null;throw err});
+   return projectDB;
+ }
+ async function projectOperation(mode,fn){
+   const db=await openProjects();
+   return new Promise((resolve,reject)=>{
+     const tx=db.transaction('projects',mode),req=fn(tx.objectStore('projects'));
+     tx.oncomplete=()=>resolve(req.result);tx.onabort=()=>reject(tx.error||Error('Storage transaction aborted.'));tx.onerror=()=>reject(tx.error||req.error);
+   });
+ }
+ async function listProjects(selected=projectList.value){
+   const names=await projectOperation('readonly',store=>store.getAllKeys());
+   projectList.replaceChildren(new Option('Choose saved interview',''),...names.map(name=>new Option(name,name)));
+   projectList.value=names.includes(selected)?selected:'';
+ }
+ function projectControls(busy){
+   projectBusy=busy;for(const id of ['rtrnInterviewSave','rtrnInterviewLoad','rtrnInterviewDelete'])$(id).disabled=busy;
+ }
+ async function runProject(fn){
+   if(projectBusy)return;
+   projectControls(true);
+   try{await fn()}catch(err){projectStatus.textContent='Interview project error: '+(err?.message||err)}finally{projectControls(false)}
+ }
+ projectList.addEventListener('change',()=>{if(projectList.value)projectName.value=projectList.value});
+ $('rtrnInterviewSave').addEventListener('click',()=>runProject(async()=>{
+   const name=projectName.value.trim();if(!name){projectStatus.textContent='Enter a project name first.';return}
+   if(Array.from(projectList.options).some(o=>o.value===name)&&!confirm('Replace saved interview "'+name+'"?'))return;
+   const seats=Array.from(states,([n,st])=>({n,mode:st.mode,clips:st.clips.slice(),idle:st.idle,index:st.index}));
+   if(!seats.some(st=>st.mode!=='live'&&st.clips.length)){projectStatus.textContent='Add at least one prerecorded guest video or answer before saving.';return}
+   await projectOperation('readwrite',store=>store.put({name,seats,savedAt:Date.now()}));
+   await listProjects(name);projectStatus.textContent='Saved interview: '+name;
+ }));
+ $('rtrnInterviewLoad').addEventListener('click',()=>runProject(async()=>{
+   const name=projectList.value;if(!name){projectStatus.textContent='Choose a saved interview first.';return}
+   if($('rtrnRecordQuick').disabled){projectStatus.textContent='Stop and finish recording before loading a project.';return}
+   const project=await projectOperation('readonly',store=>store.get(name));if(!project)throw Error('Project not found.');
+   if($('rtrnRecordQuick').disabled){projectStatus.textContent='Stop and finish recording before loading a project.';return}
+   if(Array.from(states.values()).some(st=>st.clips.length)&&!confirm('Replace current guest queues with "'+name+'"?'))return;
+   for(const [n,st] of states){
+     const saved=project.seats.find(s=>s.n===n);if(!saved)continue;
+     if(st.mode!=='live'||saved.mode!=='live'){invalidate(n);await sources[n].stop()}
+     st.mode=saved.mode;st.clips=saved.clips.slice();st.idle=saved.idle;st.index=Math.max(0,Math.min(saved.index,st.clips.length-1));st.phase='off';st.message='Loaded project: '+name;
+   }
+   syncSeats();
+   // No audible answer starts on load; listening videos are muted.
+   for(const [n,st] of states)if(available(n)&&st.mode!=='live')await listening(n);
+   projectName.value=name;refresh();projectStatus.textContent='Loaded interview: '+name+'. Select a guest and press Play when ready.';
+ }));
+ $('rtrnInterviewDelete').addEventListener('click',()=>runProject(async()=>{
+   const name=projectList.value;if(!name){projectStatus.textContent='Choose a saved interview first.';return}
+   if(!confirm('Delete saved interview "'+name+'"? Current guest queues will not be changed.'))return;
+   await projectOperation('readwrite',store=>store.delete(name));await listProjects('');if(projectName.value===name)projectName.value='';projectStatus.textContent='Deleted saved interview: '+name;
+ }));
+ fold.addEventListener('toggle',()=>{if(fold.open&&!projectBusy)listProjects().catch(err=>{projectStatus.textContent='Saved interviews unavailable: '+err.message})});
+
  const available=n=>$('rtrnLayout').value==='duo'&&window.RTRNSeatCount()>=n;
  const say=(n,msg)=>{states.get(n).message=msg;if(seatFor()===n)$('rtrnInterviewStatus').textContent=msg};
  function refresh(){
