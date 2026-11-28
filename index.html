@@ -636,7 +636,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewRemove" type="button">Remove selected clip</button><button class="btn" id="rtrnInterviewClear" type="button">Clear clips</button></div>
 <p class="mini">Clips stay on this device for the current studio session. Use numbered filenames for answers. Start recording, ask the question, then play the answer. No automatic advance. Use headphones to avoid microphone echo.</p>
 </div>
-<div class="rtrn-action-grid"><label for="rtrnInterviewProjectName">Interview project name</label><input id="rtrnInterviewProjectName" maxlength="100" placeholder="e.g. Comedy interview"><label for="rtrnInterviewProjects">Saved interviews</label><select id="rtrnInterviewProjects"><option value="">Choose saved interview</option></select><button class="btn" type="button" id="rtrnInterviewSave">Save interview</button><button class="btn" type="button" id="rtrnInterviewLoad">Load interview</button><button class="btn" type="button" id="rtrnInterviewDelete">Delete saved interview</button></div><p class="mini" id="rtrnInterviewProjectStatus" role="status" aria-live="polite">Projects store video files and guest queues on this device only. Load while not recording.</p>
+<div class="rtrn-action-grid"><label for="rtrnInterviewProjectName">Interview project name</label><input id="rtrnInterviewProjectName" maxlength="100" placeholder="e.g. Comedy interview"><label for="rtrnInterviewProjects">Saved interviews</label><select id="rtrnInterviewProjects"><option value="">Choose saved interview</option></select><button class="btn" type="button" id="rtrnInterviewSave">Save interview</button><button class="btn" type="button" id="rtrnInterviewLoad">Load interview</button><button class="btn" type="button" id="rtrnInterviewDelete">Delete saved interview</button><button class="btn" type="button" id="rtrnInterviewExport">Export selected saved interview</button><button class="btn" type="button" id="rtrnInterviewImport">Import interview backup</button><input type="file" id="rtrnInterviewBackupFile" accept=".rtrninterview,application/octet-stream" hidden></div><p class="mini" id="rtrnInterviewProjectStatus" role="status" aria-live="polite">Projects store video files and guest queues on this device only. Load while not recording.</p>
 <p class="mini" id="rtrnInterviewStatus" role="status" aria-live="polite">Choose a guest source.</p>
 </div></details>
 <p class="mobile-tip">📱 Tap Scenes below to try backgrounds. The menu stays open until you close it. Rotate your phone for a wider studio view.</p></div></div>
@@ -3717,7 +3717,7 @@ refresh();
    projectList.value=names.includes(selected)?selected:'';
  }
  function projectControls(busy){
-   projectBusy=busy;for(const id of ['rtrnInterviewSave','rtrnInterviewLoad','rtrnInterviewDelete'])$(id).disabled=busy;
+   projectBusy=busy;for(const id of ['rtrnInterviewSave','rtrnInterviewLoad','rtrnInterviewDelete','rtrnInterviewExport','rtrnInterviewImport'])$(id).disabled=busy;
  }
  async function runProject(fn){
    if(projectBusy)return;
@@ -3754,6 +3754,59 @@ refresh();
    if(!confirm('Delete saved interview "'+name+'"? Current guest queues will not be changed.'))return;
    await projectOperation('readwrite',store=>store.delete(name));await listProjects('');if(projectName.value===name)projectName.value='';projectStatus.textContent='Deleted saved interview: '+name;
  }));
+ // A versioned binary backup: 4-byte manifest length, UTF-8 JSON, then original video bytes.
+ const backupInput=$('rtrnInterviewBackupFile');
+ function makeInterviewBackup(project){
+   const parts=[];
+   const describe=file=>{
+     if(!file)return null;
+     parts.push(file);return {name:file.name,type:file.type,lastModified:file.lastModified,size:file.size};
+   };
+   const seats=project.seats.map(st=>({n:st.n,mode:st.mode,index:st.index,clips:st.clips.map(describe),idle:describe(st.idle)}));
+   const manifest=new TextEncoder().encode(JSON.stringify({format:'RTRN-interview',version:1,name:project.name,seats}));
+   if(manifest.length>1048576)throw Error('Interview metadata is too large.');
+   const header=new Uint8Array(4);new DataView(header.buffer).setUint32(0,manifest.length);
+   return new Blob([header,manifest,...parts],{type:'application/octet-stream'});
+ }
+ async function readInterviewBackup(file){
+   const invalid=()=>Error('Invalid or unsupported RTRN interview backup.');
+   if(file.size<4)throw invalid();
+   const length=new DataView(await file.slice(0,4).arrayBuffer()).getUint32(0);
+   if(!length||length>1048576||length>file.size-4)throw invalid();
+   let manifest;try{manifest=JSON.parse(await file.slice(4,4+length).text())}catch{throw invalid()}
+   if(!manifest||manifest.format!=='RTRN-interview'||manifest.version!==1||typeof manifest.name!=='string'||!manifest.name.trim()||manifest.name.length>100||!Array.isArray(manifest.seats)||manifest.seats.length!==4)throw invalid();
+   let offset=4+length;const seen=new Set();
+   function restore(d){
+     if(!d||typeof d.name!=='string'||!d.name||d.name.length>1024||typeof d.type!=='string'||d.type.length>200||!Number.isSafeInteger(d.size)||d.size<0||d.size>file.size-offset||!Number.isSafeInteger(d.lastModified)||d.lastModified<0)throw invalid();
+     if(!d.type.startsWith('video/')&&!/\.(mp4|webm|mov|m4v)$/i.test(d.name))throw invalid();
+     const clip=new File([file.slice(offset,offset+d.size)],d.name,{type:d.type,lastModified:d.lastModified});offset+=d.size;return clip;
+   }
+   const seats=manifest.seats.map(st=>{
+     if(!st||![2,3,4,5].includes(st.n)||seen.has(st.n)||!['live','video','script'].includes(st.mode)||!Array.isArray(st.clips)||!Number.isInteger(st.index)||st.index<0||st.index>Math.max(0,st.clips.length-1))throw invalid();
+     seen.add(st.n);return {n:st.n,mode:st.mode,index:st.index,clips:st.clips.map(restore),idle:st.idle===null?null:restore(st.idle)};
+   });
+   if(offset!==file.size||!seats.some(st=>st.mode!=='live'&&st.clips.length))throw invalid();
+   return {name:manifest.name.trim(),seats,savedAt:Date.now()};
+ }
+ $('rtrnInterviewExport').addEventListener('click',()=>runProject(async()=>{
+   const name=projectList.value;if(!name){projectStatus.textContent='Choose a saved interview to export first.';return}
+   const project=await projectOperation('readonly',store=>store.get(name));if(!project)throw Error('Project not found.');
+   const url=URL.createObjectURL(makeInterviewBackup(project));const a=document.createElement('a');
+   a.href=url;a.download=(name.replace(/[^a-z0-9_-]+/gi,'-')||'interview')+'.rtrninterview';
+   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+   projectStatus.textContent='Export requested: '+name+'. Keep the backup file to import on another device.';
+ }));
+ $('rtrnInterviewImport').addEventListener('click',()=>backupInput.click());
+ backupInput.addEventListener('change',()=>{
+   const file=backupInput.files?.[0];backupInput.value='';if(!file)return;
+   runProject(async()=>{
+     const project=await readInterviewBackup(file);const name=project.name;
+     const existing=await projectOperation('readonly',store=>store.get(name));
+     if(existing&&!confirm('Replace saved interview "'+name+'" with this backup? Current guest queues will not change.'))return;
+     await projectOperation('readwrite',store=>store.put(project));await listProjects(name);projectName.value=name;
+     projectStatus.textContent='Imported interview: '+name+'. Press Load interview when ready.';
+   });
+ });
  fold.addEventListener('toggle',()=>{if(fold.open&&!projectBusy)listProjects().catch(err=>{projectStatus.textContent='Saved interviews unavailable: '+err.message})});
 
  const available=n=>$('rtrnLayout').value==='duo'&&window.RTRNSeatCount()>=n;
