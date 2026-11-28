@@ -624,6 +624,17 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <details id="rtrnInterviewFold" class="rtrn-audio-setup" hidden>
 <summary>🎭 Virtual Guest Interview</summary>
 <div style="display:grid;gap:8px;padding:8px;min-width:0">
+<details id="rtrnInterviewHelp" class="rtrn-audio-setup" style="padding:8px;overflow-wrap:anywhere">
+<summary>❔ How to make a virtual guest interview</summary>
+<div style="padding:8px 0;line-height:1.55">
+<p><strong>1. Prepare your guest videos.</strong> Record one short video answering each question. Name them 01, 02, 03 and so on. Record an optional silent listening or reaction clip.</p>
+<p><strong>2. Set up the studio.</strong> Choose a studio with guest seating, select Guest seats, then open Virtual Guest Interview. Choose the guest seat and set Guest source to Scripted interview (answer clips). For a single prerecorded video instead, choose Prerecorded guest video.</p>
+<p><strong>3. Add your answers and questions.</strong> Upload the answer clips. Use Choose clip to select an answer, then type what you want to ask in Host question / cue notes. Use Move earlier or Move later to fix the order. Repeat for each answer. Open All interview questions (private) to see the full rundown. The current and next question notes are for you, not the recording.</p>
+<p><strong>4. Practice first.</strong> Tap Start rehearsal. Ask the question out loud, then tap Play answer. The optional listening clip plays muted while the guest waits. Previous and Next change clips; Pause, Restart and Stop answer control playback. Enable Cue next answer when a clip finishes to prepare the next clip without playing it automatically. Tap End rehearsal to reset to the first answer. Recording is blocked during rehearsal.</p>
+<p><strong>5. Record your real show.</strong> Start your camera and check your mic. Use headphones to prevent echo. Start recording, ask the question, then tap Play answer. Repeat until finished. Stop recording and save the show. Check the saved video and audio before sharing.</p>
+<p><strong>6. Save your setup.</strong> Enter an Interview project name and tap Save interview. Later, select it under Saved interviews and tap Load interview while not recording. Export selected saved interview creates a backup; Import interview backup restores one. Keep backups of original clips too. Saved projects are local to this browser and device.</p>
+<p><strong>Tip:</strong> You can play both roles yourself: record the guest answers in a different outfit, then host the interview live in the studio.</p>
+</div></details>
 <div class="rtrn-action-grid"><button class="btn btn-green" id="rtrnInterviewRehearse" type="button">Start rehearsal</button><button class="btn" id="rtrnInterviewEndRehearsal" type="button" disabled>End rehearsal</button></div>
 <p class="mini" id="rtrnInterviewRehearsalStatus" role="status" aria-live="polite">Practice answers without recording. Ending rehearsal cues the first answer again.</p>
 <label for="rtrnInterviewSeat">Guest seat</label><select id="rtrnInterviewSeat"></select>
@@ -868,6 +879,18 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <p class="mini">Recording stays on this device. A phone browser may limit long recordings; leave enough storage and try a short test first.</p>
 <section aria-labelledby="rtrnShowLibHeading" class="rtrn-v6-show-library" id="rtrnShowsPanel">
 <h3 id="rtrnShowLibHeading">📼 Saved shows &amp; video editor (test)</h3>
+<details id="rtrnEditorHelp" class="rtrn-audio-setup" style="padding:8px;overflow-wrap:anywhere">
+<summary>❔ How to use the video editor</summary>
+<div style="padding:8px 0;line-height:1.55">
+<p><strong>1. Open a video.</strong> Choose a saved show from the list, or use Or add a downloaded video to edit to import one from your device. The video appears in the preview player.</p>
+<p><strong>2. Mark the beginning.</strong> Play the video and pause immediately before the unwanted word or section. Tap Mark start at playhead. The Start time box shows the position in seconds.</p>
+<p><strong>3. Mark the ending.</strong> Play or seek to just after the unwanted part, pause, and tap Mark end at playhead. End time must be greater than Start time. You can type more precise times in either box.</p>
+<p><strong>4. Choose your edit.</strong> Tap Cut this section to remove both picture and sound for that interval, or Bleep this section to keep the picture and replace the sound with a censor tone. The Edit mode text confirms your choice.</p>
+<p><strong>5. Export.</strong> Tap Export edited copy. Keep the app open and the device awake until export finishes; it runs in real time. Stop export cancels the in-progress export. The original video is not overwritten.</p>
+<p><strong>6. Check and keep your copy.</strong> Play the downloaded edited video and check the change before sharing. To make another edit, import the newly exported copy and mark the next section using its new times. Keep your original backup.</p>
+<p><strong>Example:</strong> To censor a word from 12.5 to 13.2 seconds, enter 12.5 for Start time and 13.2 for End time, choose Bleep this section and export. To remove a long pause instead, choose Cut this section.</p>
+<p><strong>Phone tip:</strong> Test with a short video first. Make sure there is free storage and leave the app in the foreground. If your browser cannot export, try a supported desktop browser.</p>
+</div></details>
 <p class="mini">Finished shows save to this browser when your device has room, and still download as backups. Choose a show or import a video. Mark the unwanted section and cut it, or replace its sound with a bleep. Export makes a <strong>new copy</strong> in real time; your original stays untouched.</p>
 <label for="rtrnSavedSelect">Choose a saved show</label>
 <select id="rtrnSavedSelect"><option value="">No saved shows yet</option></select>
