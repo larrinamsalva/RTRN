@@ -633,6 +633,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <label for="rtrnInterviewUpload" id="rtrnInterviewUploadLabel">Add video answer clips in order</label><input id="rtrnInterviewUpload" type="file" accept="video/*" multiple>
 <div id="rtrnInterviewIdleTools"><label for="rtrnInterviewIdle">Optional listening / reaction video (muted loop)</label><input id="rtrnInterviewIdle" type="file" accept="video/*"><button class="btn" id="rtrnInterviewClearIdle" type="button">Remove listening video</button><p id="rtrnInterviewIdleName" class="mini">No listening clip selected.</p></div>
 <label for="rtrnInterviewQueue">Choose clip</label><select id="rtrnInterviewQueue"></select>
+<div id="rtrnInterviewQuestionTools" hidden><label for="rtrnInterviewQuestion">Host question / cue notes (not recorded)</label><textarea id="rtrnInterviewQuestion" rows="3" maxlength="2000" placeholder="What should I ask before playing this answer?" style="width:100%;box-sizing:border-box;resize:vertical"></textarea><p class="mini">Notes follow each answer and are included when you save or export an interview.</p></div>
 <div id="rtrnInterviewOrder" class="rtrn-action-grid"><button class="btn" id="rtrnInterviewUp" type="button">Move earlier</button><button class="btn" id="rtrnInterviewDown" type="button">Move later</button></div>
 <div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewPrev" type="button">⏮ Previous</button><button class="btn" id="rtrnInterviewNext" type="button">Next ⏭</button><button class="btn btn-green" id="rtrnInterviewPlay" type="button">▶ Play answer</button><button class="btn" id="rtrnInterviewPause" type="button">⏸ Pause</button><button class="btn" id="rtrnInterviewRestart" type="button">↻ Restart</button><button class="btn" id="rtrnInterviewStop" type="button">■ Stop answer</button></div>
 <div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewRemove" type="button">Remove selected clip</button><button class="btn" id="rtrnInterviewClear" type="button">Clear clips</button></div>
@@ -3703,9 +3704,12 @@ refresh();
 (()=>{
  const $=id=>document.getElementById(id), sources=window.RTRNInterviewSources, fold=$('rtrnInterviewFold');
  if(!sources||new URLSearchParams(location.search).has('output'))return;
- const states=new Map([2,3,4,5].map(n=>[n,{mode:'live',clips:[],idle:null,index:0,epoch:0,phase:'off',message:'Choose a guest source.'}]));
+ const states=new Map([2,3,4,5].map(n=>[n,{mode:'live',clips:[],notes:[],idle:null,index:0,epoch:0,phase:'off',message:'Choose a guest source.'}]));
  const sel=$('rtrnInterviewSeat'),mode=$('rtrnInterviewMode'),queue=$('rtrnInterviewQueue'),upload=$('rtrnInterviewUpload'),idleInput=$('rtrnInterviewIdle');
  const stateFor=()=>states.get(Number(sel.value)), seatFor=()=>Number(sel.value);
+ const question=$('rtrnInterviewQuestion');
+ const normalizedNotes=(clips,notes)=>clips.map((_,i)=>typeof notes?.[i]==='string'?notes[i].slice(0,2000):'');
+ question.addEventListener('input',()=>{const st=stateFor();if(st?.mode==='script'&&st.clips.length)st.notes[st.index]=question.value.slice(0,2000)});
  // Explicit named projects, with original File objects stored in IndexedDB.
  const projectName=$('rtrnInterviewProjectName'), projectList=$('rtrnInterviewProjects'), projectStatus=$('rtrnInterviewProjectStatus');
  let projectBusy=false, projectDB=null;
@@ -3741,7 +3745,7 @@ refresh();
  $('rtrnInterviewSave').addEventListener('click',()=>runProject(async()=>{
    const name=projectName.value.trim();if(!name){projectStatus.textContent='Enter a project name first.';return}
    if(Array.from(projectList.options).some(o=>o.value===name)&&!confirm('Replace saved interview "'+name+'"?'))return;
-   const seats=Array.from(states,([n,st])=>({n,mode:st.mode,clips:st.clips.slice(),idle:st.idle,index:st.index}));
+   const seats=Array.from(states,([n,st])=>({n,mode:st.mode,clips:st.clips.slice(),notes:normalizedNotes(st.clips,st.notes),idle:st.idle,index:st.index}));
    if(!seats.some(st=>st.mode!=='live'&&st.clips.length)){projectStatus.textContent='Add at least one prerecorded guest video or answer before saving.';return}
    await projectOperation('readwrite',store=>store.put({name,seats,savedAt:Date.now()}));
    await listProjects(name);projectStatus.textContent='Saved interview: '+name;
@@ -3755,7 +3759,7 @@ refresh();
    for(const [n,st] of states){
      const saved=project.seats.find(s=>s.n===n);if(!saved)continue;
      if(st.mode!=='live'||saved.mode!=='live'){invalidate(n);await sources[n].stop()}
-     st.mode=saved.mode;st.clips=saved.clips.slice();st.idle=saved.idle;st.index=Math.max(0,Math.min(saved.index,st.clips.length-1));st.phase='off';st.message='Loaded project: '+name;
+     st.mode=saved.mode;st.clips=saved.clips.slice();st.notes=normalizedNotes(st.clips,saved.notes);st.idle=saved.idle;st.index=Math.max(0,Math.min(saved.index,st.clips.length-1));st.phase='off';st.message='Loaded project: '+name;
    }
    syncSeats();
    // No audible answer starts on load; listening videos are muted.
@@ -3775,7 +3779,7 @@ refresh();
      if(!file)return null;
      parts.push(file);return {name:file.name,type:file.type,lastModified:file.lastModified,size:file.size};
    };
-   const seats=project.seats.map(st=>({n:st.n,mode:st.mode,index:st.index,clips:st.clips.map(describe),idle:describe(st.idle)}));
+   const seats=project.seats.map(st=>({n:st.n,mode:st.mode,index:st.index,clips:st.clips.map(describe),notes:normalizedNotes(st.clips,st.notes),idle:describe(st.idle)}));
    const manifest=new TextEncoder().encode(JSON.stringify({format:'RTRN-interview',version:1,name:project.name,seats}));
    if(manifest.length>1048576)throw Error('Interview metadata is too large.');
    const header=new Uint8Array(4);new DataView(header.buffer).setUint32(0,manifest.length);
@@ -3796,7 +3800,8 @@ refresh();
    }
    const seats=manifest.seats.map(st=>{
      if(!st||![2,3,4,5].includes(st.n)||seen.has(st.n)||!['live','video','script'].includes(st.mode)||!Array.isArray(st.clips)||!Number.isInteger(st.index)||st.index<0||st.index>Math.max(0,st.clips.length-1))throw invalid();
-     seen.add(st.n);return {n:st.n,mode:st.mode,index:st.index,clips:st.clips.map(restore),idle:st.idle===null?null:restore(st.idle)};
+     if(st.notes!==undefined&&(!Array.isArray(st.notes)||st.notes.length!==st.clips.length||st.notes.some(note=>typeof note!=='string'||note.length>2000)))throw invalid();
+     seen.add(st.n);return {n:st.n,mode:st.mode,index:st.index,clips:st.clips.map(restore),notes:normalizedNotes(st.clips,st.notes),idle:st.idle===null?null:restore(st.idle)};
    });
    if(offset!==file.size||!seats.some(st=>st.mode!=='live'&&st.clips.length))throw invalid();
    return {name:manifest.name.trim(),seats,savedAt:Date.now()};
@@ -3860,6 +3865,9 @@ refresh();
    $('rtrnInterviewIdleName').textContent=st.idle?st.idle.name:'No listening clip selected.';
    queue.replaceChildren(...st.clips.map((f,i)=>new Option((i+1)+' · '+f.name,String(i))));
    if(st.clips.length){st.index=Math.min(st.index,st.clips.length-1);queue.value=String(st.index)}
+   $('rtrnInterviewQuestionTools').hidden=st.mode!=='script';
+   question.disabled=st.mode!=='script'||!st.clips.length;
+   const note=question.disabled?'':(st.notes[st.index]||'');if(question.value!==note)question.value=note;
    for(const key of ['Play','Restart','Remove','Clear'])$('rtrnInterview'+key).disabled=!st.clips.length;
    for(const key of ['Pause','Stop'])$('rtrnInterview'+key).disabled=st.phase!=='answer'&&st.phase!=='paused';
    for(const key of ['Prev','Up'])$('rtrnInterview'+key).disabled=st.index<1;
@@ -3905,23 +3913,23 @@ refresh();
    present(n,file,'answer',true);
  }
  sel.addEventListener('change',()=>{upload.value='';idleInput.value='';refresh()});
- mode.addEventListener('change',()=>{const n=seatFor(),st=stateFor();if(!st)return;invalidate(n);sources[n].stop();st.mode=mode.value;st.clips=[];st.idle=null;st.index=0;upload.value='';idleInput.value='';say(n,st.mode==='live'?'Use guest camera settings.':'Add your prerecorded guest clips.');refresh()});
+ mode.addEventListener('change',()=>{const n=seatFor(),st=stateFor();if(!st)return;invalidate(n);sources[n].stop();st.mode=mode.value;st.clips=[];st.notes=[];st.idle=null;st.index=0;upload.value='';idleInput.value='';say(n,st.mode==='live'?'Use guest camera settings.':'Add your prerecorded guest clips.');refresh()});
  $('rtrnInterviewCameraTools').addEventListener('click',()=>{$('rtrnBroadcastTab').click();$(seatFor()===2?'rtrnSecondTools':'rtrnGuestTools'+seatFor()).scrollIntoView({block:'center'})});
  upload.addEventListener('change',()=>{const n=seatFor(),st=stateFor(),files=Array.from(upload.files||[]).filter(f=>f.type.startsWith('video/')||/\.(mp4|webm|mov|m4v)$/i.test(f.name));upload.value='';if(!st||!files.length)return;
-   if(st.mode==='video'){st.clips=[files[0]];st.index=0}else st.clips.push(...files);
+   if(st.mode==='video'){st.clips=[files[0]];st.notes=[''];st.index=0}else{st.clips.push(...files);st.notes.push(...files.map(()=>''));}
    listening(n);refresh();
  });
  idleInput.addEventListener('change',()=>{const n=seatFor(),st=stateFor(),file=idleInput.files?.[0];idleInput.value='';if(!st||!file)return;st.idle=file;listening(n);refresh()});
  $('rtrnInterviewClearIdle').addEventListener('click',()=>{const st=stateFor();st.idle=null;listening(seatFor());refresh()});
  queue.addEventListener('change',()=>choose(seatFor(),Number(queue.value)));
  for(const [key,delta] of [['Prev',-1],['Next',1]])$('rtrnInterview'+key).addEventListener('click',()=>choose(seatFor(),stateFor().index+delta));
- for(const [key,delta] of [['Up',-1],['Down',1]])$('rtrnInterview'+key).addEventListener('click',()=>{const st=stateFor(),i=st.index,j=i+delta;if(j<0||j>=st.clips.length)return;[st.clips[i],st.clips[j]]=[st.clips[j],st.clips[i]];st.index=j;refresh()});
+ for(const [key,delta] of [['Up',-1],['Down',1]])$('rtrnInterview'+key).addEventListener('click',()=>{const st=stateFor(),i=st.index,j=i+delta;if(j<0||j>=st.clips.length)return;[st.clips[i],st.clips[j]]=[st.clips[j],st.clips[i]];[st.notes[i],st.notes[j]]=[st.notes[j],st.notes[i]];st.index=j;refresh()});
  $('rtrnInterviewPlay').addEventListener('click',()=>play(seatFor()));
  $('rtrnInterviewRestart').addEventListener('click',()=>play(seatFor(),true));
  $('rtrnInterviewPause').addEventListener('click',()=>{const n=seatFor(),st=stateFor();if(st.phase!=='answer')return;st.epoch++;sources[n].video.pause();st.phase='paused';say(n,'Answer paused.');refresh()});
  $('rtrnInterviewStop').addEventListener('click',()=>listening(seatFor()));
- $('rtrnInterviewRemove').addEventListener('click',()=>{const st=stateFor();st.clips.splice(st.index,1);st.index=Math.max(0,Math.min(st.index,st.clips.length-1));listening(seatFor());refresh()});
- $('rtrnInterviewClear').addEventListener('click',()=>{const st=stateFor();st.clips=[];st.index=0;listening(seatFor());refresh()});
+ $('rtrnInterviewRemove').addEventListener('click',()=>{const st=stateFor();st.clips.splice(st.index,1);st.notes.splice(st.index,1);st.index=Math.max(0,Math.min(st.index,st.clips.length-1));listening(seatFor());refresh()});
+ $('rtrnInterviewClear').addEventListener('click',()=>{const st=stateFor();st.clips=[];st.notes=[];st.index=0;listening(seatFor());refresh()});
  for(const [n,src] of Object.entries(sources)){const seat=Number(n);src.video.addEventListener('ended',()=>{
    const st=states.get(seat);if(st.phase!=='answer'||!src.video.ended)return;
    if(st.mode==='script'&&$('rtrnInterviewAutoCue').checked&&st.index<st.clips.length-1)st.index++;
