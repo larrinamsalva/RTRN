@@ -167,6 +167,23 @@ try {
   });
   assert(await page.locator('#rtrnSecondBox').isHidden(),'Fireside must remain a one-chair scene');
   console.log('Mobile Cozy Fireside camera clears headline, ticker and recording banner.');
+  // All guest seats share the same mobile and recording banner clearance.
+  for(const [id,count] of [['cozy-2',2],['cozy-3',3],['cozy-4',4]]){
+    await page.locator('[data-scene="'+id+'"]').tap();
+    await page.locator('#rtrnDuoQuick').click();
+    await page.waitForFunction(count=>{
+      const stage=document.getElementById('stage').getBoundingClientRect();
+      const banner=document.getElementById('lowerThird').getBoundingClientRect();
+      const ticker=document.getElementById('tickerBox').getBoundingClientRect();
+      const limit=Math.min(banner.top,ticker.top,stage.top+stage.height*595/720);
+      const ids=['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].slice(0,count);
+      return stage.height>0&&ids.every(id=>{
+        const el=document.getElementById(id),box=el.getBoundingClientRect();
+        return !el.hidden&&box.width>0&&box.height>=stage.height*.15&&box.bottom<=limit+1;
+      });
+    },count,{timeout:6000});
+    console.log('Mobile Cozy seat clearance passed:',id);
+  }
   for(const [id,filename,labels] of [['vintage-tea','vintage_tea_room.jpg',['Tea room — wall picture','Tea room — center table picture']],['vintage-man','vintage_good_old_days.jpg',['Wall picture 1','Wall picture 2','Wall picture 3','Wall picture 4']]]){
     await page.locator('[data-scene="'+id+'"]').tap();
     await page.waitForFunction(filename=>{const img=document.getElementById('stageBackgroundImage');return img?.src.endsWith(filename)&&img.complete&&img.naturalWidth>=1200&&img.naturalHeight>=675},filename);
