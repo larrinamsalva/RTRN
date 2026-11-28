@@ -574,5 +574,20 @@ try {
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.muted&&!v.paused&&v.readyState>=2});
   await desktop.locator('#rtrnInterviewStop').click();
   console.log('Portable backup export, invalid backup rejection, import and playback passed.');
+  // Rehearsal must cue the first answer, prevent recording, and reset after practice.
+  await desktop.locator('#rtrnInterviewRehearse').click();
+  assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'0');
+  assert(await desktop.locator('#rtrnInterviewEndRehearsal').isEnabled());
+  await desktop.locator('#rtrnRecordQuick').click();
+  assert(await desktop.locator('#rtrnRecordQuick').isEnabled(),'Rehearsal must not start a recording');
+  await desktop.locator('#rtrnInterviewNext').click();
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.muted&&!v.paused});
+  await desktop.locator('#rtrnInterviewEndRehearsal').click();
+  assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'0');
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
+  assert(await desktop.locator('#rtrnInterviewEndRehearsal').isDisabled());
+  assert(await desktop.locator('#rtrnRecordQuick').isEnabled());
+  console.log('Interview rehearsal, recording guard and first-answer reset passed.');
 
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}

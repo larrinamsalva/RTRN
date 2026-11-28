@@ -624,6 +624,8 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <details id="rtrnInterviewFold" class="rtrn-audio-setup" hidden>
 <summary>🎭 Virtual Guest Interview</summary>
 <div style="display:grid;gap:8px;padding:8px;min-width:0">
+<div class="rtrn-action-grid"><button class="btn btn-green" id="rtrnInterviewRehearse" type="button">Start rehearsal</button><button class="btn" id="rtrnInterviewEndRehearsal" type="button" disabled>End rehearsal</button></div>
+<p class="mini" id="rtrnInterviewRehearsalStatus" role="status" aria-live="polite">Practice answers without recording. Ending rehearsal cues the first answer again.</p>
 <label for="rtrnInterviewSeat">Guest seat</label><select id="rtrnInterviewSeat"></select>
 <label for="rtrnInterviewMode">Guest source</label><select id="rtrnInterviewMode"><option value="live">Live camera / guest</option><option value="video">Prerecorded guest video</option><option value="script">Scripted interview (answer clips)</option></select>
 <div id="rtrnInterviewLive"><p class="mini">Use the existing guest camera controls or hosted guest room. Select Guest seats to show the guest on stage.</p><button class="btn" type="button" id="rtrnInterviewCameraTools">Open guest camera settings</button></div>
@@ -3462,6 +3464,7 @@ refresh();
     for(const id of ['rtrnRecordStop','rtrnStopRecordQuick'])$(id).disabled=!active;
   }
   async function startRecording(){
+    if(window.RTRNInterviewRehearsalActive?.()){status('End interview rehearsal before starting a recording.');return}
     if(recordingBusy||recorder?.state==='recording')return;
         if(!window.MediaRecorder||!canvas.captureStream){status('This phone browser cannot record a canvas video. Try the latest Chrome or Safari on a secure page.');return}
     const mime=recordingFormat();
@@ -3810,6 +3813,32 @@ refresh();
  fold.addEventListener('toggle',()=>{if(fold.open&&!projectBusy)listProjects().catch(err=>{projectStatus.textContent='Saved interviews unavailable: '+err.message})});
 
  const available=n=>$('rtrnLayout').value==='duo'&&window.RTRNSeatCount()>=n;
+ let rehearsing=false;
+ window.RTRNInterviewRehearsalActive=()=>rehearsing;
+ const rehearsalStatus=$('rtrnInterviewRehearsalStatus');
+ function resetRehearsalCues(){
+   for(const [n,st] of states){
+     if(st.mode==='live')continue;
+     invalidate(n);sources[n].video.pause();st.index=0;
+     if(available(n))listening(n);else sources[n].stop();
+   }
+   refresh();
+ }
+ function endRehearsal(){
+   if(!rehearsing)return;
+   rehearsing=false;resetRehearsalCues();
+   $('rtrnInterviewRehearse').disabled=false;$('rtrnInterviewEndRehearsal').disabled=true;
+   rehearsalStatus.textContent='Rehearsal ended. First answers cued. Ready to record.';
+ }
+ $('rtrnInterviewRehearse').addEventListener('click',()=>{
+   if(rehearsing)return;
+   if($('rtrnRecordQuick').disabled){rehearsalStatus.textContent='Finish the current recording or save first.';return}
+   if(!Array.from(states).some(([n,st])=>available(n)&&st.mode!=='live'&&st.clips.length)){rehearsalStatus.textContent='Add a prerecorded guest or answer clips first.';return}
+   rehearsing=true;resetRehearsalCues();
+   $('rtrnInterviewRehearse').disabled=true;$('rtrnInterviewEndRehearsal').disabled=false;
+   rehearsalStatus.textContent='REHEARSAL — not recording. Ask your question, then play the answer. End rehearsal when ready.';
+ });
+ $('rtrnInterviewEndRehearsal').addEventListener('click',endRehearsal);
  const say=(n,msg)=>{states.get(n).message=msg;if(seatFor()===n)$('rtrnInterviewStatus').textContent=msg};
  function refresh(){
    const st=stateFor();if(!st)return;
@@ -3831,6 +3860,7 @@ refresh();
    const current=seatFor(), ns=[2,3,4,5].filter(available);
    for(const n of [2,3,4,5])if(!ns.includes(n)&&states.get(n).phase!=='off'){invalidate(n);sources[n].stop();say(n,'Guest seat hidden. Choose a visible seat to continue.');}
    fold.hidden=!ns.length;
+   if(!ns.length&&rehearsing)endRehearsal();
    const next=ns.includes(current)?current:ns[0];
    if(Array.from(sel.options).map(o=>Number(o.value)).join(',')!==ns.join(','))sel.replaceChildren(...ns.map(n=>new Option('Guest '+(n-1)+' · seat '+n,String(n))));
    if(next)sel.value=String(next);refresh();
