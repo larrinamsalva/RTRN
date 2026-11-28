@@ -156,6 +156,17 @@ try {
   await page.waitForFunction(()=>{const img=document.getElementById('stageBackgroundImage');return img?.complete&&img.naturalWidth>0&&getComputedStyle(img).visibility==='visible'});
   assert(await page.locator('#stageBackgroundError').isHidden(),'Mobile scene background must load without error');
   await dock.locator('[data-mobile-target="scenes"]').tap();
+  // The single-chair fireside camera must clear both mobile overlays and the fixed recording banner.
+  await page.locator('[data-scene="cozy-1"]').tap();
+  await page.waitForFunction(()=>{
+    const stage=document.getElementById('stage').getBoundingClientRect();
+    const host=document.getElementById('cameraBox').getBoundingClientRect();
+    const banner=document.getElementById('lowerThird').getBoundingClientRect();
+    const ticker=document.getElementById('tickerBox').getBoundingClientRect();
+    return stage.height>0&&host.height>=stage.height*.20&&host.bottom<=Math.min(banner.top,ticker.top,stage.top+stage.height*595/720)+1;
+  });
+  assert(await page.locator('#rtrnSecondBox').isHidden(),'Fireside must remain a one-chair scene');
+  console.log('Mobile Cozy Fireside camera clears headline, ticker and recording banner.');
   for(const [id,filename,labels] of [['vintage-tea','vintage_tea_room.jpg',['Tea room — wall picture','Tea room — center table picture']],['vintage-man','vintage_good_old_days.jpg',['Wall picture 1','Wall picture 2','Wall picture 3','Wall picture 4']]]){
     await page.locator('[data-scene="'+id+'"]').tap();
     await page.waitForFunction(filename=>{const img=document.getElementById('stageBackgroundImage');return img?.src.endsWith(filename)&&img.complete&&img.naturalWidth>=1200&&img.naturalHeight>=675},filename);
