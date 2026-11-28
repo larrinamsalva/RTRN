@@ -630,13 +630,15 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <p><strong>1. Prepare your guest videos.</strong> Record one short video answering each question. Name them 01, 02, 03 and so on. Record an optional silent listening or reaction clip.</p>
 <p><strong>2. Set up the studio.</strong> Choose a studio with guest seating, select Guest seats, then open Virtual Guest Interview. Choose the guest seat and set Guest source to Scripted interview (answer clips). For a single prerecorded video instead, choose Prerecorded guest video.</p>
 <p><strong>3. Add your answers and questions.</strong> Upload the answer clips. Use Choose clip to select an answer, then type what you want to ask in Host question / cue notes. Use Move earlier or Move later to fix the order. Repeat for each answer. Open All interview questions (private) to see the full rundown. The current and next question notes are for you, not the recording.</p>
-<p><strong>4. Practice first.</strong> Tap Start rehearsal. Ask the question out loud, then tap Play answer. The optional listening clip plays muted while the guest waits. Previous and Next change clips; Pause, Restart and Stop answer control playback. Enable Cue next answer when a clip finishes to prepare the next clip without playing it automatically. Tap End rehearsal to reset to the first answer. Recording is blocked during rehearsal.</p>
+<p><strong>4. Practice first.</strong> Open Practice interview (rehearsal) and tap Start rehearsal. Ask the displayed question out loud, then tap Preview answer. Replay answer restarts the current clip, and Reset to first answer lets you practice again without ending rehearsal. The optional listening clip plays muted while the guest waits. Previous and Next change clips; Pause, Restart and Stop answer control playback. Enable Cue next answer when a clip finishes to prepare the next clip without playing it automatically. Tap End rehearsal to reset to the first answer. Recording is blocked during rehearsal.</p>
 <p><strong>5. Record your real show.</strong> Start your camera and check your mic. Use headphones to prevent echo. Start recording, ask the question, then tap Play answer. Repeat until finished. Stop recording and save the show. Check the saved video and audio before sharing.</p>
 <p><strong>6. Save your setup.</strong> Enter an Interview project name and tap Save interview. Later, select it under Saved interviews and tap Load interview while not recording. Export selected saved interview creates a backup; Import interview backup restores one. Keep backups of original clips too. Saved projects are local to this browser and device.</p>
 <p><strong>Tip:</strong> You can play both roles yourself: record the guest answers in a different outfit, then host the interview live in the studio.</p>
 </div></details>
+<details id="rtrnInterviewPractice" class="rtrn-audio-setup" style="padding:8px;overflow-wrap:anywhere"><summary style="cursor:pointer;min-height:44px">🎬 Practice interview (rehearsal)</summary><p class="mini">Ask your question aloud, then preview the guest answer. Nothing is recorded in rehearsal.</p>
 <div class="rtrn-action-grid"><button class="btn btn-green" id="rtrnInterviewRehearse" type="button">Start rehearsal</button><button class="btn" id="rtrnInterviewEndRehearsal" type="button" disabled>End rehearsal</button></div>
 <p class="mini" id="rtrnInterviewRehearsalStatus" role="status" aria-live="polite">Practice answers without recording. Ending rehearsal cues the first answer again.</p>
+<p class="mini" id="rtrnPracticeCue" style="white-space:pre-wrap;overflow-wrap:anywhere" aria-live="polite">Choose a guest and add answers.</p><div class="rtrn-action-grid"><button class="btn" id="rtrnPracticePreview" type="button" disabled>▶ Preview answer</button><button class="btn" id="rtrnPracticeReplay" type="button" disabled>↻ Replay answer</button><button class="btn" id="rtrnPracticeReset" type="button" disabled>Reset to first answer</button></div></details>
 <label for="rtrnInterviewSeat">Guest seat</label><select id="rtrnInterviewSeat"></select>
 <label for="rtrnInterviewMode">Guest source</label><select id="rtrnInterviewMode"><option value="live">Live camera / guest</option><option value="video">Prerecorded guest video</option><option value="script">Scripted interview (answer clips)</option></select>
 <div id="rtrnInterviewLive"><p class="mini">Use the existing guest camera controls or hosted guest room. Select Guest seats to show the guest on stage.</p><button class="btn" type="button" id="rtrnInterviewCameraTools">Open guest camera settings</button></div>
@@ -3775,7 +3777,7 @@ refresh();
    });
    list.replaceChildren(...items);
  }
- question.addEventListener('input',()=>{const st=stateFor();if(st?.mode==='script'&&st.clips.length){st.notes[st.index]=question.value.slice(0,2000);renderRundown(st)}});
+ question.addEventListener('input',()=>{const st=stateFor();if(st?.mode==='script'&&st.clips.length){st.notes[st.index]=question.value.slice(0,2000);renderRundown(st);refreshPractice(st)}});
  // Explicit named projects, with original File objects stored in IndexedDB.
  const projectName=$('rtrnInterviewProjectName'), projectList=$('rtrnInterviewProjects'), projectStatus=$('rtrnInterviewProjectStatus');
  let projectBusy=false, projectDB=null;
@@ -3920,6 +3922,15 @@ refresh();
    rehearsalStatus.textContent='REHEARSAL — not recording. Ask your question, then play the answer. End rehearsal when ready.';
  });
  $('rtrnInterviewEndRehearsal').addEventListener('click',endRehearsal);
+ $('rtrnPracticeReset').addEventListener('click',()=>{if(!rehearsing)return;resetRehearsalCues();rehearsalStatus.textContent='REHEARSAL — first answers cued. Ask your question, then preview.'});
+ $('rtrnPracticePreview').addEventListener('click',()=>{if(rehearsing&&stateFor()?.mode!=='live')play(seatFor())});
+ $('rtrnPracticeReplay').addEventListener('click',()=>{if(rehearsing&&stateFor()?.mode!=='live')play(seatFor(),true)});
+ function refreshPractice(st){
+   const ready=!!(st&&st.mode!=='live'&&st.clips.length&&available(seatFor()));
+   $('rtrnPracticePreview').disabled=$('rtrnPracticeReplay').disabled=!rehearsing||!ready;
+   $('rtrnPracticeReset').disabled=!rehearsing;
+   $('rtrnPracticeCue').textContent=ready?'Clip '+(st.index+1)+' of '+st.clips.length+' · '+st.clips[st.index].name+(st.mode==='script'?'\nQuestion: '+(st.notes[st.index]?.trim()||'(No question notes yet)'):''):'Choose a guest and add answers.';
+ }
  const say=(n,msg)=>{states.get(n).message=msg;if(seatFor()===n)$('rtrnInterviewStatus').textContent=msg};
  function refresh(){
    const st=stateFor();if(!st)return;
@@ -3936,7 +3947,7 @@ refresh();
    const note=question.disabled?'':(st.notes[st.index]||'');if(question.value!==note)question.value=note;
    const nextQuestion=$('rtrnInterviewNextQuestion');nextQuestion.hidden=question.disabled;
    nextQuestion.textContent=question.disabled?'':st.index+1>=st.clips.length?'No more answers after this clip.':'Next question: '+(st.notes[st.index+1]?.trim()||'(No question notes yet)');
-   renderRundown(st);
+   renderRundown(st);refreshPractice(st);
    for(const key of ['Play','Restart','Remove','Clear'])$('rtrnInterview'+key).disabled=!st.clips.length;
    for(const key of ['Pause','Stop'])$('rtrnInterview'+key).disabled=st.phase!=='answer'&&st.phase!=='paused';
    for(const key of ['Prev','Up'])$('rtrnInterview'+key).disabled=st.index<1;
