@@ -546,11 +546,33 @@ try {
   await desktop.locator('#rtrnInterviewPlay').click();
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.loop&&!v.muted&&!v.paused});
   await desktop.locator('#rtrnInterviewStop').click();
+  const backupDownload=desktop.waitForEvent('download');
+  await desktop.locator('#rtrnInterviewExport').click();
+  const backup=await backupDownload;
+  assert.equal(backup.suggestedFilename(),'Comedy-interview.rtrninterview');
+  const backupBytes=await readFile(await backup.path());
+  assert(backupBytes.length>4);
   desktop.once('dialog',d=>d.accept());
   await desktop.locator('#rtrnInterviewDelete').click();
   await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewProjectStatus').textContent==='Deleted saved interview: Comedy interview');
   assert.equal(await desktop.locator('#rtrnInterviewProjects option').count(),1);
   assert.equal(await desktop.locator('#rtrnInterviewQueue option').count(),2,'Deleting saved copy must preserve current queue');
   console.log('Saved interview reload, original clips, playback and deletion passed.');
+  await desktop.locator('#rtrnInterviewBackupFile').setInputFiles({name:'broken.rtrninterview',mimeType:'application/octet-stream',buffer:Buffer.from('bad')});
+  await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewProjectStatus').textContent.includes('Invalid or unsupported'));
+  assert.equal(await desktop.locator('#rtrnInterviewProjects option').count(),1);
+  await desktop.locator('#rtrnInterviewBackupFile').setInputFiles({name:backup.suggestedFilename(),mimeType:'application/octet-stream',buffer:backupBytes});
+  await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewProjectStatus').textContent.startsWith('Imported interview: Comedy interview'));
+  assert.equal(await desktop.locator('#rtrnInterviewProjects').inputValue(),'Comedy interview');
+  assert.equal(await desktop.locator('#rtrnInterviewQueue option').count(),2);
+  desktop.once('dialog',d=>d.accept());
+  await desktop.locator('#rtrnInterviewLoad').click();
+  await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewProjectStatus').textContent.startsWith('Loaded interview:'));
+  assert.deepEqual(await desktop.locator('#rtrnInterviewQueue option').allTextContents(),['1 · 01-intro.webm','2 · 02-joke.webm']);
+  assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'1');
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.muted&&!v.paused&&v.readyState>=2});
+  await desktop.locator('#rtrnInterviewStop').click();
+  console.log('Portable backup export, invalid backup rejection, import and playback passed.');
 
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
