@@ -464,6 +464,52 @@ try {
   await desktop.reload();
   await desktop.waitForFunction(()=>document.getElementById('rtrnCustomSeatCount').value==='5'&&!document.getElementById('rtrnSeatPlaceholder5').hidden);
   console.log('Custom scene seating from one to five, fifth camera, solo and saved count passed.');
+  // Generate a local talking-guest fixture with both video and audio.
+  const guestBytes=Buffer.from(await desktop.evaluate(async()=>{
+    const c=document.createElement('canvas');c.width=160;c.height=90;const ctx=c.getContext('2d');
+    const ac=new AudioContext();await ac.resume();const dest=ac.createMediaStreamDestination(),tone=ac.createOscillator(),gain=ac.createGain();gain.gain.value=.04;tone.connect(gain);gain.connect(dest);tone.start();
+    const video=c.captureStream(12),stream=new MediaStream([...video.getVideoTracks(),...dest.stream.getAudioTracks()]);
+    const rec=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp8,opus'}),chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const done=new Promise(r=>rec.onstop=r);rec.start();
+    for(let i=0;i<24;i++){ctx.fillStyle=i%2?'purple':'green';ctx.fillRect(0,0,160,90);await new Promise(r=>setTimeout(r,85))}
+    rec.stop();await done;tone.stop();stream.getTracks().forEach(t=>t.stop());await ac.close();
+    return Array.from(new Uint8Array(await new Blob(chunks,{type:rec.mimeType}).arrayBuffer()));
+  }));
+  const guestFile=name=>({name,mimeType:'video/webm',buffer:guestBytes});
+  await desktop.locator('#rtrnInterviewFold > summary').click();
+  await desktop.locator('#rtrnInterviewSeat').selectOption('2');
+  await desktop.locator('#rtrnInterviewMode').selectOption('script');
+  await desktop.locator('#rtrnInterviewUpload').setInputFiles([guestFile('01-intro.webm'),guestFile('02-joke.webm')]);
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.src&&v.paused&&v.readyState>=2});
+  await desktop.locator('#rtrnInterviewIdle').setInputFiles(guestFile('listening.webm'));
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.loop&&!v.muted&&!v.paused&&v.currentTime>0});
+  await desktop.locator('#rtrnInterviewPause').click();
+  assert(await desktop.locator('#rtrnSecondVideo').evaluate(v=>v.paused),'Answer pauses');
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused},{},{timeout:12000});
+  assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'0','No automatic advance after an answer');
+  await desktop.locator('#rtrnInterviewNext').click();
+  assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'1');
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.loop&&!v.muted&&!v.paused});
+  await desktop.locator('#rtrnInterviewStop').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
+  await desktop.locator('#rtrnInterviewSeat').selectOption('5');
+  await desktop.locator('#rtrnInterviewMode').selectOption('video');
+  await desktop.locator('#rtrnInterviewUpload').setInputFiles(guestFile('guest-five.webm'));
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSeatVideo5');return v.src&&v.paused&&!v.hidden&&v.readyState>=2});
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSeatVideo5');return !v.muted&&!v.paused});
+  await desktop.locator('#rtrnSoloQuick').click();
+  await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewFold').hidden&&document.getElementById('rtrnSeatVideo5').paused&&document.getElementById('rtrnSecondVideo').paused);
+  await desktop.locator('#rtrnDuoQuick').click();
+  await desktop.locator('#rtrnInterviewSeat').selectOption('2');
+  await desktop.locator('#rtrnInterviewMode').selectOption('live');
+  assert(await desktop.locator('#rtrnInterviewLive').isVisible(),'Live guest mode remains available');
+  await desktop.locator('#rtrnInterviewFold > summary').click();
+  console.log('Scripted guest answers, idle clips, extra guest playback and solo cleanup passed.');
+
   // Reload intentionally collapses the scene selector; open it as a user would.
   assert.equal(await desktop.locator('#sceneFold').evaluate(el=>el.open),false);
   await desktop.locator('#sceneFold > summary').click();

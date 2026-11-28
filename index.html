@@ -621,6 +621,23 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <button class="btn" id="rtrnBleepQuick" type="button">🔇 Bleep words</button>
 <span aria-live="polite" id="rtrnQuickStatus" role="status">Ready to record.</span>
 </div>
+<details id="rtrnInterviewFold" class="rtrn-audio-setup" hidden>
+<summary>🎭 Virtual Guest Interview</summary>
+<div style="display:grid;gap:8px;padding:8px;min-width:0">
+<label for="rtrnInterviewSeat">Guest seat</label><select id="rtrnInterviewSeat"></select>
+<label for="rtrnInterviewMode">Guest source</label><select id="rtrnInterviewMode"><option value="live">Live camera / guest</option><option value="video">Prerecorded guest video</option><option value="script">Scripted interview (answer clips)</option></select>
+<div id="rtrnInterviewLive"><p class="mini">Use the existing guest camera controls or hosted guest room. Select Guest seats to show the guest on stage.</p><button class="btn" type="button" id="rtrnInterviewCameraTools">Open guest camera settings</button></div>
+<div id="rtrnInterviewFiles" hidden>
+<label for="rtrnInterviewUpload" id="rtrnInterviewUploadLabel">Add video answer clips in order</label><input id="rtrnInterviewUpload" type="file" accept="video/*" multiple>
+<div id="rtrnInterviewIdleTools"><label for="rtrnInterviewIdle">Optional listening / reaction video (muted loop)</label><input id="rtrnInterviewIdle" type="file" accept="video/*"><button class="btn" id="rtrnInterviewClearIdle" type="button">Remove listening video</button><p id="rtrnInterviewIdleName" class="mini">No listening clip selected.</p></div>
+<label for="rtrnInterviewQueue">Choose clip</label><select id="rtrnInterviewQueue"></select>
+<div id="rtrnInterviewOrder" class="rtrn-action-grid"><button class="btn" id="rtrnInterviewUp" type="button">Move earlier</button><button class="btn" id="rtrnInterviewDown" type="button">Move later</button></div>
+<div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewPrev" type="button">⏮ Previous</button><button class="btn" id="rtrnInterviewNext" type="button">Next ⏭</button><button class="btn btn-green" id="rtrnInterviewPlay" type="button">▶ Play answer</button><button class="btn" id="rtrnInterviewPause" type="button">⏸ Pause</button><button class="btn" id="rtrnInterviewRestart" type="button">↻ Restart</button><button class="btn" id="rtrnInterviewStop" type="button">■ Stop answer</button></div>
+<div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewRemove" type="button">Remove selected clip</button><button class="btn" id="rtrnInterviewClear" type="button">Clear clips</button></div>
+<p class="mini">Clips stay on this device for the current studio session. Use numbered filenames for answers. Start recording, ask the question, then play the answer. No automatic advance. Use headphones to avoid microphone echo.</p>
+</div>
+<p class="mini" id="rtrnInterviewStatus" role="status" aria-live="polite">Choose a guest source.</p>
+</div></details>
 <p class="mobile-tip">📱 Tap Scenes below to try backgrounds. The menu stays open until you close it. Rotate your phone for a wider studio view.</p></div></div>
 <div class="panel reaction-deck"><details class="control-fold" id="audienceFold">
 <summary class="fold-summary"><span aria-hidden="true" class="fold-icon">🎭</span><span class="fold-titleblock"><strong>02 / Audience &amp; Sound Effects</strong><small id="audienceFoldCurrent">Laughs · Cheers · Fart · Birds · Kiss · more</small></span><span aria-hidden="true" class="fold-chevron">⌄</span></summary>
@@ -1983,7 +2000,7 @@ function quietOtherPlayback(all=false){
   // Stop audible prerecorded sources, including detached soundboard players.
   // Never stop a live camera stream or the show recorder.
   for(const media of document.querySelectorAll('audio,video')){
-    if(media===$('musicPlayer')||media.srcObject||media.dataset.rtrnExport==='1')continue;
+    if(media===$('musicPlayer')||media.srcObject||media.dataset.rtrnExport==='1'||media.dataset.rtrnInterview==='1')continue;
     if(!media.paused&&!media.muted){media.pause();try{media.currentTime=0}catch(_){}}
   }
   if(typeof soundPlayers!=='undefined')for(const player of Object.values(soundPlayers)){
@@ -2838,7 +2855,7 @@ refresh();
   const save = () => {try{localStorage.setItem(hostKey,JSON.stringify(conf))}catch(_){}};
   const stage = $('stage'), desk = $('rtrnOriginalDesk'), firstBox = $('cameraBox');
   const secondBox = $('rtrnSecondBox'), secondVideo = $('rtrnSecondVideo'), secondCanvas = $('rtrnSecondCanvas');
-  let secondStream = null, secondFileURL = '', secondLoop = 0, tributeURL = '';
+  let secondStream = null, secondFileURL = '', secondLoop = 0, tributeURL = '', secondGeneration=0;
   const isOutdoor = () => ['beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars'].includes(state.scene);
   const isVintage=()=>['vintage-tea','vintage-man'].includes(state.scene);
   const isDance=()=>['dance-purple','dance-retro'].includes(state.scene);
@@ -3086,30 +3103,33 @@ refresh();
     }catch(_){}
   }
   async function stopSecond(){
+    secondGeneration++;
     secondStream?.getTracks().forEach(t=>t.stop());secondStream=null;
     if(secondFileURL){URL.revokeObjectURL(secondFileURL);secondFileURL=''}
     secondVideo.pause();secondVideo.srcObject=null;secondVideo.removeAttribute('src');secondVideo.load();
     cancelAnimationFrame(secondLoop);$('rtrnSecondStatus').textContent='Second camera is off.';
     paintHostLayers();
   }
-  $('rtrnStopSecond').addEventListener('click',stopSecond);
+  const manualGuest=()=>window.dispatchEvent(new CustomEvent('rtrn-guest-manual',{detail:{seat:2}}));
+  $('rtrnStopSecond').addEventListener('click',()=>{manualGuest();stopSecond()});
   $('rtrnStartSecond').addEventListener('click',async()=>{
     if(!navigator.mediaDevices?.getUserMedia){$('rtrnSecondStatus').textContent='Camera needs a secure browser page (HTTPS).';return}
-    await stopSecond();
+    manualGuest();await stopSecond();const generation=secondGeneration;
     try{
-      secondStream=await navigator.mediaDevices.getUserMedia({video:{
+      const incoming=await navigator.mediaDevices.getUserMedia({video:{
         deviceId:$('rtrnSecondSource').value?{exact:$('rtrnSecondSource').value}:undefined,
         width:{ideal:640},height:{ideal:480}},audio:false});
-      secondVideo.srcObject=secondStream;await secondVideo.play();
+      if(generation!==secondGeneration){incoming.getTracks().forEach(t=>t.stop());return}secondStream=incoming;
+      secondVideo.autoplay=true;secondVideo.loop=false;secondVideo.muted=true;secondVideo.srcObject=secondStream;await secondVideo.play();if(generation!==secondGeneration)return;
       $('rtrnSecondStatus').textContent='Mikey’s second camera is live on this device.';
       secondLoop=requestAnimationFrame(keySecond);listCameras();paintHostLayers();
-    }catch(err){secondStream?.getTracks().forEach(t=>t.stop());secondStream=null;
+    }catch(err){if(generation!==secondGeneration)return;secondStream?.getTracks().forEach(t=>t.stop());secondStream=null;
       $('rtrnSecondStatus').textContent='Second camera unavailable. Choose Together to show both of you with one camera. '+(err.message||'');
       paintHostLayers()}
   });
   $('rtrnSecondFile').addEventListener('change',async e=>{
     const file=e.target.files?.[0];if(!file)return;
-    await stopSecond();secondFileURL=URL.createObjectURL(file);
+    manualGuest();await stopSecond();secondVideo.autoplay=true;secondFileURL=URL.createObjectURL(file);
     secondVideo.src=secondFileURL;secondVideo.loop=true;secondVideo.muted=!$('rtrnSecondSound').checked;
     try{await secondVideo.play();$('rtrnSecondStatus').textContent='Video clip playing (recorded earlier).'}
     catch(_){$('rtrnSecondStatus').textContent='Clip loaded. Tap play on your phone to start it.'}
@@ -3120,6 +3140,16 @@ refresh();
     secondVideo.muted=!e.target.checked||!secondFileURL;
     if(!secondVideo.muted)window.RTRNRecorder?.connectAudio(secondVideo);
   });
+  window.RTRNInterviewSources=window.RTRNInterviewSources||{};
+  window.RTRNInterviewSources[2]={video:secondVideo,stop:stopSecond,load:async(file,{loop=false,sound=true,play=false}={})=>{
+    await stopSecond();const generation=secondGeneration;
+    secondVideo.autoplay=false;secondVideo.loop=loop;secondVideo.muted=!sound;
+    $('rtrnSecondSound').checked=sound;secondFileURL=URL.createObjectURL(file);secondVideo.src=secondFileURL;secondVideo.load();
+    secondLoop=requestAnimationFrame(keySecond);paintHostLayers();
+    if(sound)window.RTRNRecorder?.connectAudio(secondVideo);
+    if(play){await secondVideo.play();if(generation!==secondGeneration)return false}
+    return generation===secondGeneration;
+  }};
   function keySecond(){
     secondLoop=requestAnimationFrame(keySecond);
     if(state.cameraMode!=='cutout'||secondVideo.readyState<2)return;
@@ -3317,13 +3347,14 @@ refresh();
       const url=element.currentSrc||element.src||'';
       if(/^https?:/.test(url)&&new URL(url,location.href).origin!==location.origin)return;
       const source=audioCtx.createMediaElementSource(element);
-      const bus=element===$('musicPlayer')?musicBus:element===$('rtrnSecondVideo')?voiceBus:null;
+      const guest=/^rtrn(?:SecondVideo|SeatVideo[345])$/.test(element.id);
+      const bus=element===$('musicPlayer')?musicBus:guest?voiceBus:null;
       if(bus){
         wired.set(element,source);
         if(element===$('musicPlayer'))try{element.volume=1}catch(_){}
         source.connect(bus);
         // Guest clips need audible playback, but never monitor the live mic.
-        if(element===$('rtrnSecondVideo'))source.connect(audioCtx.destination);
+        if(guest)source.connect(audioCtx.destination);
       }else{source.connect(audioCtx.destination);source.connect(destination);wired.set(element,source);}
     }catch(_){}
   }
@@ -3368,6 +3399,7 @@ refresh();
       selectedSpeaker=id;audioOutput.value=id;
       connectAudio($('musicPlayer'));for(const player of Object.values(soundPlayers))connectAudio(player);
       if(secondFileURL&&!secondVideo.muted)connectAudio(secondVideo);
+      for(const v of document.querySelectorAll('[id^="rtrnSeatVideo"]'))if(!v.muted&&!v.srcObject&&v.src)connectAudio(v);
       document.querySelectorAll('#framePortraits video').forEach(v=>{if(!v.muted)connectAudio(v)});
       audioNotice(id?'Selected speaker connected for studio playback.':'Using the system default speaker.');
     }catch(err){audioOutput.value=selectedSpeaker;audioNotice('Speaker could not be selected: '+err.message+'. Use system audio settings or reconnect it.');}
@@ -3401,7 +3433,7 @@ refresh();
   $('rtrnAudioMicStop').addEventListener('click',()=>{stopMicTest();audioNotice('Microphone test stopped.')});
   navigator.mediaDevices?.addEventListener?.('devicechange',()=>{if(audioSetup.open)refreshAudio()});
   window.addEventListener('pagehide',stopMicTest);
-  document.addEventListener('play',e=>{if(e.target===$('musicPlayer')&&!e.target.paused&&audioCtx){connectAudio(e.target);audioCtx.resume().catch(()=>{})}},true);
+  document.addEventListener('play',e=>{if((e.target===$('musicPlayer')||(/^rtrn(?:SecondVideo|SeatVideo[345])$/.test(e.target.id)&&!e.target.muted&&!e.target.srcObject))&&!e.target.paused&&audioCtx){connectAudio(e.target);audioCtx.resume().catch(()=>{})}},true);
   $('framePortraits').addEventListener('play',e=>{if(audioCtx&&e.target.tagName==='VIDEO'&&!e.target.muted)connectAudio(e.target)},true);
   function keepDrawing(){drawProgram();if(recorder?.state==='recording'){
     const seconds=Math.floor((Date.now()-startTime)/1000);
@@ -3448,6 +3480,7 @@ refresh();
       for(const player of Object.values(soundPlayers))connectAudio(player);
       document.querySelectorAll('#framePortraits video').forEach(v=>{if(!v.muted)connectAudio(v)});
       if(secondFileURL&&!secondVideo.muted)connectAudio(secondVideo);
+      for(const v of document.querySelectorAll('[id^="rtrnSeatVideo"]'))if(!v.muted&&!v.srcObject&&v.src)connectAudio(v);
       // Draw the actual studio before opening the video stream, so the first
       // encoded frame is not the canvas's initial blank/black contents.
       const background=$('stageBackgroundImage');
@@ -3601,7 +3634,7 @@ refresh();
    try{
      const source=await navigator.mediaDevices.getUserMedia({video:{deviceId:{exact:item.select.value},width:{ideal:640},height:{ideal:480}},audio:false});
      if(!active(item)||generation!==item.generation){source.getTracks().forEach(t=>t.stop());return}
-     item.stream=source;item.video.srcObject=source;updateSeat(item);
+     item.stream=source;item.video.autoplay=true;item.video.loop=false;item.video.muted=true;item.video.srcObject=source;updateSeat(item);
      await item.video.play();if(generation===item.generation)seatStatus(item,'Guest camera live.');
    }catch(err){if(generation===item.generation){stopSeat(item);seatStatus(item,'Camera unavailable: '+err.message)}}
  }
@@ -3622,13 +3655,19 @@ refresh();
  seats.forEach(item=>{
    for(const [key,suffix] of [['x','X'],['y','Y'],['size','Size']])$('rtrnSeat'+suffix+item.n).addEventListener('input',e=>{window.RTRNSetExtraSeatPosition(item.n,key,e.target.value);drawSeats()});
    $('rtrnSeatRefresh'+item.n).addEventListener('click',()=>refreshSeat(item));
-   $('rtrnSeatStart'+item.n).addEventListener('click',()=>startSeat(item));
-   $('rtrnSeatStop'+item.n).addEventListener('click',()=>stopSeat(item));
+   const manual=()=>window.dispatchEvent(new CustomEvent('rtrn-guest-manual',{detail:{seat:item.n}}));
+   $('rtrnSeatStart'+item.n).addEventListener('click',()=>{manual();startSeat(item)});
+   $('rtrnSeatStop'+item.n).addEventListener('click',()=>{manual();stopSeat(item)});
+   window.RTRNInterviewSources[item.n]={video:item.video,stop:()=>stopSeat(item),load:async(file,{loop=false,sound=true,play=false}={})=>{
+     stopSeat(item);const generation=item.generation;if(!active(item))return false;
+     item.url=URL.createObjectURL(file);item.video.autoplay=false;item.video.muted=!sound;item.video.loop=loop;item.video.src=item.url;item.video.load();updateSeat(item);
+     if(sound)window.RTRNRecorder?.connectAudio(item.video);if(play)await item.video.play();return generation===item.generation;
+   }};
    item.clip.addEventListener('change',async e=>{
      const file=e.target.files?.[0];if(!file||!active(item))return;
      if(!file.type.startsWith('video/')){seatStatus(item,'Choose a video file.');return}
-     stopSeat(item);const generation=item.generation;
-     item.url=URL.createObjectURL(file);item.video.src=item.url;item.video.loop=true;updateSeat(item);
+     manual();stopSeat(item);const generation=item.generation;
+     item.url=URL.createObjectURL(file);item.video.autoplay=true;item.video.muted=true;item.video.src=item.url;item.video.loop=true;updateSeat(item);
      try{await item.video.play();if(generation===item.generation)seatStatus(item,'Video clip playing (muted).')}
      catch(err){if(generation===item.generation){stopSeat(item);seatStatus(item,'Could not play clip: '+err.message)}}
    });
@@ -3643,6 +3682,93 @@ refresh();
  drawSeats();
  $('cameraButton')?.addEventListener('click',()=>setTimeout(refreshCameras,700));
  if(!new URLSearchParams(location.search).has('output'))setTimeout(refreshCameras,1000);
+})();
+</script>
+<script>
+/* RTRN Virtual Guest Interview — session-local, manually cued answers. */
+(()=>{
+ const $=id=>document.getElementById(id), sources=window.RTRNInterviewSources, fold=$('rtrnInterviewFold');
+ if(!sources||new URLSearchParams(location.search).has('output'))return;
+ const states=new Map([2,3,4,5].map(n=>[n,{mode:'live',clips:[],idle:null,index:0,epoch:0,phase:'off',message:'Choose a guest source.'}]));
+ const sel=$('rtrnInterviewSeat'),mode=$('rtrnInterviewMode'),queue=$('rtrnInterviewQueue'),upload=$('rtrnInterviewUpload'),idleInput=$('rtrnInterviewIdle');
+ const stateFor=()=>states.get(Number(sel.value)), seatFor=()=>Number(sel.value);
+ const available=n=>$('rtrnLayout').value==='duo'&&window.RTRNSeatCount()>=n;
+ const say=(n,msg)=>{states.get(n).message=msg;if(seatFor()===n)$('rtrnInterviewStatus').textContent=msg};
+ function refresh(){
+   const st=stateFor();if(!st)return;
+   mode.value=st.mode;$('rtrnInterviewLive').hidden=st.mode!=='live';$('rtrnInterviewFiles').hidden=st.mode==='live';
+   $('rtrnInterviewIdleTools').hidden=st.mode!=='script';$('rtrnInterviewOrder').hidden=st.mode!=='script';
+   upload.multiple=st.mode==='script';$('rtrnInterviewUploadLabel').textContent=st.mode==='script'?'Add video answer clips in order':'Choose a prerecorded guest video';
+   $('rtrnInterviewIdleName').textContent=st.idle?st.idle.name:'No listening clip selected.';
+   queue.replaceChildren(...st.clips.map((f,i)=>new Option((i+1)+' · '+f.name,String(i))));
+   if(st.clips.length){st.index=Math.min(st.index,st.clips.length-1);queue.value=String(st.index)}
+   for(const key of ['Play','Restart','Remove','Clear'])$('rtrnInterview'+key).disabled=!st.clips.length;
+   for(const key of ['Pause','Stop'])$('rtrnInterview'+key).disabled=st.phase!=='answer'&&st.phase!=='paused';
+   for(const key of ['Prev','Up'])$('rtrnInterview'+key).disabled=st.index<1;
+   for(const key of ['Next','Down'])$('rtrnInterview'+key).disabled=st.index>=st.clips.length-1;
+   $('rtrnInterviewPlay').textContent=st.phase==='paused'?'▶ Resume answer':st.mode==='video'?'▶ Play guest video':'▶ Play answer';
+   $('rtrnInterviewStatus').textContent=st.message;
+ }
+ function invalidate(n){const st=states.get(n);st.epoch++;st.phase='off';delete sources[n].video.dataset.rtrnInterview;}
+ function syncSeats(){
+   const current=seatFor(), ns=[2,3,4,5].filter(available);
+   for(const n of [2,3,4,5])if(!ns.includes(n)&&states.get(n).phase!=='off'){invalidate(n);sources[n].stop();say(n,'Guest seat hidden. Choose a visible seat to continue.');}
+   fold.hidden=!ns.length;
+   const next=ns.includes(current)?current:ns[0];
+   if(Array.from(sel.options).map(o=>Number(o.value)).join(',')!==ns.join(','))sel.replaceChildren(...ns.map(n=>new Option('Guest '+(n-1)+' · seat '+n,String(n))));
+   if(next)sel.value=String(next);refresh();
+ }
+ async function present(n,file,kind,play){
+   const st=states.get(n),src=sources[n];if(!available(n)||st.mode==='live'||!file)return;
+   const token=++st.epoch;st.phase=kind;src.video.dataset.rtrnInterview='1';
+   say(n,kind==='idle'?'Listening…':play?'Playing '+file.name:'Ready: '+file.name);refresh();
+   try{
+     const ok=await src.load(file,{loop:kind==='idle',sound:kind!=='idle',play});
+     if(token!==st.epoch)return;
+     if(!ok)throw Error('Guest seat is unavailable');
+   }catch(err){if(token===st.epoch){st.phase='paused';say(n,'Clip could not start. Press Play to retry: '+err.message);refresh()}}
+ }
+ async function listening(n){
+   const st=states.get(n);if(!available(n)||st.mode==='live')return;
+   if(st.mode==='script'&&st.idle){await present(n,st.idle,'idle',true);return}
+   const file=st.clips[st.index];
+   if(file){await present(n,file,'ready',false);return}
+   invalidate(n);await sources[n].stop();say(n,'Add a guest video to begin.');refresh();
+ }
+ function choose(n,index){const st=states.get(n);if(index<0||index>=st.clips.length)return;st.index=index;listening(n);refresh()}
+ function play(n,restart=false){
+   const st=states.get(n),src=sources[n],file=st.clips[st.index];if(!file||!available(n))return;
+   // At most one scripted guest speaks; the others return to listening.
+   for(const [other,os] of states)if(other!==n&&os.phase==='answer'){sources[other].video.pause();listening(other)}
+   if(!restart&&(st.phase==='paused'||st.phase==='ready')&&src.video.src&&!src.video.ended){
+     const token=++st.epoch;st.phase='answer';src.video.muted=false;src.video.dataset.rtrnInterview='1';src.video.play().then(()=>{if(token===st.epoch){say(n,'Playing '+file.name);refresh()}}).catch(err=>{if(token===st.epoch){st.phase='paused';say(n,'Press Play to retry: '+err.message);refresh()}});refresh();return;
+   }
+   present(n,file,'answer',true);
+ }
+ sel.addEventListener('change',()=>{upload.value='';idleInput.value='';refresh()});
+ mode.addEventListener('change',()=>{const n=seatFor(),st=stateFor();if(!st)return;invalidate(n);sources[n].stop();st.mode=mode.value;st.clips=[];st.idle=null;st.index=0;upload.value='';idleInput.value='';say(n,st.mode==='live'?'Use guest camera settings.':'Add your prerecorded guest clips.');refresh()});
+ $('rtrnInterviewCameraTools').addEventListener('click',()=>{$('rtrnBroadcastTab').click();$(seatFor()===2?'rtrnSecondTools':'rtrnGuestTools'+seatFor()).scrollIntoView({block:'center'})});
+ upload.addEventListener('change',()=>{const n=seatFor(),st=stateFor(),files=Array.from(upload.files||[]).filter(f=>f.type.startsWith('video/')||/\.(mp4|webm|mov|m4v)$/i.test(f.name));upload.value='';if(!st||!files.length)return;
+   if(st.mode==='video'){st.clips=[files[0]];st.index=0}else st.clips.push(...files);
+   listening(n);refresh();
+ });
+ idleInput.addEventListener('change',()=>{const n=seatFor(),st=stateFor(),file=idleInput.files?.[0];idleInput.value='';if(!st||!file)return;st.idle=file;listening(n);refresh()});
+ $('rtrnInterviewClearIdle').addEventListener('click',()=>{const st=stateFor();st.idle=null;listening(seatFor());refresh()});
+ queue.addEventListener('change',()=>choose(seatFor(),Number(queue.value)));
+ for(const [key,delta] of [['Prev',-1],['Next',1]])$('rtrnInterview'+key).addEventListener('click',()=>choose(seatFor(),stateFor().index+delta));
+ for(const [key,delta] of [['Up',-1],['Down',1]])$('rtrnInterview'+key).addEventListener('click',()=>{const st=stateFor(),i=st.index,j=i+delta;if(j<0||j>=st.clips.length)return;[st.clips[i],st.clips[j]]=[st.clips[j],st.clips[i]];st.index=j;refresh()});
+ $('rtrnInterviewPlay').addEventListener('click',()=>play(seatFor()));
+ $('rtrnInterviewRestart').addEventListener('click',()=>play(seatFor(),true));
+ $('rtrnInterviewPause').addEventListener('click',()=>{const n=seatFor(),st=stateFor();if(st.phase!=='answer')return;st.epoch++;sources[n].video.pause();st.phase='paused';say(n,'Answer paused.');refresh()});
+ $('rtrnInterviewStop').addEventListener('click',()=>listening(seatFor()));
+ $('rtrnInterviewRemove').addEventListener('click',()=>{const st=stateFor();st.clips.splice(st.index,1);st.index=Math.max(0,Math.min(st.index,st.clips.length-1));listening(seatFor());refresh()});
+ $('rtrnInterviewClear').addEventListener('click',()=>{const st=stateFor();st.clips=[];st.index=0;listening(seatFor());refresh()});
+ for(const [n,src] of Object.entries(sources)){const seat=Number(n);src.video.addEventListener('ended',()=>{if(states.get(seat).phase==='answer'&&src.video.ended)listening(seat)})}
+ window.addEventListener('rtrn-guest-manual',e=>{const n=e.detail.seat;invalidate(n);states.get(n).mode='live';say(n,'Using existing guest source.');refresh()});
+ for(const id of ['rtrnSoloQuick','rtrnDuoQuick','rtrnLayout','rtrnCustomSeatCount'])$(id).addEventListener(id==='rtrnLayout'||id==='rtrnCustomSeatCount'?'change':'click',syncSeats);
+ new MutationObserver(syncSeats).observe($('sceneStatus'),{childList:true,subtree:true});
+ window.addEventListener('pagehide',()=>{for(const n of states.keys())if(states.get(n).phase!=='off'){invalidate(n);sources[n].stop()}});
+ syncSeats();
 })();
 </script>
 <script>
