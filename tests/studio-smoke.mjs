@@ -266,6 +266,37 @@ try {
   }
   await dock.locator('[data-mobile-target="scenes"]').tap();
   await checkDance(page);
+  // Rotate/resize the preview and exercise headline/ticker independently on a narrow phone.
+  for(const [scene,count] of [['vintage-tea',2],['dance-retro',2],['stars',4]]){
+    await page.locator('[data-scene="'+scene+'"]').click();
+    await page.locator('#rtrnDuoQuick').click();
+    for(const [width,height] of [[320,640],[844,390],[390,844]]){
+      await page.setViewportSize({width,height});
+      for(const [banner,ticker] of [[true,true],[false,true],[true,false],[false,false],[true,true]]){
+        await page.evaluate(({banner,ticker})=>{
+          for(const [id,on] of [['bannerToggle',banner],['tickerToggle',ticker]]){
+            const el=document.getElementById(id);
+            if(el.checked!==on){el.checked=on;el.dispatchEvent(new Event('change',{bubbles:true}));}
+          }
+        },{banner,ticker});
+        await page.waitForFunction(({count,banner,ticker})=>{
+          const stage=document.getElementById('stage').getBoundingClientRect();
+          if(stage.height<=0)return false;
+          let limit=stage.bottom;
+          for(const [id,on,y] of [['lowerThird',banner,595],['tickerBox',ticker,683]]){
+            const el=document.getElementById(id),visible=getComputedStyle(el).display!=='none';
+            if(visible!==on)return false;
+            if(on)limit=Math.min(limit,el.getBoundingClientRect().top,stage.top+stage.height*y/720);
+          }
+          return ['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4'].slice(0,count).every(id=>{
+            const el=document.getElementById(id),box=el.getBoundingClientRect();
+            return !el.hidden&&box.width>0&&box.height>0&&box.bottom<=limit+1;
+          });
+        },{count,banner,ticker},{timeout:6000});
+      }
+    }
+    console.log('Mobile resized recording overlay clearance passed:',scene);
+  }
   assert.deepEqual(errors,[],'No uncaught browser errors');
   await mobile.close();
   const desktopContext = await browser.newContext({viewport:{width:1440,height:900}});
