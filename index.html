@@ -2931,10 +2931,11 @@ refresh();
       const bounds=stage.getBoundingClientRect();
       if(bounds.height>0){
         const overlays=[$('lowerThird'),$('tickerBox')].filter(node=>node&&getComputedStyle(node).display!=='none'&&node.getBoundingClientRect().height>0);
-        if(overlays.length){
-          let limit=Math.min(...overlays.map(node=>node.getBoundingClientRect().top));
-          // The recording canvas uses a fixed lower third at 595/720 and ticker at 683/720.
-          if(seatedBannerClearance())limit=Math.min(limit,bounds.top+bounds.height*(state.banner?595/720:683/720));
+        if(overlays.length||state.banner||state.ticker){
+          let limit=Math.min(bounds.bottom,...overlays.map(node=>node.getBoundingClientRect().top));
+          // Match the recording canvas in every built-in studio, including vintage and dance.
+          if(state.banner)limit=Math.min(limit,bounds.top+bounds.height*595/720);
+          if(state.ticker)limit=Math.min(limit,bounds.top+bounds.height*683/720);
           const available=(limit-bounds.top-4)/bounds.height*100;
           const height=parseFloat(box.style.height);
           const safeTop=Math.max(4,Math.min(top,available-height));
