@@ -168,6 +168,27 @@ try {
       assert.match(await guide.textContent(),/Play answer/);
       await guide.locator('summary').tap();
       assert.equal(await guide.evaluate(el=>el.open),false);
+      const folds=page.locator('#rtrnBroadcastArea .controls > details.rtrn-broadcast-fold');
+      assert.equal(await folds.count(),7);
+      assert.equal(await page.locator('#rtrnBroadcastArea .controls > details[open]').count(),0);
+      const headline=page.locator('#rtrnHeadlineFold'), camera=page.locator('#rtrnCameraFold');
+      assert(await page.locator('#headlineInput').isHidden());
+      await headline.locator('summary').tap();
+      assert(await page.locator('#headlineInput').isVisible());
+      const originalHeadline=await page.locator('#headlineInput').inputValue();
+      await page.locator('#headlineInput').fill('Test headline');
+      await camera.locator('summary').tap();
+      assert.equal(await headline.evaluate(el=>el.open),true,'Opening camera must not close headline');
+      assert(await page.locator('#cameraButton').isVisible());
+      await headline.locator('summary').tap();
+      assert(await page.locator('#headlineInput').isHidden());
+      assert.equal(await camera.evaluate(el=>el.open),true);
+      await headline.locator('summary').tap();
+      assert.equal(await page.locator('#headlineInput').inputValue(),'Test headline');
+      await page.locator('#headlineInput').fill(originalHeadline);
+      await headline.locator('summary').tap();
+      await camera.locator('summary').tap();
+      assert.equal(await page.locator('#rtrnBroadcastArea .controls > details[open]').count(),0);
     }
     if(target==='stage')assert(await page.locator('#rtrnRecordQuick').isVisible(),'record shortcut is accessible');
     console.log('Mobile navigation passed:',target);
@@ -433,6 +454,18 @@ try {
   assert.match(await selfGuide.textContent(),/Stop & save video/);
   await selfGuide.locator('summary').click();
   assert.equal(await selfGuide.evaluate(el=>el.open),false);
+  assert.equal(await broadcastControls.locator(':scope > details.rtrn-broadcast-fold').count(),7);
+  assert.equal(await broadcastControls.locator(':scope > details[open]').count(),0);
+  const recordFold=desktop.locator('#rtrnRecordingFold');
+  assert(await desktop.locator('#rtrnRecordStart').isHidden());
+  await recordFold.locator(':scope > summary').click();
+  assert(await desktop.locator('#rtrnRecordStart').isVisible());
+  await recordFold.locator(':scope > summary').click();
+  assert(await desktop.locator('#rtrnRecordStart').isHidden());
+  assert(await desktop.locator('#rtrnRecordQuick').isVisible(),'Quick recording remains accessible');
+  await desktop.locator('#weatherView > summary').click();
+  await desktop.locator('#rtrnSeatsFold > summary').click();
+  assert.equal(await desktop.locator('#weatherView').evaluate(el=>el.open),true,'Weather and seats can stay open independently');
 
   const stageImage=desktop.locator('#stageBackgroundImage');
   await desktop.waitForFunction(()=>{const img=document.getElementById('stageBackgroundImage');return img?.complete&&img.naturalWidth>0&&getComputedStyle(img).visibility==='visible'});
@@ -568,6 +601,7 @@ try {
   const custom=desktop.locator('[data-scene^="custom-scene-"]').first();
   await custom.click();
   await desktop.locator('#rtrnBroadcastTab').click();
+  await desktop.locator('#rtrnSeatsFold > summary').click();
   const seatIds=['cameraBox','rtrnSecondBox','rtrnSeatPlaceholder3','rtrnSeatPlaceholder4','rtrnSeatPlaceholder5'];
   for(const n of [1,2,3,4,5]){
     await desktop.locator('#rtrnCustomSeatCount').selectOption(String(n));
