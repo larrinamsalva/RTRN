@@ -501,6 +501,10 @@ try {
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSeatVideo5');return v.src&&v.paused&&!v.hidden&&v.readyState>=2});
   await desktop.locator('#rtrnInterviewPlay').click();
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSeatVideo5');return !v.muted&&!v.paused});
+  await desktop.locator('#rtrnInterviewProjectName').fill('Comedy interview');
+  await desktop.locator('#rtrnInterviewSave').click();
+  await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewProjectStatus').textContent==='Saved interview: Comedy interview');
+  assert.equal(await desktop.locator('#rtrnInterviewProjects').inputValue(),'Comedy interview');
   await desktop.locator('#rtrnSoloQuick').click();
   await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewFold').hidden&&document.getElementById('rtrnSeatVideo5').paused&&document.getElementById('rtrnSecondVideo').paused);
   await desktop.locator('#rtrnDuoQuick').click();
@@ -523,4 +527,30 @@ try {
     if(scene.startsWith('original-'))await desktop.waitForFunction(()=>parseFloat(document.getElementById('cameraBox').style.width)===22);
   }
   console.log('Desktop workspace, scenic sets, tabletop photo and seat checks passed.');
+  // A fresh page must restore the original video bytes, queue order and selected answer.
+  await desktop.reload();
+  await desktop.locator('#sceneFold > summary').click();
+  await desktop.locator('#sceneFold [data-scene="cozy-2"]').click();
+  await desktop.locator('#rtrnDuoQuick').click();
+  await desktop.locator('#rtrnInterviewFold > summary').click();
+  await desktop.locator('#rtrnInterviewProjects option[value="Comedy interview"]').waitFor({state:'attached'});
+  await desktop.locator('#rtrnInterviewProjects').selectOption('Comedy interview');
+  await desktop.locator('#rtrnInterviewLoad').click();
+  await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewProjectStatus').textContent.startsWith('Loaded interview:'));
+  await desktop.locator('#rtrnInterviewSeat').selectOption('2');
+  assert.equal(await desktop.locator('#rtrnInterviewMode').inputValue(),'script');
+  assert.deepEqual(await desktop.locator('#rtrnInterviewQueue option').allTextContents(),['1 · 01-intro.webm','2 · 02-joke.webm']);
+  assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'1');
+  assert.equal(await desktop.locator('#rtrnInterviewIdleName').textContent(),'listening.webm');
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return !v.loop&&!v.muted&&!v.paused});
+  await desktop.locator('#rtrnInterviewStop').click();
+  desktop.once('dialog',d=>d.accept());
+  await desktop.locator('#rtrnInterviewDelete').click();
+  await desktop.waitForFunction(()=>document.getElementById('rtrnInterviewProjectStatus').textContent==='Deleted saved interview: Comedy interview');
+  assert.equal(await desktop.locator('#rtrnInterviewProjects option').count(),1);
+  assert.equal(await desktop.locator('#rtrnInterviewQueue option').count(),2,'Deleting saved copy must preserve current queue');
+  console.log('Saved interview reload, original clips, playback and deletion passed.');
+
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
