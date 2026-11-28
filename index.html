@@ -633,7 +633,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <label for="rtrnInterviewUpload" id="rtrnInterviewUploadLabel">Add video answer clips in order</label><input id="rtrnInterviewUpload" type="file" accept="video/*" multiple>
 <div id="rtrnInterviewIdleTools"><label for="rtrnInterviewIdle">Optional listening / reaction video (muted loop)</label><input id="rtrnInterviewIdle" type="file" accept="video/*"><button class="btn" id="rtrnInterviewClearIdle" type="button">Remove listening video</button><p id="rtrnInterviewIdleName" class="mini">No listening clip selected.</p></div>
 <label for="rtrnInterviewQueue">Choose clip</label><select id="rtrnInterviewQueue"></select>
-<div id="rtrnInterviewQuestionTools" hidden><label for="rtrnInterviewQuestion">Host question / cue notes (not recorded)</label><textarea id="rtrnInterviewQuestion" rows="3" maxlength="2000" placeholder="What should I ask before playing this answer?" style="width:100%;box-sizing:border-box;resize:vertical"></textarea><p class="mini">Notes follow each answer and are included when you save or export an interview.</p><p class="mini" id="rtrnInterviewNextQuestion" hidden style="white-space:pre-wrap;overflow-wrap:anywhere"></p></div>
+<div id="rtrnInterviewQuestionTools" hidden><label for="rtrnInterviewQuestion">Host question / cue notes (not recorded)</label><textarea id="rtrnInterviewQuestion" rows="3" maxlength="2000" placeholder="What should I ask before playing this answer?" style="width:100%;box-sizing:border-box;resize:vertical"></textarea><p class="mini">Notes follow each answer and are included when you save or export an interview.</p><p class="mini" id="rtrnInterviewNextQuestion" hidden style="white-space:pre-wrap;overflow-wrap:anywhere"></p><details id="rtrnInterviewRundown" hidden><summary>All interview questions (private)</summary><ol id="rtrnInterviewRundownList" style="padding-left:1.5em;white-space:pre-wrap;overflow-wrap:anywhere"></ol></details></div>
 <div id="rtrnInterviewOrder" class="rtrn-action-grid"><button class="btn" id="rtrnInterviewUp" type="button">Move earlier</button><button class="btn" id="rtrnInterviewDown" type="button">Move later</button></div>
 <div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewPrev" type="button">⏮ Previous</button><button class="btn" id="rtrnInterviewNext" type="button">Next ⏭</button><button class="btn btn-green" id="rtrnInterviewPlay" type="button">▶ Play answer</button><button class="btn" id="rtrnInterviewPause" type="button">⏸ Pause</button><button class="btn" id="rtrnInterviewRestart" type="button">↻ Restart</button><button class="btn" id="rtrnInterviewStop" type="button">■ Stop answer</button></div>
 <div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewRemove" type="button">Remove selected clip</button><button class="btn" id="rtrnInterviewClear" type="button">Clear clips</button></div>
@@ -3709,7 +3709,19 @@ refresh();
  const stateFor=()=>states.get(Number(sel.value)), seatFor=()=>Number(sel.value);
  const question=$('rtrnInterviewQuestion');
  const normalizedNotes=(clips,notes)=>clips.map((_,i)=>typeof notes?.[i]==='string'?notes[i].slice(0,2000):'');
- question.addEventListener('input',()=>{const st=stateFor();if(st?.mode==='script'&&st.clips.length)st.notes[st.index]=question.value.slice(0,2000)});
+ function renderRundown(st){
+   const panel=$('rtrnInterviewRundown'),list=$('rtrnInterviewRundownList');
+   panel.hidden=st.mode!=='script'||!st.clips.length;
+   if(panel.hidden){panel.open=false;list.replaceChildren();return}
+   const items=st.clips.map((file,i)=>{
+     const li=document.createElement('li');
+     li.textContent=(i===st.index?'Current · ':'')+file.name+' — '+(st.notes[i]?.trim()||'(No question notes yet)');
+     if(i===st.index){li.setAttribute('aria-current','step');li.style.fontWeight='bold'}
+     return li;
+   });
+   list.replaceChildren(...items);
+ }
+ question.addEventListener('input',()=>{const st=stateFor();if(st?.mode==='script'&&st.clips.length){st.notes[st.index]=question.value.slice(0,2000);renderRundown(st)}});
  // Explicit named projects, with original File objects stored in IndexedDB.
  const projectName=$('rtrnInterviewProjectName'), projectList=$('rtrnInterviewProjects'), projectStatus=$('rtrnInterviewProjectStatus');
  let projectBusy=false, projectDB=null;
@@ -3870,6 +3882,7 @@ refresh();
    const note=question.disabled?'':(st.notes[st.index]||'');if(question.value!==note)question.value=note;
    const nextQuestion=$('rtrnInterviewNextQuestion');nextQuestion.hidden=question.disabled;
    nextQuestion.textContent=question.disabled?'':st.index+1>=st.clips.length?'No more answers after this clip.':'Next question: '+(st.notes[st.index+1]?.trim()||'(No question notes yet)');
+   renderRundown(st);
    for(const key of ['Play','Restart','Remove','Clear'])$('rtrnInterview'+key).disabled=!st.clips.length;
    for(const key of ['Pause','Stop'])$('rtrnInterview'+key).disabled=st.phase!=='answer'&&st.phase!=='paused';
    for(const key of ['Prev','Up'])$('rtrnInterview'+key).disabled=st.index<1;
