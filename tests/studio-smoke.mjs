@@ -573,11 +573,18 @@ try {
   await desktop.locator('#rtrnInterviewUpload').setInputFiles([guestFile('01-intro.webm'),guestFile('02-joke.webm')]);
   const question=desktop.locator('#rtrnInterviewQuestion');
   await question.fill('Tell us about yourself.');
+  const rundown=desktop.locator('#rtrnInterviewRundown');
+  const rundownList=desktop.locator('#rtrnInterviewRundownList');
+  assert.equal(await rundown.evaluate(el=>el.open),false,'Private rundown starts closed');
+  await rundown.locator('summary').click();
+  assert.deepEqual(await rundownList.locator('li').allTextContents(),['Current · 01-intro.webm — Tell us about yourself.','02-joke.webm — (No question notes yet)']);
   await desktop.locator('#rtrnInterviewNext').click();
   await question.fill('What is your favorite joke?');
+  assert.equal(await rundownList.locator('[aria-current="step"]').textContent(),'Current · 02-joke.webm — What is your favorite joke?');
   const upcoming=desktop.locator('#rtrnInterviewNextQuestion');
   assert.equal(await upcoming.textContent(),'No more answers after this clip.');
   await desktop.locator('#rtrnInterviewUp').click();
+  assert.deepEqual(await rundownList.locator('li').allTextContents(),['Current · 02-joke.webm — What is your favorite joke?','01-intro.webm — Tell us about yourself.']);
   assert.equal(await upcoming.textContent(),'Next question: Tell us about yourself.');
   assert.equal(await question.inputValue(),'What is your favorite joke?');
   await desktop.locator('#rtrnInterviewDown').click();
@@ -603,6 +610,8 @@ try {
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
   await desktop.locator('#rtrnInterviewSeat').selectOption('5');
   await desktop.locator('#rtrnInterviewMode').selectOption('video');
+  assert.equal(await rundown.isVisible(),false,'Rundown hidden for nonscripted guests');
+  assert.equal(await rundownList.locator('li').count(),0);
   assert(await question.isHidden());
   assert(await upcoming.isHidden());
   await desktop.locator('#rtrnInterviewUpload').setInputFiles(guestFile('guest-five.webm'));
