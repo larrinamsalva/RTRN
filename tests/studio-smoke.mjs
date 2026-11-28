@@ -575,12 +575,16 @@ try {
   await question.fill('Tell us about yourself.');
   await desktop.locator('#rtrnInterviewNext').click();
   await question.fill('What is your favorite joke?');
+  const upcoming=desktop.locator('#rtrnInterviewNextQuestion');
+  assert.equal(await upcoming.textContent(),'No more answers after this clip.');
   await desktop.locator('#rtrnInterviewUp').click();
+  assert.equal(await upcoming.textContent(),'Next question: Tell us about yourself.');
   assert.equal(await question.inputValue(),'What is your favorite joke?');
   await desktop.locator('#rtrnInterviewDown').click();
   assert.equal(await question.inputValue(),'What is your favorite joke?');
   await desktop.locator('#rtrnInterviewPrev').click();
   assert.equal(await question.inputValue(),'Tell us about yourself.');
+  assert.equal(await upcoming.textContent(),'Next question: What is your favorite joke?');
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.src&&v.paused&&v.readyState>=2});
   await desktop.locator('#rtrnInterviewIdle').setInputFiles(guestFile('listening.webm'));
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
@@ -600,6 +604,7 @@ try {
   await desktop.locator('#rtrnInterviewSeat').selectOption('5');
   await desktop.locator('#rtrnInterviewMode').selectOption('video');
   assert(await question.isHidden());
+  assert(await upcoming.isHidden());
   await desktop.locator('#rtrnInterviewUpload').setInputFiles(guestFile('guest-five.webm'));
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSeatVideo5');return v.src&&v.paused&&!v.hidden&&v.readyState>=2});
   await desktop.locator('#rtrnInterviewPlay').click();
@@ -704,6 +709,7 @@ try {
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return document.getElementById('rtrnInterviewQueue').value==='1'&&v.loop&&v.muted&&!v.paused});
   assert.equal(await desktop.locator('#rtrnInterviewCueProgress').textContent(),'Clip 2 of 2');
   assert.equal(await question.inputValue(),'What is your favorite joke?','Automatic cue updates the question');
+  assert.equal(await upcoming.textContent(),'No more answers after this clip.');
   await desktop.locator('#rtrnInterviewPlay').click();
   await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
   assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'1','Final answer must not wrap');
@@ -712,6 +718,7 @@ try {
   assert.equal(await question.inputValue(),'Tell us about yourself.');
   await desktop.locator('#rtrnInterviewClear').click();
   assert(await question.isDisabled());
+  assert(await upcoming.isHidden());
   assert.equal(await question.inputValue(),'');
   await desktop.locator('#rtrnInterviewUpload').setInputFiles(guestFile('new-answer.webm'));
   assert.equal(await question.inputValue(),'','New answer must not inherit removed notes');
