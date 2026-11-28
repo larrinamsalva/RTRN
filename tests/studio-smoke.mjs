@@ -681,5 +681,18 @@ try {
   assert(await desktop.locator('#rtrnInterviewEndRehearsal').isDisabled());
   assert(await desktop.locator('#rtrnRecordQuick').isEnabled());
   console.log('Interview rehearsal, recording guard and first-answer reset passed.');
+  // Optional cue advances only after natural completion and never starts the next answer.
+  assert.equal(await desktop.locator('#rtrnInterviewAutoCue').isChecked(),false);
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
+  assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'0','Manual cue remains default');
+  await desktop.locator('#rtrnInterviewAutoCue').check();
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return document.getElementById('rtrnInterviewQueue').value==='1'&&v.loop&&v.muted&&!v.paused});
+  assert.equal(await desktop.locator('#rtrnInterviewCueProgress').textContent(),'Clip 2 of 2');
+  await desktop.locator('#rtrnInterviewPlay').click();
+  await desktop.waitForFunction(()=>{const v=document.getElementById('rtrnSecondVideo');return v.loop&&v.muted&&!v.paused});
+  assert.equal(await desktop.locator('#rtrnInterviewQueue').inputValue(),'1','Final answer must not wrap');
+  console.log('Manual and automatic cue, muted listening and final answer behavior passed.');
 
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
