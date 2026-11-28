@@ -158,6 +158,17 @@ try {
     }
     if(target==='library')assert(await page.locator('#musicUpload').isVisible(),'music upload is accessible');
     if(target==='reactions')assert(await page.locator('#birdsEffectButton').isVisible(),'bird effect is accessible');
+    if(target==='settings'){
+      const guide=page.locator('#rtrnSelfInterviewHelp');
+      assert.equal(await guide.evaluate(el=>el.open),false,'Self-interview guide starts closed');
+      assert.equal(await page.locator('#rtrnBroadcastArea .controls').evaluate(el=>getComputedStyle(el).columnCount),'1');
+      await guide.locator('summary').tap();
+      assert.equal(await guide.evaluate(el=>el.open),true);
+      assert.match(await guide.textContent(),/Record your character first/);
+      assert.match(await guide.textContent(),/Play answer/);
+      await guide.locator('summary').tap();
+      assert.equal(await guide.evaluate(el=>el.open),false);
+    }
     if(target==='stage')assert(await page.locator('#rtrnRecordQuick').isVisible(),'record shortcut is accessible');
     console.log('Mobile navigation passed:',target);
   }
@@ -412,6 +423,17 @@ try {
   for(const id of ['original-podcast','original-live','news','cozy-1','cozy-2','cozy-3','cozy-4','window-washers','window-grandma','window-robber','window-sunset','window-weather','beach','mountain','porch','gazebo','gazebo-branded','purple-haze','midnight','stars'])assert(ids.includes(id),'Missing '+id);
   await desktop.locator('[data-scene="window-weather"]').click();
   await desktop.locator('#rtrnBroadcastTab').click();
+  const broadcastControls=desktop.locator('#rtrnBroadcastArea .controls');
+  assert.equal(await broadcastControls.evaluate(el=>getComputedStyle(el).columnCount),'2','Desktop broadcast uses compact independent columns');
+  assert.equal(await broadcastControls.evaluate(el=>getComputedStyle(el).display),'block','Broadcast cards no longer stretch in grid rows');
+  const selfGuide=desktop.locator('#rtrnSelfInterviewHelp');
+  assert.equal(await selfGuide.evaluate(el=>el.open),false);
+  await selfGuide.locator('summary').click();
+  assert.equal(await selfGuide.evaluate(el=>el.open),true);
+  assert.match(await selfGuide.textContent(),/Stop & save video/);
+  await selfGuide.locator('summary').click();
+  assert.equal(await selfGuide.evaluate(el=>el.open),false);
+
   const stageImage=desktop.locator('#stageBackgroundImage');
   await desktop.waitForFunction(()=>{const img=document.getElementById('stageBackgroundImage');return img?.complete&&img.naturalWidth>0&&getComputedStyle(img).visibility==='visible'});
   const before=await stageImage.getAttribute('src');
