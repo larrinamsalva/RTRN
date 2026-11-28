@@ -636,7 +636,7 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 <div id="rtrnInterviewOrder" class="rtrn-action-grid"><button class="btn" id="rtrnInterviewUp" type="button">Move earlier</button><button class="btn" id="rtrnInterviewDown" type="button">Move later</button></div>
 <div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewPrev" type="button">⏮ Previous</button><button class="btn" id="rtrnInterviewNext" type="button">Next ⏭</button><button class="btn btn-green" id="rtrnInterviewPlay" type="button">▶ Play answer</button><button class="btn" id="rtrnInterviewPause" type="button">⏸ Pause</button><button class="btn" id="rtrnInterviewRestart" type="button">↻ Restart</button><button class="btn" id="rtrnInterviewStop" type="button">■ Stop answer</button></div>
 <div class="rtrn-action-grid"><button class="btn" id="rtrnInterviewRemove" type="button">Remove selected clip</button><button class="btn" id="rtrnInterviewClear" type="button">Clear clips</button></div>
-<p class="mini">Clips stay on this device for the current studio session. Use numbered filenames for answers. Start recording, ask the question, then play the answer. No automatic advance. Use headphones to avoid microphone echo.</p>
+<label id="rtrnInterviewAutoCueTools" style="display:flex;align-items:center;gap:8px"><input id="rtrnInterviewAutoCue" type="checkbox" style="width:auto"> Cue next answer when a clip finishes (never auto-play)</label><p class="mini" id="rtrnInterviewCueProgress" role="status" aria-live="polite"></p><p class="mini">Clips stay on this device for the current studio session. Use numbered filenames for answers. Start recording, ask the question, then play the answer. Automatic cue is optional; the guest never speaks automatically. Use headphones to avoid microphone echo.</p>
 </div>
 <div class="rtrn-action-grid"><label for="rtrnInterviewProjectName">Interview project name</label><input id="rtrnInterviewProjectName" maxlength="100" placeholder="e.g. Comedy interview"><label for="rtrnInterviewProjects">Saved interviews</label><select id="rtrnInterviewProjects"><option value="">Choose saved interview</option></select><button class="btn" type="button" id="rtrnInterviewSave">Save interview</button><button class="btn" type="button" id="rtrnInterviewLoad">Load interview</button><button class="btn" type="button" id="rtrnInterviewDelete">Delete saved interview</button><button class="btn" type="button" id="rtrnInterviewExport">Export selected saved interview</button><button class="btn" type="button" id="rtrnInterviewImport">Import interview backup</button><input type="file" id="rtrnInterviewBackupFile" accept=".rtrninterview,application/octet-stream" hidden></div><p class="mini" id="rtrnInterviewProjectStatus" role="status" aria-live="polite">Projects store video files and guest queues on this device only. Load while not recording.</p>
 <p class="mini" id="rtrnInterviewStatus" role="status" aria-live="polite">Choose a guest source.</p>
@@ -3854,6 +3854,8 @@ refresh();
    const st=stateFor();if(!st)return;
    mode.value=st.mode;$('rtrnInterviewLive').hidden=st.mode!=='live';$('rtrnInterviewFiles').hidden=st.mode==='live';
    $('rtrnInterviewIdleTools').hidden=st.mode!=='script';$('rtrnInterviewOrder').hidden=st.mode!=='script';
+   $('rtrnInterviewAutoCueTools').hidden=st.mode!=='script';
+   $('rtrnInterviewCueProgress').textContent=st.clips.length?`Clip ${st.index+1} of ${st.clips.length}`:'No clips queued.';
    upload.multiple=st.mode==='script';$('rtrnInterviewUploadLabel').textContent=st.mode==='script'?'Add video answer clips in order':'Choose a prerecorded guest video';
    $('rtrnInterviewIdleName').textContent=st.idle?st.idle.name:'No listening clip selected.';
    queue.replaceChildren(...st.clips.map((f,i)=>new Option((i+1)+' · '+f.name,String(i))));
@@ -3920,7 +3922,11 @@ refresh();
  $('rtrnInterviewStop').addEventListener('click',()=>listening(seatFor()));
  $('rtrnInterviewRemove').addEventListener('click',()=>{const st=stateFor();st.clips.splice(st.index,1);st.index=Math.max(0,Math.min(st.index,st.clips.length-1));listening(seatFor());refresh()});
  $('rtrnInterviewClear').addEventListener('click',()=>{const st=stateFor();st.clips=[];st.index=0;listening(seatFor());refresh()});
- for(const [n,src] of Object.entries(sources)){const seat=Number(n);src.video.addEventListener('ended',()=>{if(states.get(seat).phase==='answer'&&src.video.ended)listening(seat)})}
+ for(const [n,src] of Object.entries(sources)){const seat=Number(n);src.video.addEventListener('ended',()=>{
+   const st=states.get(seat);if(st.phase!=='answer'||!src.video.ended)return;
+   if(st.mode==='script'&&$('rtrnInterviewAutoCue').checked&&st.index<st.clips.length-1)st.index++;
+   listening(seat);
+ })}
  window.addEventListener('rtrn-guest-manual',e=>{const n=e.detail.seat;invalidate(n);states.get(n).mode='live';say(n,'Using existing guest source.');refresh()});
  for(const id of ['rtrnSoloQuick','rtrnDuoQuick','rtrnLayout','rtrnCustomSeatCount'])$(id).addEventListener(id==='rtrnLayout'||id==='rtrnCustomSeatCount'?'change':'click',syncSeats);
  new MutationObserver(syncSeats).observe($('sceneStatus'),{childList:true,subtree:true});
