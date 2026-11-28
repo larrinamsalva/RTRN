@@ -837,7 +837,32 @@ body:not(.output-mode){touch-action:pan-y pinch-zoom}
 </details>
 </section>
 <section aria-labelledby="rtrnBroadcastTab" class="panel workspace-area" data-area="broadcast" hidden="" id="rtrnBroadcastArea" role="tabpanel"><div class="rtrn-v38-sectiontag">🎛️ BROADCAST ONLY — Camera, guest desk set, headlines, animated window</div>
-<div class="panel-pad"><h2 class="section-eyebrow">Broadcast controls</h2><div class="controls">
+<div class="panel-pad"><h2 class="section-eyebrow">Broadcast controls</h2>
+<style>
+/* Broadcast cards use their own height instead of stretching to the tallest card in a grid row. */
+#rtrnBroadcastArea .controls{display:block!important;column-count:1;column-gap:12px}
+#rtrnBroadcastArea .controls > .control-block{break-inside:avoid;page-break-inside:avoid;margin:0 0 12px;min-width:0}
+#rtrnBroadcastArea .controls > .control-block[hidden]{display:none!important}
+@media(min-width:981px){#rtrnBroadcastArea .controls{column-count:2}}
+#rtrnSelfInterviewHelp{margin:0 0 12px;padding:6px 12px;overflow-wrap:anywhere}
+#rtrnSelfInterviewHelp summary{line-height:1.4;padding:10px 0;min-height:40px}
+#rtrnSelfInterviewHelp ol{padding-left:22px;margin:8px 0;line-height:1.55}
+#rtrnSelfInterviewHelp li{margin:6px 0}
+</style>
+<details id="rtrnSelfInterviewHelp" class="rtrn-audio-setup">
+<summary>🎭 Play both roles yourself — host and character directions</summary>
+<div style="padding:0 0 8px">
+<ol>
+<li><strong>Record your character first:</strong> Put on a costume and use your phone camera to record one short answer per interview question. Name them 01, 02, 03 in order. Optionally record a silent listening or reaction clip.</li>
+<li><strong>Set up the studio:</strong> Change back into your host outfit. Choose a scene with at least two seats and select Guest seats. Open Virtual Guest Interview, choose the guest seat, then select Scripted interview (answer clips).</li>
+<li><strong>Prepare your questions:</strong> Upload your answer clips, select each clip and enter its Host question / cue notes. Add your optional listening clip. Enable Cue next answer when a clip finishes so each answer waits for you.</li>
+<li><strong>Practice:</strong> Tap Start rehearsal, ask a question, then tap Play answer. Repeat for each clip. Tap End rehearsal to reset the first answer and allow recording.</li>
+<li><strong>Record both roles:</strong> Start your host camera, check your microphone, wear headphones to avoid echo, then tap Start recording. Ask each question out loud, press Play answer, and react naturally. Repeat until finished.</li>
+<li><strong>Save and review:</strong> Tap Stop &amp; save video. Check that both voices and both seats appear in the saved show before sharing. Try a 30-second test first.</li>
+</ol>
+<p class="mini">Example: Host: “What's your favorite hobby?” Character: “Mindin' everybody else's business!” Save your interview setup and keep backups of the original clips.</p>
+</div></details>
+<div class="controls">
 <div class="control-block"><label for="headlineInput">On-screen headline</label><input id="headlineInput" maxlength="115" value="Real people. Real stories. Real impact."/><div style="height:10px"></div><label for="hostInput">Host name</label><input id="hostInput" maxlength="32" value="Larrina"/><div class="switch-line"><span>Show headline banner</span><input aria-label="Show headline banner" checked="" id="bannerToggle" type="checkbox"/></div><div class="switch-line"><span>Show scrolling ticker</span><input aria-label="Show scrolling ticker" checked="" id="tickerToggle" type="checkbox"/></div><div class="switch-line"><span>On-air indicator (visual only)</span><input aria-label="On-air indicator" id="liveToggle" type="checkbox"/></div></div>
 <div class="control-block"><h2 class="section-eyebrow">03 / Camera overlay</h2><button class="btn btn-green" id="cameraButton" style="width:100%">📷 Enable camera</button><p class="mini" id="cameraStatus" role="status" style="margin-top:8px">Camera is off. Nothing is being uploaded.</p><div class="rtrn-v6-inline"><strong>📱 Connect your phone camera (Windows)</strong><p class="mini">Pair and enable a supported Android phone as a Windows connected camera first. Your phone will appear as a camera choice when Windows exposes it to your browser. This is not Bluetooth-only video.</p>
 <div class="rtrn-action-grid"><button class="btn" id="rtrnPhoneLink" type="button">Open Phone Link</button><button class="btn" id="rtrnMobileSettings" type="button">Windows mobile devices</button></div>
