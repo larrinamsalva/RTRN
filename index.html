@@ -2923,19 +2923,16 @@ refresh();
   
   const sourceReady = () => !!secondStream || !!secondFileURL;
   const inRange = (v,lo,hi) => Math.min(hi,Math.max(lo,Number(v)||0));
-  function setBox(box,x,y,size,cutout) {
-    const width = inRange(size,(isCustom()||['porch','midnight','stars'].includes(state.scene))?11.5:/^cozy-[1-4]$/.test(state.scene)?11.5:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
-    box.style.left=left+'%';box.style.top=top+'%';box.style.width=width+'%';
-    box.style.height=(isDance()?Math.min(78,width*2.8,81-top):isVintage()?Math.min(29,width*1.5):state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isOriginalDesk()?Math.min(width*1.55,(state.scene==='original-live'?65:70)-top):isCustom()&&seatCount()>=3?Math.min(32,91-top):/^cozy-[1-4]$/.test(state.scene)?Math.min(36,width*1.65,91-top):(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
-    // Keep vintage, dance and single-chair fireside video above responsive overlays.
-    if(isVintage()||isDance()||state.scene==='cozy-1'){
+  // Keep each cozy camera above the preview and recording overlays.
+  function clearSeatOverlays(box,top){
+    if(isVintage()||isDance()||/^cozy-[1-4]$/.test(state.scene)){
       const bounds=stage.getBoundingClientRect();
       if(bounds.height>0){
         const overlays=[$('lowerThird'),$('tickerBox')].filter(node=>node&&getComputedStyle(node).display!=='none'&&node.getBoundingClientRect().height>0);
         if(overlays.length){
           let limit=Math.min(...overlays.map(node=>node.getBoundingClientRect().top));
           // The recording canvas uses a fixed lower third at 595/720 and ticker at 683/720.
-          if(state.scene==='cozy-1')limit=Math.min(limit,bounds.top+bounds.height*(state.banner?595/720:683/720));
+          if(/^cozy-[1-4]$/.test(state.scene))limit=Math.min(limit,bounds.top+bounds.height*(state.banner?595/720:683/720));
           const available=(limit-bounds.top-4)/bounds.height*100;
           const height=parseFloat(box.style.height);
           const safeTop=Math.max(4,Math.min(top,available-height));
@@ -2944,6 +2941,13 @@ refresh();
         }
       }
     }
+  }
+  window.RTRNClearSeatOverlays=clearSeatOverlays;
+  function setBox(box,x,y,size,cutout) {
+    const width = inRange(size,(isCustom()||['porch','midnight','stars'].includes(state.scene))?11.5:/^cozy-[1-4]$/.test(state.scene)?11.5:18,75), left = inRange(x,0,100-width), top = inRange(y,4,58);
+    box.style.left=left+'%';box.style.top=top+'%';box.style.width=width+'%';
+    box.style.height=(isDance()?Math.min(78,width*2.8,81-top):isVintage()?Math.min(29,width*1.5):state.scene==='purple-haze'?27:['midnight','stars'].includes(state.scene)?Math.min(24,width*1.4):['gazebo','gazebo-branded'].includes(state.scene)?Math.min(25,width*25/18):state.scene==='porch'?Math.min(29,width*1.6):state.scene==='mountain'?29:state.scene==='beach'?32:isOriginalDesk()?Math.min(width*1.55,(state.scene==='original-live'?65:70)-top):isCustom()&&seatCount()>=3?Math.min(32,91-top):/^cozy-[1-4]$/.test(state.scene)?Math.min(36,width*1.65,91-top):(cutout?Math.min(73,93-top):Math.min(51,91-top)))+'%';
+    clearSeatOverlays(box,top);
     box.classList.toggle('cutout',cutout);
     box.style.borderRadius=cutout?'0':'16px';
     box.style.borderWidth=cutout?'0':'3px';
@@ -3023,7 +3027,7 @@ refresh();
   window.RTRNRefreshSeatLayers=paintHostLayers;
   new MutationObserver(()=>{paintHostLayers();syncControls()}).observe($('sceneStatus'),{childList:true,subtree:true});
   if(typeof ResizeObserver==='function'){
-    const vintageResize=new ResizeObserver(()=>{if(isVintage()||isDance()||state.scene==='cozy-1')paintHostLayers()});
+    const vintageResize=new ResizeObserver(()=>{if(isVintage()||isDance()||/^cozy-[1-4]$/.test(state.scene)){paintHostLayers();if(/^cozy-[1-4]$/.test(state.scene))window.RTRNDrawExtraSeats?.()}});
     for(const node of [stage,$('lowerThird'),$('tickerBox')])vintageResize.observe(node);
   }
   $('cameraMode').addEventListener('change',paintHostLayers);
@@ -3648,6 +3652,7 @@ refresh();
    for(const item of seats){
      const pos=window.RTRNExtraSeatPosition(item.n),size=Math.min(45,Math.max(11.5,pos.size));
       item.wrap.hidden=!active(item);Object.assign(item.wrap.style,{left:Math.min(100-size,pos.x)+'%',top:pos.y+'%',width:size+'%',height:Math.min(['midnight','stars'].includes(state.scene)?Math.min(24,size*1.4):['gazebo','gazebo-branded'].includes(state.scene)?25*size/18:['cozy-3','cozy-4'].includes(state.scene)?Math.min(36,size*1.65):32,94-pos.y)+'%'});
+      if(/^cozy-[1-4]$/.test(state.scene))window.RTRNClearSeatOverlays?.(item.wrap,pos.y);
       for(const [key,suffix] of [['x','X'],['y','Y'],['size','Size']])$('rtrnSeat'+suffix+item.n).value=pos[key];
      if(!active(item)&&(item.stream||item.url))stopSeat(item);
      updateSeat(item);
