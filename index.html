@@ -2923,16 +2923,17 @@ refresh();
   
   const sourceReady = () => !!secondStream || !!secondFileURL;
   const inRange = (v,lo,hi) => Math.min(hi,Math.max(lo,Number(v)||0));
-  // Keep each cozy camera above the preview and recording overlays.
+  const deskWindowClearance=()=>isOriginalDesk()||isWindowScene()||state.scene==='news';
+  // Keep seated cameras above the preview and recording overlays.
   function clearSeatOverlays(box,top){
-    if(isVintage()||isDance()||/^cozy-[1-4]$/.test(state.scene)){
+    if(isVintage()||isDance()||deskWindowClearance()||/^cozy-[1-4]$/.test(state.scene)){
       const bounds=stage.getBoundingClientRect();
       if(bounds.height>0){
         const overlays=[$('lowerThird'),$('tickerBox')].filter(node=>node&&getComputedStyle(node).display!=='none'&&node.getBoundingClientRect().height>0);
         if(overlays.length){
           let limit=Math.min(...overlays.map(node=>node.getBoundingClientRect().top));
           // The recording canvas uses a fixed lower third at 595/720 and ticker at 683/720.
-          if(/^cozy-[1-4]$/.test(state.scene))limit=Math.min(limit,bounds.top+bounds.height*(state.banner?595/720:683/720));
+          if(deskWindowClearance()||/^cozy-[1-4]$/.test(state.scene))limit=Math.min(limit,bounds.top+bounds.height*(state.banner?595/720:683/720));
           const available=(limit-bounds.top-4)/bounds.height*100;
           const height=parseFloat(box.style.height);
           const safeTop=Math.max(4,Math.min(top,available-height));
@@ -3027,7 +3028,7 @@ refresh();
   window.RTRNRefreshSeatLayers=paintHostLayers;
   new MutationObserver(()=>{paintHostLayers();syncControls()}).observe($('sceneStatus'),{childList:true,subtree:true});
   if(typeof ResizeObserver==='function'){
-    const vintageResize=new ResizeObserver(()=>{if(isVintage()||isDance()||/^cozy-[1-4]$/.test(state.scene)){paintHostLayers();if(/^cozy-[1-4]$/.test(state.scene))window.RTRNDrawExtraSeats?.()}});
+    const vintageResize=new ResizeObserver(()=>{if(isVintage()||isDance()||deskWindowClearance()||/^cozy-[1-4]$/.test(state.scene)){paintHostLayers();if(/^cozy-[1-4]$/.test(state.scene))window.RTRNDrawExtraSeats?.()}});
     for(const node of [stage,$('lowerThird'),$('tickerBox')])vintageResize.observe(node);
   }
   $('cameraMode').addEventListener('change',paintHostLayers);

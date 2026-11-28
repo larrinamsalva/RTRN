@@ -167,6 +167,23 @@ try {
   });
   assert(await page.locator('#rtrnSecondBox').isHidden(),'Fireside must remain a one-chair scene');
   console.log('Mobile Cozy Fireside camera clears headline, ticker and recording banner.');
+  // The original desk, news and window sets also keep their visible cameras above overlays.
+  for(const [id,count] of [['original-podcast',1],['original-live',1],['news',2],['window-washers',2],['window-grandma',2],['window-robber',2],['window-sunset',2],['window-weather',2]]){
+    await page.locator('[data-scene="'+id+'"]').tap();
+    if(count===2)await page.locator('#rtrnDuoQuick').click();
+    await page.waitForFunction(count=>{
+      const stage=document.getElementById('stage').getBoundingClientRect();
+      const banner=document.getElementById('lowerThird').getBoundingClientRect();
+      const ticker=document.getElementById('tickerBox').getBoundingClientRect();
+      const limit=Math.min(banner.top,ticker.top,stage.top+stage.height*595/720);
+      return stage.height>0&&['cameraBox','rtrnSecondBox'].slice(0,count).every(id=>{
+        const el=document.getElementById(id),box=el.getBoundingClientRect();
+        return !el.hidden&&box.width>0&&box.height>=stage.height*.12&&box.bottom<=limit+1;
+      });
+    },count,{timeout:6000});
+    if(count===1)assert(await page.locator('#rtrnSecondBox').isHidden(),'Original desk must retain one host');
+    console.log('Mobile desk/window camera clearance passed:',id);
+  }
   // All guest seats share the same mobile and recording banner clearance.
   for(const [id,count] of [['cozy-2',2],['cozy-3',3],['cozy-4',4]]){
     await page.locator('[data-scene="'+id+'"]').tap();
